@@ -1,0 +1,1797 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campamento Evangelico - Organizador</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #ec4899;
+            --accent: #f59e0b;
+            --success: #10b981;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --border: #334155;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Login Screen */
+        .login-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: opacity 0.5s ease;
+        }
+
+        .login-box {
+            background: var(--bg-card);
+            padding: 3rem;
+            border-radius: 20px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            border: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-box::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 70%);
+            animation: pulse 4s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+
+        .login-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .login-icon {
+            font-size: 4rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .login-box h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .login-box p {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+
+        .password-input {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            font-size: 1rem;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .password-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .error-msg {
+            color: #ef4444;
+            margin-top: 1rem;
+            display: none;
+            font-size: 0.9rem;
+        }
+
+        /* Main App */
+        .app-container {
+            display: none;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 280px;
+            height: 100vh;
+            background: var(--bg-card);
+            border-right: 1px solid var(--border);
+            padding: 2rem;
+            overflow-y: auto;
+            z-index: 100;
+            transition: transform 0.3s ease;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .logo-text h2 {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .logo-text span {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .nav-menu {
+            list-style: none;
+        }
+
+        .nav-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--primary);
+        }
+
+        .nav-link.active {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(236, 72, 153, 0.1) 100%);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+        }
+
+        .nav-link i {
+            font-size: 1.25rem;
+            width: 24px;
+            text-align: center;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 280px;
+            padding: 2rem;
+            min-height: 100vh;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .btn-secondary {
+            padding: 0.75rem 1.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-secondary:hover {
+            background: var(--border);
+            transform: translateY(-2px);
+        }
+
+        .user-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem 1rem;
+            background: var(--bg-card);
+            border-radius: 50px;
+            border: 1px solid var(--border);
+        }
+
+        .user-avatar {
+            width: 35px;
+            height: 35px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        /* Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            padding: 1.5rem;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.3);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 1rem;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .stat-icon.worship { background: rgba(99, 102, 241, 0.2); color: var(--primary); }
+        .stat-icon.activities { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+        .stat-icon.schedule { background: rgba(245, 158, 11, 0.2); color: var(--accent); }
+        .stat-icon.team { background: rgba(236, 72, 153, 0.2); color: var(--secondary); }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        /* Content Sections */
+        .content-section {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 0.875rem;
+            background: var(--bg-dark);
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            border-color: var(--primary);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        /* Tables */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .data-table th {
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .data-table tr:hover {
+            background: rgba(99, 102, 241, 0.05);
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .badge-primary { background: rgba(99, 102, 241, 0.2); color: var(--primary); }
+        .badge-success { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+        .badge-warning { background: rgba(245, 158, 11, 0.2); color: var(--accent); }
+        .badge-secondary { background: rgba(236, 72, 153, 0.2); color: var(--secondary); }
+
+        /* Schedule Timeline */
+        .timeline {
+            position: relative;
+            padding-left: 2rem;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, var(--primary), var(--secondary));
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-bottom: 2rem;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -2rem;
+            top: 0.5rem;
+            width: 12px;
+            height: 12px;
+            background: var(--primary);
+            border-radius: 50%;
+            transform: translateX(-5px);
+            border: 3px solid var(--bg-card);
+        }
+
+        .timeline-time {
+            font-size: 0.875rem;
+            color: var(--primary);
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .timeline-content {
+            background: var(--bg-dark);
+            padding: 1rem;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+        }
+
+        .timeline-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .timeline-desc {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        /* Team Grid */
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .team-card {
+            background: var(--bg-dark);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .team-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+        }
+
+        .team-avatar {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            border-radius: 50%;
+            margin: 0 auto 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .team-name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .team-role {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        /* Action Buttons */
+        .btn-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-icon:hover {
+            background: var(--border);
+            color: var(--text-primary);
+        }
+
+        .btn-icon.delete:hover {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .btn-icon.edit:hover {
+            background: rgba(99, 102, 241, 0.2);
+            color: var(--primary);
+        }
+
+        /* Mobile Menu Toggle */
+        .menu-toggle {
+            display: none;
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 101;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 0.75rem;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 1rem;
+                padding-top: 5rem;
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+            }
+        }
+
+        /* Animations */
+        .fade-in {
+            animation: fadeIn 0.5s ease;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-dark);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary);
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            padding: 2rem;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .close-modal:hover {
+            color: var(--text-primary);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .toast {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            animation: slideInRight 0.3s ease;
+            min-width: 300px;
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .toast.success { border-left: 4px solid var(--success); }
+        .toast.error { border-left: 4px solid #ef4444; }
+        .toast.info { border-left: 4px solid var(--primary); }
+
+        /* Print Styles */
+        @media print {
+            .sidebar, .header, .btn-secondary, .menu-toggle {
+                display: none !important;
+            }
+            .main-content {
+                margin-left: 0;
+            }
+            .content-section {
+                display: block !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div class="login-container" id="loginScreen">
+        <div class="login-box">
+            <div class="login-content">
+                <div class="login-icon">
+                    <i class="fas fa-church"></i>
+                </div>
+                <h1>Campamento Evangelico</h1>
+                <p>Sistema de Organización y Gestión</p>
+                <input type="password" class="password-input" id="passwordInput" placeholder="Introduce la contraseña..." autocomplete="off">
+                <button class="btn-primary" onclick="login()">
+                    <i class="fas fa-sign-in-alt"></i> Acceder
+                </button>
+                <div class="error-msg" id="errorMsg">
+                    <i class="fas fa-exclamation-circle"></i> Contraseña incorrecta
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div class="app-container" id="appContainer">
+        <!-- Mobile Menu Toggle -->
+        <button class="menu-toggle" onclick="toggleSidebar()">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-cross"></i>
+                </div>
+                <div class="logo-text">
+                    <h2>Campamento</h2>
+                    <span>Panel de Control</span>
+                </div>
+            </div>
+
+            <nav>
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a class="nav-link active" onclick="showSection('dashboard')">
+                            <i class="fas fa-home"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" onclick="showSection('culto')">
+                            <i class="fas fa-pray"></i>
+                            <span>Organización del Culto</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" onclick="showSection('horario')">
+                            <i class="fas fa-clock"></i>
+                            <span>Horarios</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" onclick="showSection('actividades')">
+                            <i class="fas fa-hiking"></i>
+                            <span>Actividades</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" onclick="showSection('equipo')">
+                            <i class="fas fa-users"></i>
+                            <span>Equipo</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+
+            <div style="margin-top: auto; padding-top: 2rem; border-top: 1px solid var(--border);">
+                <button class="btn-secondary" style="width: 100%;" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <div class="header">
+                <h1 id="pageTitle">Dashboard</h1>
+                <div class="header-actions">
+                    <button class="btn-secondary" onclick="exportData()">
+                        <i class="fas fa-download"></i> Exportar Datos
+                    </button>
+                    <div class="user-badge">
+                        <div class="user-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <span>Administrador</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Section -->
+            <div id="dashboard" class="content-section active">
+                <div class="dashboard-grid">
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-value" id="totalCultos">0</div>
+                                <div class="stat-label">Servicios Programados</div>
+                            </div>
+                            <div class="stat-icon worship">
+                                <i class="fas fa-pray"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-value" id="totalActividades">0</div>
+                                <div class="stat-label">Actividades Planificadas</div>
+                            </div>
+                            <div class="stat-icon activities">
+                                <i class="fas fa-hiking"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-value" id="totalHorarios">0</div>
+                                <div class="stat-label">Eventos en Horario</div>
+                            </div>
+                            <div class="stat-icon schedule">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-value" id="totalEquipo">0</div>
+                                <div class="stat-label">Miembros del Equipo</div>
+                            </div>
+                            <div class="stat-icon team">
+                                <i class="fas fa-users"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fas fa-calendar-day"></i>
+                            Resumen del Día
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="timeline" id="resumenTimeline">
+                            <!-- Dynamic content -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Culto Section -->
+            <div id="culto" class="content-section">
+                <div class="section-header">
+                    <h2 class="section-title">Organización del Culto</h2>
+                    <button class="btn-primary" onclick="openModal('cultoModal')">
+                        <i class="fas fa-plus"></i> Nuevo Servicio
+                    </button>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fas fa-list"></i>
+                            Servicios Programados
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Tipo</th>
+                                        <th>Dirige</th>
+                                        <th>Canto</th>
+                                        <th>Devocional</th>
+                                        <th>Predicador</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="cultoTable">
+                                    <!-- Dynamic content -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="empty-state" id="emptyCulto" style="display: none;">
+                            <i class="fas fa-pray"></i>
+                            <p>No hay servicios programados. ¡Crea el primero!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Horario Section -->
+            <div id="horario" class="content-section">
+                <div class="section-header">
+                    <h2 class="section-title">Gestión de Horarios</h2>
+                    <button class="btn-primary" onclick="openModal('horarioModal')">
+                        <i class="fas fa-plus"></i> Añadir Evento
+                    </button>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fas fa-calendar-alt"></i>
+                            Horario del Campamento
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="timeline" id="horarioTimeline">
+                            <!-- Dynamic content -->
+                        </div>
+                        <div class="empty-state" id="emptyHorario" style="display: none;">
+                            <i class="fas fa-clock"></i>
+                            <p>No hay eventos programados. ¡Añade el primero!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actividades Section -->
+            <div id="actividades" class="content-section">
+                <div class="section-header">
+                    <h2 class="section-title">Actividades del Campamento</h2>
+                    <button class="btn-primary" onclick="openModal('actividadModal')">
+                        <i class="fas fa-plus"></i> Nueva Actividad
+                    </button>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fas fa-tasks"></i>
+                            Lista de Actividades
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Actividad</th>
+                                        <th>Tipo</th>
+                                        <th>Responsable</th>
+                                        <th>Duración</th>
+                                        <th>Materiales</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="actividadesTable">
+                                    <!-- Dynamic content -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="empty-state" id="emptyActividades" style="display: none;">
+                            <i class="fas fa-hiking"></i>
+                            <p>No hay actividades planificadas. ¡Crea la primera!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Equipo Section -->
+            <div id="equipo" class="content-section">
+                <div class="section-header">
+                    <h2 class="section-title">Equipo de Trabajo</h2>
+                    <button class="btn-primary" onclick="openModal('equipoModal')">
+                        <i class="fas fa-plus"></i> Añadir Miembro
+                    </button>
+                </div>
+
+                <div class="team-grid" id="equipoGrid">
+                    <!-- Dynamic content -->
+                </div>
+                <div class="empty-state" id="emptyEquipo" style="display: none;">
+                    <i class="fas fa-users"></i>
+                    <p>No hay miembros en el equipo. ¡Añade el primero!</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <!-- Culto Modal -->
+    <div class="modal" id="cultoModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Nuevo Servicio de Culto</h3>
+                <button class="close-modal" onclick="closeModal('cultoModal')">&times;</button>
+            </div>
+            <form onsubmit="saveCulto(event)">
+                <div class="form-group">
+                    <label class="form-label">Fecha y Hora</label>
+                    <input type="datetime-local" class="form-input" id="cultoFecha" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Tipo de Servicio</label>
+                    <select class="form-select" id="cultoTipo" required>
+                        <option value="Adoración">Adoración</option>
+                        <option value="Devocional">Devocional</option>
+                        <option value="Predicación">Predicación</option>
+                        <option value="Oración">Oración</option>
+                        <option value="Especial">Especial</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Dirige (Maestro/Maestra)</label>
+                    <input type="text" class="form-input" id="cultoDirige" placeholder="Nombre del director" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Equipo de Canto</label>
+                    <input type="text" class="form-input" id="cultoCanto" placeholder="Nombres de los cantantes" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Devocional (quién lo lleva)</label>
+                    <input type="text" class="form-input" id="cultoDevocional" placeholder="Nombre del responsable">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Predicador/Ponente</label>
+                    <input type="text" class="form-input" id="cultoPredicador" placeholder="Nombre del predicador">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Observaciones</label>
+                    <textarea class="form-textarea" id="cultoObservaciones" placeholder="Notas adicionales..."></textarea>
+                </div>
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-save"></i> Guardar Servicio
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Horario Modal -->
+    <div class="modal" id="horarioModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Añadir Evento al Horario</h3>
+                <button class="close-modal" onclick="closeModal('horarioModal')">&times;</button>
+            </div>
+            <form onsubmit="saveHorario(event)">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Hora Inicio</label>
+                        <input type="time" class="form-input" id="horarioInicio" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Hora Fin</label>
+                        <input type="time" class="form-input" id="horarioFin" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Día</label>
+                    <select class="form-select" id="horarioDia" required>
+                        <option value="Lunes">Lunes</option>
+                        <option value="Martes">Martes</option>
+                        <option value="Miércoles">Miércoles</option>
+                        <option value="Jueves">Jueves</option>
+                        <option value="Viernes">Viernes</option>
+                        <option value="Sábado">Sábado</option>
+                        <option value="Domingo">Domingo</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Actividad/Evento</label>
+                    <input type="text" class="form-input" id="horarioActividad" placeholder="Nombre de la actividad" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Lugar</label>
+                    <input type="text" class="form-input" id="horarioLugar" placeholder="Ubicación">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Responsable</label>
+                    <input type="text" class="form-input" id="horarioResponsable" placeholder="Persona a cargo">
+                </div>
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-save"></i> Guardar Evento
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Actividad Modal -->
+    <div class="modal" id="actividadModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Nueva Actividad</h3>
+                <button class="close-modal" onclick="closeModal('actividadModal')">&times;</button>
+            </div>
+            <form onsubmit="saveActividad(event)">
+                <div class="form-group">
+                    <label class="form-label">Nombre de la Actividad</label>
+                    <input type="text" class="form-input" id="actNombre" placeholder="Ej: Juego de Bienvenida" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Tipo</label>
+                    <select class="form-select" id="actTipo" required>
+                        <option value="Deportiva">Deportiva</option>
+                        <option value="Dinámica">Dinámica/Grupo</option>
+                        <option value="Taller">Taller/Workshop</option>
+                        <option value="Recreativa">Recreativa</option>
+                        <option value="Espiritual">Espiritual</option>
+                        <option value="Nocturna">Nocturna</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Responsable</label>
+                    <input type="text" class="form-input" id="actResponsable" placeholder="Nombre del responsable" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Duración Estimada</label>
+                    <input type="text" class="form-input" id="actDuracion" placeholder="Ej: 45 minutos">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Materiales Necesarios</label>
+                    <textarea class="form-textarea" id="actMateriales" placeholder="Lista de materiales necesarios..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Descripción</label>
+                    <textarea class="form-textarea" id="actDescripcion" placeholder="Descripción de la actividad..."></textarea>
+                </div>
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-save"></i> Guardar Actividad
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Equipo Modal -->
+    <div class="modal" id="equipoModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Añadir Miembro al Equipo</h3>
+                <button class="close-modal" onclick="closeModal('equipoModal')">&times;</button>
+            </div>
+            <form onsubmit="saveEquipo(event)">
+                <div class="form-group">
+                    <label class="form-label">Nombre Completo</label>
+                    <input type="text" class="form-input" id="eqNombre" placeholder="Nombre del miembro" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Rol/Función</label>
+                    <select class="form-select" id="eqRol" required>
+                        <option value="Director">Director/a del Campamento</option>
+                        <option value="Maestro">Maestro/a</option>
+                        <option value="Cantante">Cantante/Músico</option>
+                        <option value="Predicador">Predicador/a</option>
+                        <option value="Monitor">Monitor/a</option>
+                        <option value="Cocina">Cocina/Logística</option>
+                        <option value="Enfermería">Enfermería</option>
+                        <option value="Voluntario">Voluntario/a</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Teléfono</label>
+                    <input type="tel" class="form-input" id="eqTelefono" placeholder="Número de contacto">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-input" id="eqEmail" placeholder="Correo electrónico">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Notas</label>
+                    <textarea class="form-textarea" id="eqNotas" placeholder="Información adicional..."></textarea>
+                </div>
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-save"></i> Guardar Miembro
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        // Configuración
+        const PASSWORD = 'campamento2024'; // Cambia esto por tu contraseña
+        const STORAGE_KEY = 'campamento_data';
+
+        // Datos iniciales de ejemplo
+        const defaultData = {
+            cultos: [],
+            horarios: [],
+            actividades: [],
+            equipo: []
+        };
+
+        // Estado de la aplicación
+        let appData = {};
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', () => {
+            loadData();
+            checkAuth();
+            
+            // Enter key en login
+            document.getElementById('passwordInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') login();
+            });
+        });
+
+        // Autenticación
+        function checkAuth() {
+            const isAuth = sessionStorage.getItem('campamento_auth');
+            if (isAuth === 'true') {
+                showApp();
+            }
+        }
+
+        function login() {
+            const input = document.getElementById('passwordInput');
+            const error = document.getElementById('errorMsg');
+            
+            if (input.value === PASSWORD) {
+                sessionStorage.setItem('campamento_auth', 'true');
+                showApp();
+                showToast('Bienvenido al sistema de organización', 'success');
+            } else {
+                error.style.display = 'block';
+                input.value = '';
+                input.focus();
+                setTimeout(() => error.style.display = 'none', 3000);
+            }
+        }
+
+        function logout() {
+            sessionStorage.removeItem('campamento_auth');
+            location.reload();
+        }
+
+        function showApp() {
+            document.getElementById('loginScreen').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('appContainer').style.display = 'block';
+                updateDashboard();
+                renderAll();
+            }, 500);
+        }
+
+        // Gestión de Datos
+        function loadData() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                appData = JSON.parse(saved);
+            } else {
+                appData = { ...defaultData };
+                saveData();
+            }
+        }
+
+        function saveData() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+        }
+
+        function exportData() {
+            const dataStr = JSON.stringify(appData, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `campamento_backup_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            showToast('Datos exportados correctamente', 'success');
+        }
+
+        // Navegación
+        function showSection(sectionId) {
+            // Ocultar todas las secciones
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Mostrar sección seleccionada
+            document.getElementById(sectionId).classList.add('active');
+            
+            // Actualizar navegación
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            event.target.closest('.nav-link').classList.add('active');
+            
+            // Actualizar título
+            const titles = {
+                'dashboard': 'Dashboard',
+                'culto': 'Organización del Culto',
+                'horario': 'Gestión de Horarios',
+                'actividades': 'Actividades del Campamento',
+                'equipo': 'Equipo de Trabajo'
+            };
+            document.getElementById('pageTitle').textContent = titles[sectionId];
+            
+            // Cerrar sidebar en móvil
+            if (window.innerWidth <= 768) {
+                document.getElementById('sidebar').classList.remove('open');
+            }
+            
+            // Renderizar contenido específico
+            if (sectionId === 'dashboard') updateDashboard();
+            if (sectionId === 'culto') renderCultos();
+            if (sectionId === 'horario') renderHorarios();
+            if (sectionId === 'actividades') renderActividades();
+            if (sectionId === 'equipo') renderEquipo();
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+        }
+
+        // Modales
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+            // Limpiar formulario
+            const form = document.querySelector(`#${modalId} form`);
+            if (form) form.reset();
+        }
+
+        // CRUD Cultos
+        function saveCulto(e) {
+            e.preventDefault();
+            
+            const culto = {
+                id: Date.now(),
+                fecha: document.getElementById('cultoFecha').value,
+                tipo: document.getElementById('cultoTipo').value,
+                dirige: document.getElementById('cultoDirige').value,
+                canto: document.getElementById('cultoCanto').value,
+                devocional: document.getElementById('cultoDevocional').value,
+                predicador: document.getElementById('cultoPredicador').value,
+                observaciones: document.getElementById('cultoObservaciones').value
+            };
+            
+            appData.cultos.push(culto);
+            saveData();
+            closeModal('cultoModal');
+            renderCultos();
+            updateDashboard();
+            showToast('Servicio guardado correctamente', 'success');
+        }
+
+        function deleteCulto(id) {
+            if (confirm('¿Estás seguro de eliminar este servicio?')) {
+                appData.cultos = appData.cultos.filter(c => c.id !== id);
+                saveData();
+                renderCultos();
+                updateDashboard();
+                showToast('Servicio eliminado', 'info');
+            }
+        }
+
+        function renderCultos() {
+            const tbody = document.getElementById('cultoTable');
+            const empty = document.getElementById('emptyCulto');
+            
+            if (appData.cultos.length === 0) {
+                tbody.innerHTML = '';
+                empty.style.display = 'block';
+                return;
+            }
+            
+            empty.style.display = 'none';
+            tbody.innerHTML = appData.cultos.map(c => `
+                <tr>
+                    <td>${new Date(c.fecha).toLocaleString('es-ES')}</td>
+                    <td><span class="badge badge-primary">${c.tipo}</span></td>
+                    <td>${c.dirige}</td>
+                    <td>${c.canto}</td>
+                    <td>${c.devocional || '-'}</td>
+                    <td>${c.predicador || '-'}</td>
+                    <td>
+                        <button class="btn-icon delete" onclick="deleteCulto(${c.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // CRUD Horarios
+        function saveHorario(e) {
+            e.preventDefault();
+            
+            const horario = {
+                id: Date.now(),
+                dia: document.getElementById('horarioDia').value,
+                inicio: document.getElementById('horarioInicio').value,
+                fin: document.getElementById('horarioFin').value,
+                actividad: document.getElementById('horarioActividad').value,
+                lugar: document.getElementById('horarioLugar').value,
+                responsable: document.getElementById('horarioResponsable').value
+            };
+            
+            appData.horarios.push(horario);
+            // Ordenar por día y hora
+            appData.horarios.sort((a, b) => {
+                const dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+                if (dias.indexOf(a.dia) !== dias.indexOf(b.dia)) {
+                    return dias.indexOf(a.dia) - dias.indexOf(b.dia);
+                }
+                return a.inicio.localeCompare(b.inicio);
+            });
+            
+            saveData();
+            closeModal('horarioModal');
+            renderHorarios();
+            updateDashboard();
+            showToast('Evento añadido al horario', 'success');
+        }
+
+        function deleteHorario(id) {
+            if (confirm('¿Eliminar este evento del horario?')) {
+                appData.horarios = appData.horarios.filter(h => h.id !== id);
+                saveData();
+                renderHorarios();
+                updateDashboard();
+                showToast('Evento eliminado', 'info');
+            }
+        }
+
+        function renderHorarios() {
+            const container = document.getElementById('horarioTimeline');
+            const empty = document.getElementById('emptyHorario');
+            
+            if (appData.horarios.length === 0) {
+                container.innerHTML = '';
+                empty.style.display = 'block';
+                return;
+            }
+            
+            empty.style.display = 'none';
+            container.innerHTML = appData.horarios.map(h => `
+                <div class="timeline-item">
+                    <div class="timeline-time">${h.dia} ${h.inicio} - ${h.fin}</div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">${h.actividad}</div>
+                        <div class="timeline-desc">
+                            <i class="fas fa-map-marker-alt"></i> ${h.lugar || 'Por definir'} 
+                            <span style="margin-left: 1rem;"><i class="fas fa-user"></i> ${h.responsable || 'Sin asignar'}</span>
+                        </div>
+                    </div>
+                    <button class="btn-icon delete" style="position: absolute; right: 0; top: 0;" onclick="deleteHorario(${h.id})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        // CRUD Actividades
+        function saveActividad(e) {
+            e.preventDefault();
+            
+            const actividad = {
+                id: Date.now(),
+                nombre: document.getElementById('actNombre').value,
+                tipo: document.getElementById('actTipo').value,
+                responsable: document.getElementById('actResponsable').value,
+                duracion: document.getElementById('actDuracion').value,
+                materiales: document.getElementById('actMateriales').value,
+                descripcion: document.getElementById('actDescripcion').value
+            };
+            
+            appData.actividades.push(actividad);
+            saveData();
+            closeModal('actividadModal');
+            renderActividades();
+            updateDashboard();
+            showToast('Actividad creada correctamente', 'success');
+        }
+
+        function deleteActividad(id) {
+            if (confirm('¿Eliminar esta actividad?')) {
+                appData.actividades = appData.actividades.filter(a => a.id !== id);
+                saveData();
+                renderActividades();
+                updateDashboard();
+                showToast('Actividad eliminada', 'info');
+            }
+        }
+
+        function renderActividades() {
+            const tbody = document.getElementById('actividadesTable');
+            const empty = document.getElementById('emptyActividades');
+            
+            if (appData.actividades.length === 0) {
+                tbody.innerHTML = '';
+                empty.style.display = 'block';
+                return;
+            }
+            
+            empty.style.display = 'none';
+            tbody.innerHTML = appData.actividades.map(a => `
+                <tr>
+                    <td><strong>${a.nombre}</strong></td>
+                    <td><span class="badge badge-success">${a.tipo}</span></td>
+                    <td>${a.responsable}</td>
+                    <td>${a.duracion || '-'}</td>
+                    <td>${a.materiales ? a.materiales.substring(0, 30) + '...' : '-'}</td>
+                    <td>
+                        <button class="btn-icon delete" onclick="deleteActividad(${a.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // CRUD Equipo
+        function saveEquipo(e) {
+            e.preventDefault();
+            
+            const miembro = {
+                id: Date.now(),
+                nombre: document.getElementById('eqNombre').value,
+                rol: document.getElementById('eqRol').value,
+                telefono: document.getElementById('eqTelefono').value,
+                email: document.getElementById('eqEmail').value,
+                notas: document.getElementById('eqNotas').value
+            };
+            
+            appData.equipo.push(miembro);
+            saveData();
+            closeModal('equipoModal');
+            renderEquipo();
+            updateDashboard();
+            showToast('Miembro añadido al equipo', 'success');
+        }
+
+        function deleteEquipo(id) {
+            if (confirm('¿Eliminar este miembro del equipo?')) {
+                appData.equipo = appData.equipo.filter(e => e.id !== id);
+                saveData();
+                renderEquipo();
+                updateDashboard();
+                showToast('Miembro eliminado', 'info');
+            }
+        }
+
+        function renderEquipo() {
+            const container = document.getElementById('equipoGrid');
+            const empty = document.getElementById('emptyEquipo');
+            
+            if (appData.equipo.length === 0) {
+                container.innerHTML = '';
+                empty.style.display = 'block';
+                return;
+            }
+            
+            empty.style.display = 'none';
+            container.innerHTML = appData.equipo.map(e => `
+                <div class="team-card">
+                    <button class="btn-icon delete" style="position: absolute; top: 1rem; right: 1rem;" onclick="deleteEquipo(${e.id})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                    <div class="team-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="team-name">${e.nombre}</div>
+                    <div class="team-role">${e.rol}</div>
+                    <div style="margin-top: 1rem; font-size: 0.875rem; color: var(--text-secondary);">
+                        ${e.telefono ? `<i class="fas fa-phone"></i> ${e.telefono}<br>` : ''}
+                        ${e.email ? `<i class="fas fa-envelope"></i> ${e.email}` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Dashboard
+        function updateDashboard() {
+            document.getElementById('totalCultos').textContent = appData.cultos.length;
+            document.getElementById('totalActividades').textContent = appData.actividades.length;
+            document.getElementById('totalHorarios').textContent = appData.horarios.length;
+            document.getElementById('totalEquipo').textContent = appData.equipo.length;
+            
+            // Resumen del día (próximos 3 eventos)
+            const timeline = document.getElementById('resumenTimeline');
+            const proximos = [...appData.horarios, ...appData.cultos.map(c => ({
+                ...c,
+                actividad: `Culto: ${c.tipo}`,
+                inicio: c.fecha,
+                esCulto: true
+            }))].slice(0, 5);
+            
+            if (proximos.length === 0) {
+                timeline.innerHTML = '<div class="empty-state"><i class="fas fa-calendar-check"></i><p>No hay eventos próximos programados</p></div>';
+            } else {
+                timeline.innerHTML = proximos.map(p => `
+                    <div class="timeline-item">
+                        <div class="timeline-time">${p.esCulto ? new Date(p.inicio).toLocaleString('es-ES') : `${p.dia} ${p.inicio}`}</div>
+                        <div class="timeline-content">
+                            <div class="timeline-title">${p.actividad}</div>
+                            <div class="timeline-desc">${p.lugar || p.dirige || 'Campamento'}</div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function renderAll() {
+            renderCultos();
+            renderHorarios();
+            renderActividades();
+            renderEquipo();
+        }
+
+        // Toast Notifications
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            const icons = {
+                success: 'check-circle',
+                error: 'exclamation-circle',
+                info: 'info-circle'
+            };
+            
+            toast.innerHTML = `
+                <i class="fas fa-${icons[type]}"></i>
+                <span>${message}</span>
+            `;
+            
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Cerrar modales al hacer click fuera
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.classList.remove('active');
+            }
+        }
+    </script>
+</body>
+</html>
