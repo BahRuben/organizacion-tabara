@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>CampamentoTML — Organización</title>
+<title>Campamento TML</title>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Lora:ital,wght@0,500;0,600;1,500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
@@ -540,6 +540,24 @@ nav{flex:1;overflow-y:auto;padding:.875rem .875rem;}
   font-size:.57rem;font-weight:700;color:#fff;flex-shrink:0;}
 @media(max-width:768px){.coche-grid{grid-template-columns:1fr;}}
 
+
+/* ── MATERIALES CHECKLIST ── */
+.checklist-item{display:flex;align-items:center;gap:.65rem;padding:.55rem .75rem;border-radius:8px;
+  background:var(--surf2);border:1px solid var(--border);margin-bottom:.4rem;transition:all .18s;cursor:pointer;}
+.checklist-item:hover{border-color:var(--border2);}
+.checklist-item.done{background:var(--green-l);border-color:var(--green-m);opacity:.75;}
+.checklist-cb{width:18px;height:18px;border-radius:5px;border:2px solid var(--border2);display:flex;
+  align-items:center;justify-content:center;flex-shrink:0;transition:all .18s;background:var(--surf);}
+.checklist-item.done .checklist-cb{background:var(--green-v);border-color:var(--green-v);color:#fff;}
+.checklist-txt{font-size:.85rem;flex:1;transition:all .18s;}
+.checklist-item.done .checklist-txt{text-decoration:line-through;color:var(--ink3);}
+.checklist-del{opacity:0;color:var(--ink3);background:none;border:none;cursor:pointer;
+  font-size:.78rem;padding:.2rem;transition:all .18s;}
+.checklist-item:hover .checklist-del{opacity:1;}
+.checklist-del:hover{color:var(--red-v);}
+.mat-add-row{display:flex;gap:.5rem;margin-top:.5rem;}
+.mat-add-row input{flex:1;}
+
 /* ── CSV IMPORT ── */
 .csv-drop{border:2.5px dashed var(--border2);border-radius:var(--r);padding:2.5rem;text-align:center;
   cursor:pointer;transition:all .25s;background:var(--surf2);}
@@ -623,9 +641,9 @@ html{scroll-behavior:smooth;}
     <div style="text-align:center;margin-bottom:1.5rem">
       <div class="lcross" style="width:64px;height:64px;font-size:1.6rem;box-shadow:0 8px 24px rgba(67,56,202,.3)"><i class="fas fa-cross"></i></div>
     </div>
-    <h1 style="background:linear-gradient(135deg,#4338ca,#818cf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Campamento Org</h1>
+    <h1 style="background:linear-gradient(135deg,#4338ca,#818cf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Campamento TML</h1>
     <p style="margin-bottom:.4rem">Organización del culto y equipos</p>
-    <p style="font-size:.72rem;color:var(--ink4);margin-bottom:2rem;padding:.4rem .75rem;background:var(--surf2);border-radius:6px;border:1px solid var(--border)">🏕️ Sistema de gestión para campamentos evangélicos</p>
+    <p style="font-size:.72rem;color:var(--ink4);margin-bottom:2rem;padding:.4rem .75rem;background:var(--surf2);border-radius:6px;border:1px solid var(--border)">TML</p>
     <label style="display:block;font-size:.75rem;font-weight:700;color:var(--ink2);margin-bottom:.4rem;letter-spacing:.03em">CONTRASEÑA DE ACCESO</label>
     <input class="finput" type="password" id="pwIn" placeholder="Introduce la contraseña…" autocomplete="off">
     <button class="lbtn" onclick="login()"><i class="fas fa-sign-in-alt"></i>&nbsp; Acceder al panel</button>
@@ -642,7 +660,7 @@ html{scroll-behavior:smooth;}
     <div class="sb-brand">
       <div class="sb-logo">
         <div class="sb-icon" style="background:linear-gradient(135deg,#4338ca,#818cf8);box-shadow:0 4px 12px rgba(67,56,202,.3)"><i class="fas fa-cross"></i></div>
-        <div><div class="sb-name" style="background:linear-gradient(135deg,#4338ca,#818cf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">CampamentoTML</div><div class="sb-sub">Panel de organización</div></div>
+        <div><div class="sb-name" style="background:linear-gradient(135deg,#4338ca,#818cf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Campamento TML</div><div class="sb-sub">Panel de organización</div></div>
       </div>
     </div>
 
@@ -666,7 +684,7 @@ html{scroll-behavior:smooth;}
         <div class="nav-glbl">Campamento</div>
         <div class="ni" data-p="grupos" onclick="tryUnlock(this,'grupos')"><i class="fas fa-flag"></i>Grupos y Juegos<i class="fas fa-lock lock-ico"></i></div>
         <div class="ni" data-p="cabanas" onclick="tryUnlock(this,'cabanas')"><i class="fas fa-house-chimney"></i>Cabañas<span class="badge warn" id="cabBadge" style="display:none">0</span><i class="fas fa-lock lock-ico"></i></div>
-        <div class="ni" data-p="coches" onclick="tryUnlock(this,'coches')"><i class="fas fa-car"></i>Coches<i class="fas fa-lock lock-ico"></i></div>
+        <div class="ni" data-p="coches" onclick="go(this,'coches')"><i class="fas fa-car"></i>Coches</div>
       </div>
     </nav>
 
@@ -757,6 +775,19 @@ html{scroll-behavior:smooth;}
                 <button class="btn btn-ghost btn-sm" onclick="openModDeptEdit(currentDept)"><i class="fas fa-user-plus"></i>Gestionar</button>
               </div>
               <div class="card-body"><div class="people-grid" style="grid-template-columns:repeat(auto-fill,minmax(190px,1fr))" id="dd-members"></div></div>
+            </div>
+            <div class="card" style="margin-top:1rem">
+              <div class="card-hd">
+                <div class="card-title"><i class="fas fa-box-open"></i>Materiales a llevar</div>
+                <div id="dd-mat-progress" style="font-size:.75rem;color:var(--ink2)"></div>
+              </div>
+              <div class="card-body">
+                <div id="dd-materiales"></div>
+                <div class="mat-add-row">
+                  <input class="fctl" id="matNewItem" placeholder="Añadir material…" onkeypress="if(event.key==='Enter')addMaterial()">
+                  <button class="btn btn-primary btn-sm" onclick="addMaterial()"><i class="fas fa-plus"></i>Añadir</button>
+                </div>
+              </div>
             </div>
           </div>
           <div>
@@ -1304,7 +1335,7 @@ const ACT_TIPOS = {
 /* ═══════════════════════════════════════
    ESTADO EN MEMORIA
 ═══════════════════════════════════════ */
-let D = {personas:[],departamentos:[],canciones:[],actividades:[],servicios:[],grupos:[],juegos:[],cabanas:[],coches:[]};
+let D = {personas:[],departamentos:[],canciones:[],actividades:[],servicios:[],grupos:[],juegos:[],cabanas:[],coches:[],materiales:{}};
 let currentDept = null;
 let editingSong = null, editingAct = null, editingItem = null;
 let songFilterVal = '';
@@ -1395,6 +1426,7 @@ async function loadAll() {
       {data: cabasig},
       {data: coches},
       {data: cochepas},
+      {data: dmats},
     ] = await Promise.all([
       sb.from('personas').select('*').order('nombre'),
       sb.from('departamentos').select('*').order('nombre'),
@@ -1413,6 +1445,7 @@ async function loadAll() {
       sb.from('cabana_asignaciones').select('*'),
       sb.from('coches').select('*').order('nombre'),
       sb.from('coche_pasajeros').select('*'),
+      sb.from('departamento_materiales').select('*').order('posicion'),
     ]);
 
     D.personas = (personas || []);
@@ -1466,6 +1499,12 @@ async function loadAll() {
       ...c,
       pasajeros: (cochepas || []).filter(x => x.coche_id === c.id).map(x => x.persona_id),
     }));
+
+    D.materiales = {};
+    (dmats || []).forEach(m => {
+      if(!D.materiales[m.departamento_id]) D.materiales[m.departamento_id] = [];
+      D.materiales[m.departamento_id].push(m);
+    });
 
   } catch(e) {
     toast('Error cargando datos: ' + e.message, 'err');
@@ -1953,6 +1992,8 @@ function openDeptDetail(id) {
       <div class="pcard-info"><h3 style="font-size:.85rem">${pName(id)}</h3><p>${pRol(id)}</p></div></div>
       ${wlPill(wl.level)}</div>`;
   }).join(''):'<div class="empty"><i class="fas fa-users"></i><p>Sin miembros asignados</p></div>';
+  // Cargar materiales
+  setTimeout(() => renderMateriales(id), 50);
   const wls=allIds.map(id=>workload(id));
   const avgScore=allIds.length?Math.round(wls.reduce((a,w)=>a+w.score,0)/allIds.length):0;
   const high=wls.filter(w=>w.level==='high').length;
@@ -2804,24 +2845,34 @@ let lockPendingEl = null;
 
 function tryUnlock(el, pg) {
   if(UNLOCKED_SECTIONS.has(pg)) { go(el, pg); return; }
-  lockPendingPage = pg; lockPendingEl = el;
-  document.getElementById('lockSubtitle').textContent = `Introduce la contraseña para acceder a "${pg.charAt(0).toUpperCase()+pg.slice(1)}"`;
+  lockPendingPage = pg;
+  lockPendingEl = el.closest ? el.closest('.ni') : el;
+  const names = {grupos:'Grupos y Juegos', cabanas:'Cabañas', coches:'Coches'};
+  document.getElementById('lockSubtitle').textContent = `Contraseña para acceder a "${names[pg]||pg}"`;
   document.getElementById('lockPwInput').value = '';
   document.getElementById('lockErr').style.display = 'none';
   document.getElementById('lockOverlay').classList.add('visible');
-  setTimeout(() => document.getElementById('lockPwInput').focus(), 100);
+  setTimeout(() => document.getElementById('lockPwInput').focus(), 150);
 }
 
 function submitLock() {
   const val = document.getElementById('lockPwInput').value;
   if(val === LOCK_PW) {
-    UNLOCKED_SECTIONS.add(lockPendingPage);
+    const pg = lockPendingPage;
+    const el = lockPendingEl;
+    UNLOCKED_SECTIONS.add(pg);
     closeLock();
-    // Update nav icon to unlocked
-    document.querySelectorAll(`.ni[data-p="${lockPendingPage}"] .lock-ico`).forEach(i => {
+    document.querySelectorAll(`.ni[data-p="${pg}"] .lock-ico`).forEach(i => {
       i.className = 'fas fa-lock-open lock-ico'; i.style.color='var(--green-v)';
     });
-    go(lockPendingEl, lockPendingPage);
+    // Navegar directamente sin depender de lockPendingEl
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById('page-'+pg).classList.add('active');
+    document.querySelectorAll('.ni').forEach(n => n.classList.remove('active'));
+    const navEl = document.querySelector(`.ni[data-p="${pg}"]`);
+    if(navEl) navEl.classList.add('active');
+    const renders = {grupos:renderGrupos, cabanas:renderCabanas, coches:renderCoches};
+    if(renders[pg]) renders[pg]();
   } else {
     const err = document.getElementById('lockErr');
     err.style.display = 'block';
@@ -2836,85 +2887,96 @@ function closeLock() {
   lockPendingPage = null; lockPendingEl = null;
 }
 
-// Enter en el input del lock
 document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('lockPwInput').addEventListener('keypress', e => {
-    if(e.key === 'Enter') submitLock();
-  });
-  document.getElementById('lockOverlay').addEventListener('click', e => {
-    if(e.target === document.getElementById('lockOverlay')) closeLock();
-  });
+  const lpi = document.getElementById('lockPwInput');
+  if(lpi) lpi.addEventListener('keypress', e => { if(e.key==='Enter') submitLock(); });
+  const lov = document.getElementById('lockOverlay');
+  if(lov) lov.addEventListener('click', e => { if(e.target===lov) closeLock(); });
 });
 
 /* ═══════════════════════════════════════
    COCHES
 ═══════════════════════════════════════ */
 function renderCoches() {
-  const totalPlazas = D.coches.reduce((s,c) => s + c.plazas, 0);
-  const totalPax = D.coches.reduce((s,c) => s + (c.pasajeros||[]).length + (c.conductor?1:0), 0);
+  const coches = D.coches || [];
+  const totalPlazas = coches.reduce((s,c) => s + (parseInt(c.plazas)||0), 0);
+  const totalPax = coches.reduce((s,c) => {
+    const pas = (c.pasajeros||[]).length;
+    const cond = c.conductor ? 1 : 0;
+    return s + pas + cond;
+  }, 0);
   const sinCoche = D.personas.filter(p => {
     const pid = String(p.id);
-    return !D.coches.some(c =>
+    return !coches.some(c =>
       (c.pasajeros||[]).map(String).includes(pid) || String(c.conductor)===pid
     );
   });
 
   document.getElementById('coche-stats').innerHTML = `
-    <div class="sc c-sky"><div class="sc-icon"><i class="fas fa-car"></i></div><div class="sc-val">${D.coches.length}</div><div class="sc-lbl">Vehículos</div></div>
-    <div class="sc c-indigo"><div class="sc-icon"><i class="fas fa-chair"></i></div><div class="sc-val">${totalPlazas}</div><div class="sc-lbl">Plazas totales</div></div>
+    <div class="sc c-sky"><div class="sc-icon"><i class="fas fa-car"></i></div><div class="sc-val">${coches.length}</div><div class="sc-lbl">Vehículos</div></div>
+    <div class="sc c-indigo"><div class="sc-icon"><i class="fas fa-users"></i></div><div class="sc-val">${totalPlazas}</div><div class="sc-lbl">Plazas totales</div></div>
     <div class="sc c-green"><div class="sc-icon"><i class="fas fa-user-check"></i></div><div class="sc-val">${totalPax}</div><div class="sc-lbl">Asignadas</div></div>
-    <div class="sc c-red"><div class="sc-icon"><i class="fas fa-user-slash"></i></div><div class="sc-val">${sinCoche.length}</div><div class="sc-lbl">Sin coche</div>${sinCoche.length?`<div class="sc-sub" style="color:var(--red-v)">${sinCoche.length} persona${sinCoche.length!==1?'s':''}</div>`:''}</div>
+    <div class="sc c-red"><div class="sc-icon"><i class="fas fa-user-xmark"></i></div><div class="sc-val">${sinCoche.length}</div><div class="sc-lbl">Sin coche</div>${sinCoche.length?`<div class="sc-sub" style="color:var(--red-v)">${sinCoche.length} sin asignar</div>`:''}</div>
   `;
 
   const alertDiv = document.getElementById('coche-alert');
+  if(!alertDiv) return;
   if(sinCoche.length) {
     alertDiv.innerHTML = `<div class="alert alert-warn" style="margin-bottom:1.25rem">
       <i class="fas fa-triangle-exclamation"></i>
       <div class="alert-body">
         <h4>${sinCoche.length} persona${sinCoche.length!==1?'s':''} sin coche asignado</h4>
-        <p style="margin-top:.25rem">${sinCoche.map(p=>`<span style="display:inline-flex;align-items:center;gap:.3rem;margin:.15rem;padding:.2rem .55rem;border-radius:99px;background:#fff;border:1px solid var(--amber-m);font-size:.75rem"><span style="width:14px;height:14px;border-radius:50%;background:${p.color};flex-shrink:0;display:inline-block"></span>${p.nombre.split(' ')[0]}</span>`).join('')}</p>
+        <p style="margin-top:.25rem">${sinCoche.map(p=>`<span style="display:inline-flex;align-items:center;gap:.3rem;margin:.15rem;padding:.2rem .55rem;border-radius:99px;background:#fff;border:1px solid var(--amber-m);font-size:.75rem"><span style="width:12px;height:12px;border-radius:50%;background:${p.color||'#94a3b8'};flex-shrink:0;display:inline-block"></span>${(p.nombre||'').split(' ')[0]}</span>`).join('')}</p>
       </div>
     </div>`;
   } else if(D.personas.length > 0) {
     alertDiv.innerHTML = `<div class="alert alert-info" style="margin-bottom:1.25rem"><i class="fas fa-circle-check"></i><div class="alert-body"><h4>¡Todos tienen coche asignado!</h4></div></div>`;
   } else { alertDiv.innerHTML = ''; }
 
-  const g = document.getElementById('coches-grid'), e = document.getElementById('coches-empty');
-  if(!D.coches.length){ g.innerHTML=''; e.style.display='block'; return; }
-  e.style.display='none';
+  const g = document.getElementById('coches-grid');
+  const e = document.getElementById('coches-empty');
+  if(!g) return;
+  if(!coches.length){ g.innerHTML=''; if(e) e.style.display='block'; return; }
+  if(e) e.style.display='none';
 
-  g.innerHTML = D.coches.map(c => {
+  g.innerHTML = coches.map(c => {
     const pasajeros = c.pasajeros||[];
-    const conductor = c.conductor;
+    const conductor = c.conductor||null;
+    const plazas = parseInt(c.plazas)||5;
     const ocupados = pasajeros.length + (conductor?1:0);
-    const libre = c.plazas - ocupados;
-    const pct = c.plazas>0 ? Math.round(ocupados/c.plazas*100) : 0;
+    const libre = plazas - ocupados;
+    const pct = plazas>0 ? Math.min(100, Math.round(ocupados/plazas*100)) : 0;
     const capCls = libre===0?'full':libre<=1?'warn':'ok';
     const capTxt = libre===0?'Completo':libre===1?'1 libre':`${libre} libres`;
     const fillColor = libre===0?'var(--red-v)':libre<=1?'var(--amber-v)':'#3b82f6';
 
-    // Slots: conductor primero, luego pasajeros, luego libres
     const slots = [];
+    // Slot del conductor
     if(conductor) {
+      const cNombre = pName(conductor);
       slots.push(`<div class="asiento ocup" style="border-color:#3b82f6;background:rgba(59,130,246,.06)">
-        <div class="asiento-av" style="background:#1e40af">🚗</div>
-        <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:.7rem">${pName(conductor).split(' ')[0]}</span>
+        <div class="asiento-av" style="background:#1e40af;font-size:.6rem">🚗</div>
+        <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:.7rem">${cNombre.split(' ')[0]}</span>
       </div>`);
     } else {
-      slots.push(`<div class="asiento lib" style="border-color:#3b82f6"><i class="fas fa-steering-wheel" style="font-size:.6rem;margin-right:.2rem;color:#3b82f6"></i>Conductor</div>`);
+      slots.push(`<div class="asiento lib" style="border-color:#3b82f6"><i class="fas fa-car" style="font-size:.55rem;margin-right:.2rem;color:#3b82f6"></i>Conductor</div>`);
     }
+    // Slots pasajeros
     pasajeros.forEach(id => {
       slots.push(`<div class="asiento ocup">
         <div class="asiento-av" style="background:${pColor(id)}">${ini(pName(id))}</div>
         <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:.7rem">${pName(id).split(' ')[0]}</span>
       </div>`);
     });
-    const libresSlots = c.plazas - pasajeros.length - (conductor?1:0);
-    for(let i=0;i<libresSlots;i++) slots.push(`<div class="asiento lib"><i class="fas fa-plus" style="font-size:.55rem;margin-right:.2rem"></i>Libre</div>`);
+    // Slots libres
+    const libresCount = plazas - pasajeros.length - (conductor?1:0);
+    for(let i=0; i<Math.max(0,libresCount); i++) {
+      slots.push(`<div class="asiento lib"><i class="fas fa-plus" style="font-size:.55rem;margin-right:.2rem"></i>Libre</div>`);
+    }
 
     return `<div class="coche-card">
       <div class="coche-hd">
-        <div class="coche-nm"><i class="fas fa-car" style="color:#3b82f6"></i>${c.nombre}</div>
+        <div class="coche-nm"><i class="fas fa-car" style="color:#3b82f6"></i>${c.nombre||'Sin nombre'}</div>
         <div style="display:flex;align-items:center;gap:.4rem">
           <span class="cabana-cap ${capCls}">${capTxt}</span>
           <button class="icon-btn edit" onclick="openModCocheEdit('${c.id}')"><i class="fas fa-pen"></i></button>
@@ -2922,10 +2984,10 @@ function renderCoches() {
         </div>
       </div>
       <div class="coche-body">
-        ${c.ruta?`<div style="font-size:.75rem;color:var(--sky);margin-bottom:.5rem"><i class="fas fa-route"></i> ${c.ruta}</div>`:''}
+        ${c.ruta?`<div style="font-size:.75rem;color:#3b82f6;margin-bottom:.5rem"><i class="fas fa-route"></i> ${c.ruta}</div>`:''}
         ${c.notas?`<div style="font-size:.73rem;color:var(--ink2);margin-bottom:.625rem">${c.notas}</div>`:''}
         <div style="font-size:.72rem;color:var(--ink2);margin-bottom:.35rem;display:flex;justify-content:space-between">
-          <span><strong>${ocupados}</strong> / ${c.plazas} plazas</span>
+          <span><strong>${ocupados}</strong> / ${plazas} plazas</span>
           <span style="color:${fillColor}">${pct}% lleno</span>
         </div>
         <div class="capacity-bar" style="margin-bottom:.875rem">
@@ -2936,54 +2998,6 @@ function renderCoches() {
     </div>`;
   }).join('');
 }
-
-function openModCoche() {
-  document.getElementById('mCocheT').textContent = 'Nuevo coche';
-  document.getElementById('cocheId').value = '';
-  ['cocheNom','cocheRuta','cocheNotas'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('cochePlazas').value = '5';
-  document.getElementById('cocheConductor').innerHTML = '<option value="">— Sin asignar —</option>'+D.personas.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join('');
-  buildPicker('cochePick',[]);
-  om('modCoche');
-}
-function openModCocheEdit(id) {
-  const c = D.coches.find(x=>x.id===id); if(!c) return;
-  document.getElementById('mCocheT').textContent = 'Editar coche';
-  document.getElementById('cocheId').value = c.id;
-  document.getElementById('cocheNom').value = c.nombre;
-  document.getElementById('cochePlazas').value = c.plazas;
-  document.getElementById('cocheRuta').value = c.ruta||'';
-  document.getElementById('cocheNotas').value = c.notas||'';
-  document.getElementById('cocheConductor').innerHTML = '<option value="">— Sin asignar —</option>'+D.personas.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join('');
-  document.getElementById('cocheConductor').value = c.conductor||'';
-  buildPicker('cochePick', c.pasajeros||[]);
-  om('modCoche');
-}
-async function saveCoche() {
-  const nom = document.getElementById('cocheNom').value.trim();
-  if(!nom){toast('El nombre es obligatorio','err');return;}
-  const plazas = parseInt(document.getElementById('cochePlazas').value)||5;
-  const conductor = document.getElementById('cocheConductor').value||null;
-  const pasajeros = getSelected('cochePick').filter(id=>id!==conductor);
-  const totalOcupados = pasajeros.length + (conductor?1:0);
-  if(totalOcupados > plazas){toast(`Hay más asignados (${totalOcupados}) que plazas (${plazas})`,'err');return;}
-  const obj = {nombre:nom, plazas, conductor, ruta:document.getElementById('cocheRuta').value, notas:document.getElementById('cocheNotas').value};
-  const eid = document.getElementById('cocheId').value;
-  try {
-    let cid = eid;
-    if(eid){
-      await sb.from('coches').update(obj).eq('id',eid);
-    } else {
-      const {data,error}=await sb.from('coches').insert(obj).select().single();
-      if(error) throw error; cid=data.id;
-    }
-    await sb.from('coche_pasajeros').delete().eq('coche_id',cid);
-    if(pasajeros.length) await sb.from('coche_pasajeros').insert(pasajeros.map(pid=>({coche_id:cid,persona_id:pid})));
-    const local = {id:cid,...obj,pasajeros};
-    if(eid){ Object.assign(D.coches.find(c=>c.id===eid),local); }
-    else{ D.coches.push(local); }
-    cm('modCoche'); renderCoches(); toast(eid?'Coche actualizado':'Coche añadido','ok');
-  } catch(e){ toast('Error: '+e.message,'err'); }
 }
 async function delCoche(id) {
   if(!confirm('¿Eliminar este vehículo?')) return;
@@ -2992,6 +3006,86 @@ async function delCoche(id) {
     D.coches = D.coches.filter(c=>c.id!==id);
     renderCoches(); toast('Vehículo eliminado','info');
   } catch(e){ toast('Error: '+e.message,'err'); }
+}
+
+
+/* ═══════════════════════════════════════
+   MATERIALES POR DEPARTAMENTO (Supabase)
+═══════════════════════════════════════ */
+function renderMateriales(deptId) {
+  const lista = D.materiales[deptId] || [];
+  const done  = lista.filter(m => m.done).length;
+  const total = lista.length;
+
+  const prog = document.getElementById('dd-mat-progress');
+  if(prog) {
+    if(total) {
+      const pct = Math.round(done/total*100);
+      prog.innerHTML = `<span style="color:${done===total?'var(--green)':'var(--ink2)'};font-weight:600">${done}/${total} preparados</span>
+        <div style="width:80px;height:5px;background:var(--surf3);border-radius:99px;overflow:hidden;display:inline-block;margin-left:.5rem;vertical-align:middle">
+          <div style="width:${pct}%;height:100%;background:${done===total?'var(--green-v)':'var(--indigo)'};border-radius:99px;transition:width .4s"></div>
+        </div>`;
+    } else { prog.innerHTML = ''; }
+  }
+
+  const container = document.getElementById('dd-materiales');
+  if(!container) return;
+
+  if(!lista.length) {
+    container.innerHTML = '<div style="font-size:.8rem;color:var(--ink3);font-style:italic;padding:.5rem 0">Sin materiales. Añade el primero abajo.</div>';
+    return;
+  }
+
+  container.innerHTML = lista.map(m => `
+    <div class="checklist-item ${m.done?'done':''}" onclick="toggleMaterial('${m.id}','${deptId}',${m.done})">
+      <div class="checklist-cb">${m.done?'<i class="fas fa-check" style="font-size:.65rem"></i>':''}</div>
+      <span class="checklist-txt">${m.texto}</span>
+      <button class="checklist-del" onclick="event.stopPropagation();delMaterial('${m.id}','${deptId}')" title="Eliminar">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+  `).join('');
+}
+
+async function addMaterial() {
+  const input = document.getElementById('matNewItem');
+  const texto = (input.value||'').trim();
+  if(!texto || !currentDept) return;
+  const lista = D.materiales[currentDept] || [];
+  const posicion = lista.length;
+  try {
+    const {data, error} = await sb.from('departamento_materiales')
+      .insert({departamento_id: currentDept, texto, done: false, posicion})
+      .select().single();
+    if(error) throw error;
+    if(!D.materiales[currentDept]) D.materiales[currentDept] = [];
+    D.materiales[currentDept].push(data);
+    input.value = '';
+    renderMateriales(currentDept);
+  } catch(e) { toast('Error añadiendo material: '+e.message,'err'); }
+}
+
+async function toggleMaterial(itemId, deptId, currentDone) {
+  const newDone = !currentDone;
+  try {
+    const {error} = await sb.from('departamento_materiales')
+      .update({done: newDone}).eq('id', itemId);
+    if(error) throw error;
+    const lista = D.materiales[deptId] || [];
+    const item = lista.find(m => m.id === itemId);
+    if(item) item.done = newDone;
+    renderMateriales(deptId);
+  } catch(e) { toast('Error: '+e.message,'err'); }
+}
+
+async function delMaterial(itemId, deptId) {
+  try {
+    const {error} = await sb.from('departamento_materiales')
+      .delete().eq('id', itemId);
+    if(error) throw error;
+    D.materiales[deptId] = (D.materiales[deptId]||[]).filter(m => m.id !== itemId);
+    renderMateriales(deptId);
+  } catch(e) { toast('Error: '+e.message,'err'); }
 }
 
 function renderAll() { renderDash(); }
