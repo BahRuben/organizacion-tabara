@@ -641,9 +641,9 @@ html{scroll-behavior:smooth;}
     <div style="text-align:center;margin-bottom:1.5rem">
       <div class="lcross" style="width:64px;height:64px;font-size:1.6rem;box-shadow:0 8px 24px rgba(67,56,202,.3)"><i class="fas fa-cross"></i></div>
     </div>
-    <h1 style="background:linear-gradient(135deg,#4338ca,#818cf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Campamento TML</h1>
+    <h1 style="background:linear-gradient(135deg,#4338ca,#818cf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Campamento Org</h1>
     <p style="margin-bottom:.4rem">Organización del culto y equipos</p>
-    <p style="font-size:.72rem;color:var(--ink4);margin-bottom:2rem;padding:.4rem .75rem;background:var(--surf2);border-radius:6px;border:1px solid var(--border)">TML</p>
+    <p style="font-size:.72rem;color:var(--ink4);margin-bottom:2rem;padding:.4rem .75rem;background:var(--surf2);border-radius:6px;border:1px solid var(--border)">🏕️ Sistema de gestión para campamentos evangélicos</p>
     <label style="display:block;font-size:.75rem;font-weight:700;color:var(--ink2);margin-bottom:.4rem;letter-spacing:.03em">CONTRASEÑA DE ACCESO</label>
     <input class="finput" type="password" id="pwIn" placeholder="Introduce la contraseña…" autocomplete="off">
     <button class="lbtn" onclick="login()"><i class="fas fa-sign-in-alt"></i>&nbsp; Acceder al panel</button>
@@ -1307,7 +1307,13 @@ const SUPABASE_URL  = 'https://cvignxrpesgxpxiikkpx.supabase.co';
 const SUPABASE_KEY  = 'sb_publishable_J0_5eGWdyTn0g3IbIlVlhg_yLz7162n';
 const PW = 'tml2026';
 
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let sb;
+try {
+  sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+} catch(err) {
+  console.error('Supabase init error:', err);
+  sb = null;
+}
 
 /* ═══════════════════════════════════════
    TIPO CONFIG
@@ -1344,7 +1350,8 @@ let songFilterVal = '';
    INIT
 ═══════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('pwIn').addEventListener('keypress', e => { if(e.key==='Enter') login(); });
+  const pwEl = document.getElementById('pwIn');
+  if(pwEl) pwEl.addEventListener('keypress', e => { if(e.key==='Enter') login(); });
   if(isLoggedIn()) showApp();
 });
 
@@ -1407,6 +1414,7 @@ function showLoading(on) {
    CARGA DESDE SUPABASE
 ═══════════════════════════════════════ */
 async function loadAll() {
+  if(!sb) { toast('Sin conexión a la base de datos. Revisa las credenciales en el archivo.','err'); return; }
   try {
     const [
       {data: personas},
@@ -1692,11 +1700,12 @@ function go(el, pg) {
   if(renders[pg]) renders[pg]();
 }
 function toggleSb() {
-  const sb = document.getElementById('sidebar');
+  const sidebar = document.getElementById('sidebar');
   const ov = document.getElementById('mobOverlay');
   const ic = document.getElementById('mobIcon');
   const lb = document.getElementById('mobLabel');
-  const open = sb.classList.toggle('open');
+  if(!sidebar) return;
+  const open = sidebar.classList.toggle('open');
   if(ov) ov.style.display = open ? 'block' : 'none';
   if(ic) ic.className = open ? 'fas fa-times' : 'fas fa-bars';
   if(lb) lb.textContent = open ? 'Cerrar' : 'Menú';
