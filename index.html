@@ -684,7 +684,6 @@ html{scroll-behavior:smooth;}
         <div class="nav-glbl">Campamento</div>
         <div class="ni" data-p="grupos" onclick="tryUnlock(this,'grupos')"><i class="fas fa-flag"></i>Grupos y Juegos<i class="fas fa-lock lock-ico"></i></div>
         <div class="ni" data-p="cabanas" onclick="tryUnlock(this,'cabanas')"><i class="fas fa-house-chimney"></i>Cabañas<span class="badge warn" id="cabBadge" style="display:none">0</span><i class="fas fa-lock lock-ico"></i></div>
-        <div class="ni" data-p="coches" onclick="go(this,'coches')"><i class="fas fa-car"></i>Coches</div>
       </div>
     </nav>
 
@@ -941,6 +940,21 @@ html{scroll-behavior:smooth;}
       <!-- Grid cabañas -->
       <div class="cabana-grid" id="cabanas-grid"></div>
       <div class="empty" id="cabanas-empty" style="display:none"><i class="fas fa-house-chimney"></i><p>Añade las cabañas del campamento</p></div>
+
+      <!-- ── SECCIÓN COCHES ── -->
+      <div style="margin-top:2rem;padding-top:1.5rem;border-top:2px solid var(--border)">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem;margin-bottom:1.25rem">
+          <div>
+            <h2 style="font-family:'Lora',serif;font-size:1.3rem;font-weight:600;display:flex;align-items:center;gap:.5rem"><i class="fas fa-car" style="color:#3b82f6;font-size:1.1rem"></i>Organización de Coches</h2>
+            <p style="font-size:.78rem;color:var(--ink2);margin-top:.2rem">Asigna personas a vehículos y gestiona el transporte</p>
+          </div>
+          <button class="btn btn-primary" onclick="openModCoche()"><i class="fas fa-plus"></i>Añadir coche</button>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.75rem;margin-bottom:1rem" id="coche-stats"></div>
+        <div id="coche-alert"></div>
+        <div class="coche-grid" id="coches-grid"></div>
+        <div class="empty" id="coches-empty" style="display:none"><i class="fas fa-car"></i><p>Añade vehículos para el transporte</p></div>
+      </div>
     </div>
 
   </main>
@@ -1236,19 +1250,6 @@ html{scroll-behavior:smooth;}
 
 
     <!-- ══════════ COCHES ══════════ -->
-    <div class="page" id="page-coches">
-      <div style="background:linear-gradient(135deg,#1e3a5f 0%,#1e40af 50%,#3b82f6 100%);border-radius:var(--r-lg);padding:.875rem 1.25rem;margin-bottom:.875rem;color:#fff;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem;box-shadow:0 8px 24px rgba(30,64,175,.3)">
-        <div>
-          <h1 style="font-family:'Lora',serif;font-size:1.4rem;font-weight:600;margin-bottom:.1rem">Organización de Coches</h1>
-          <p style="font-size:.78rem;opacity:.8">Asigna personas a vehículos y gestiona el transporte</p>
-        </div>
-        <button class="btn btn-sm" style="background:#fff;color:#1e40af;border-color:#fff;flex-shrink:0" onclick="openModCoche()"><i class="fas fa-plus"></i>Añadir coche</button>
-      </div>
-      <div class="stats-row" id="coche-stats" style="margin-bottom:.875rem"></div>
-      <div id="coche-alert"></div>
-      <div class="coche-grid" id="coches-grid"></div>
-      <div class="empty" id="coches-empty" style="display:none"><i class="fas fa-car"></i><p>Añade los vehículos del campamento</p></div>
-    </div>
 
 <!-- ══ LOCK OVERLAY ══ -->
 <div class="lock-overlay" id="lockOverlay">
@@ -1267,29 +1268,47 @@ html{scroll-behavior:smooth;}
   </div>
 </div>
 
+
 <!-- ══ MODAL: Coche ══ -->
 <div class="mov" id="modCoche">
   <div class="mbox wide">
-    <div class="mhd"><h3 id="mCocheT">Nuevo coche</h3><button class="mcls" onclick="cm('modCoche')">&times;</button></div>
+    <div class="mhd">
+      <h3 id="mCocheT">Nuevo coche</h3>
+      <button class="mcls" onclick="cm('modCoche')">&times;</button>
+    </div>
     <input type="hidden" id="cocheId">
     <div class="frow">
-      <div class="fgroup"><label class="flbl">Nombre / Matrícula*</label><input class="fctl" id="cocheNom" placeholder="Ej: Ford Focus — 1234 ABC"></div>
-      <div class="fgroup"><label class="flbl">Plazas disponibles</label><input class="fctl" type="number" id="cochePlazas" min="1" max="9" value="5"></div>
+      <div class="fgroup">
+        <label class="flbl">Nombre / Matrícula *</label>
+        <input class="fctl" id="cocheNom" placeholder="Ej: Ford Focus · 1234 ABC">
+      </div>
+      <div class="fgroup">
+        <label class="flbl">Plazas totales</label>
+        <input class="fctl" type="number" id="cochePlazas" min="1" max="12" value="5">
+      </div>
     </div>
     <div class="frow">
-      <div class="fgroup"><label class="flbl">Conductor/a</label>
+      <div class="fgroup">
+        <label class="flbl">Conductor/a</label>
         <select class="fctl" id="cocheConductor"><option value="">— Sin asignar —</option></select>
       </div>
-      <div class="fgroup"><label class="flbl">Ruta / Destino <span>(opcional)</span></label><input class="fctl" id="cocheRuta" placeholder="Ej: Salida 9:00 — Campamento"></div>
+      <div class="fgroup">
+        <label class="flbl">Ruta <span>(opcional)</span></label>
+        <input class="fctl" id="cocheRuta" placeholder="Ej: Salida 9:00">
+      </div>
     </div>
-    <div class="fgroup"><label class="flbl">Pasajeros asignados</label>
+    <div class="fgroup">
+      <label class="flbl">Pasajeros <span>(sin el conductor)</span></label>
       <div class="person-picker" id="cochePick"></div>
-      <div class="fctrl-hint">Selecciona los pasajeros (sin contar al conductor)</div>
     </div>
-    <div class="fgroup"><label class="flbl">Notas <span>(opcional)</span></label>
-      <input class="fctl" id="cocheNotas" placeholder="Observaciones del vehículo…">
+    <div class="fgroup">
+      <label class="flbl">Notas <span>(opcional)</span></label>
+      <input class="fctl" id="cocheNotas" placeholder="Observaciones…">
     </div>
-    <div class="mft"><button class="btn btn-ghost" onclick="cm('modCoche')">Cancelar</button><button class="btn btn-primary" onclick="saveCoche()"><i class="fas fa-save"></i>Guardar coche</button></div>
+    <div class="mft">
+      <button class="btn btn-ghost" onclick="cm('modCoche')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveCoche()"><i class="fas fa-save"></i>Guardar</button>
+    </div>
   </div>
 </div>
 
@@ -1692,7 +1711,7 @@ function go(el, pg) {
     dashboard: renderDash, personas: renderPersonas,
     departamentos: renderDepts, alabanza: renderAlabanza,
     actividades: renderActs, programa: renderProg,
-    grupos: renderGrupos, cabanas: renderCabanas, coches: renderCoches,
+    grupos: renderGrupos, cabanas: renderCabanas,
   };
   if(renders[pg]) renders[pg]();
 }
@@ -2786,8 +2805,8 @@ function renderCabanas() {
       </div>
     </div>`;
   }).join('');
+  renderCoches();
 }
-
 function openModCabana() {
   document.getElementById('mCabanaT').textContent='Nueva cabaña';
   document.getElementById('cabId').value='';
@@ -2906,113 +2925,188 @@ document.addEventListener('DOMContentLoaded', () => {
 function renderCoches() {
   const coches = D.coches || [];
   const totalPlazas = coches.reduce((s,c) => s + (parseInt(c.plazas)||0), 0);
-  const totalPax = coches.reduce((s,c) => {
-    const pas = (c.pasajeros||[]).length;
-    const cond = c.conductor ? 1 : 0;
-    return s + pas + cond;
-  }, 0);
-  const sinCoche = D.personas.filter(p => {
-    const pid = String(p.id);
+  const totalOcup   = coches.reduce((s,c) => s + (c.pasajeros||[]).length + (c.conductor?1:0), 0);
+  const sinCoche    = D.personas.filter(p => {
+    const id = String(p.id);
     return !coches.some(c =>
-      (c.pasajeros||[]).map(String).includes(pid) || String(c.conductor)===pid
+      (c.pasajeros||[]).map(String).includes(id) || String(c.conductor)===id
     );
   });
 
+  // ── Stats ──
   document.getElementById('coche-stats').innerHTML = `
-    <div class="sc c-sky" style="padding:.875rem 1rem"><div class="sc-icon" style="width:30px;height:30px;font-size:.8rem;margin-bottom:.5rem"><i class="fas fa-car"></i></div><div class="sc-val" style="font-size:1.4rem">${coches.length}</div><div class="sc-lbl">Vehículos</div></div>
-    <div class="sc c-indigo" style="padding:.875rem 1rem"><div class="sc-icon" style="width:30px;height:30px;font-size:.8rem;margin-bottom:.5rem"><i class="fas fa-users"></i></div><div class="sc-val" style="font-size:1.4rem">${totalPlazas}</div><div class="sc-lbl">Plazas totales</div></div>
-    <div class="sc c-green" style="padding:.875rem 1rem"><div class="sc-icon" style="width:30px;height:30px;font-size:.8rem;margin-bottom:.5rem"><i class="fas fa-user-check"></i></div><div class="sc-val" style="font-size:1.4rem">${totalPax}</div><div class="sc-lbl">Asignadas</div></div>
-    <div class="sc c-red" style="padding:.875rem 1rem"><div class="sc-icon" style="width:30px;height:30px;font-size:.8rem;margin-bottom:.5rem"><i class="fas fa-user-xmark"></i></div><div class="sc-val" style="font-size:1.4rem">${sinCoche.length}</div><div class="sc-lbl">Sin coche</div>${sinCoche.length?`<div class="sc-sub" style="color:var(--red-v)">${sinCoche.length} sin asignar</div>`:''}</div>
+    <div class="sc c-sky"><div class="sc-icon"><i class="fas fa-car"></i></div>
+      <div class="sc-val">${coches.length}</div><div class="sc-lbl">Vehículos</div></div>
+    <div class="sc c-indigo"><div class="sc-icon"><i class="fas fa-users"></i></div>
+      <div class="sc-val">${totalPlazas}</div><div class="sc-lbl">Plazas</div></div>
+    <div class="sc c-green"><div class="sc-icon"><i class="fas fa-user-check"></i></div>
+      <div class="sc-val">${totalOcup}</div><div class="sc-lbl">Asignadas</div></div>
+    <div class="sc c-red"><div class="sc-icon"><i class="fas fa-user-xmark"></i></div>
+      <div class="sc-val">${sinCoche.length}</div><div class="sc-lbl">Sin coche</div>
+      ${sinCoche.length?`<div class="sc-sub" style="color:var(--red-v)">${sinCoche.length} sin asignar</div>`:''}</div>
   `;
 
+  // ── Alerta ──
   const alertDiv = document.getElementById('coche-alert');
-  if(!alertDiv) return;
   if(sinCoche.length) {
-    alertDiv.innerHTML = `<div class="alert alert-warn" style="margin-bottom:1.25rem">
+    alertDiv.innerHTML = `<div class="alert alert-warn" style="margin-bottom:1rem">
       <i class="fas fa-triangle-exclamation"></i>
       <div class="alert-body">
-        <h4>${sinCoche.length} persona${sinCoche.length!==1?'s':''} sin coche asignado</h4>
-        <p style="margin-top:.25rem">${sinCoche.map(p=>`<span style="display:inline-flex;align-items:center;gap:.3rem;margin:.15rem;padding:.2rem .55rem;border-radius:99px;background:#fff;border:1px solid var(--amber-m);font-size:.75rem"><span style="width:12px;height:12px;border-radius:50%;background:${p.color||'#94a3b8'};flex-shrink:0;display:inline-block"></span>${(p.nombre||'').split(' ')[0]}</span>`).join('')}</p>
+        <h4>${sinCoche.length} persona${sinCoche.length!==1?'s':''} sin coche</h4>
+        <p>${sinCoche.map(p=>`<span style="display:inline-flex;align-items:center;gap:.3rem;margin:.1rem .15rem;padding:.15rem .5rem;border-radius:99px;background:#fff;border:1px solid var(--amber-m);font-size:.73rem"><span style="width:10px;height:10px;border-radius:50%;background:${p.color||'#94a3b8'};display:inline-block;flex-shrink:0"></span>${p.nombre.split(' ')[0]}</span>`).join('')}</p>
       </div>
     </div>`;
   } else if(D.personas.length > 0) {
-    alertDiv.innerHTML = `<div class="alert alert-info" style="margin-bottom:1.25rem"><i class="fas fa-circle-check"></i><div class="alert-body"><h4>¡Todos tienen coche asignado!</h4></div></div>`;
-  } else { alertDiv.innerHTML = ''; }
+    alertDiv.innerHTML = `<div class="alert alert-info" style="margin-bottom:1rem"><i class="fas fa-circle-check"></i><div class="alert-body"><h4>¡Todos tienen coche!</h4></div></div>`;
+  } else {
+    alertDiv.innerHTML = '';
+  }
 
-  const g = document.getElementById('coches-grid');
-  const e = document.getElementById('coches-empty');
-  if(!g) return;
-  if(!coches.length){ g.innerHTML=''; if(e) e.style.display='block'; return; }
-  if(e) e.style.display='none';
+  // ── Grid ──
+  const grid  = document.getElementById('coches-grid');
+  const empty = document.getElementById('coches-empty');
+  if(!coches.length) { grid.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display = 'none';
 
-  g.innerHTML = coches.map(c => {
-    const pasajeros = c.pasajeros||[];
-    const conductor = c.conductor||null;
+  grid.innerHTML = coches.map(c => {
+    const pas    = c.pasajeros||[];
+    const cond   = c.conductor||null;
     const plazas = parseInt(c.plazas)||5;
-    const ocupados = pasajeros.length + (conductor?1:0);
-    const libre = plazas - ocupados;
-    const pct = plazas>0 ? Math.min(100, Math.round(ocupados/plazas*100)) : 0;
+    const ocup   = pas.length + (cond?1:0);
+    const libre  = plazas - ocup;
+    const pct    = plazas > 0 ? Math.min(100, Math.round(ocup/plazas*100)) : 0;
     const capCls = libre===0?'full':libre<=1?'warn':'ok';
     const capTxt = libre===0?'Completo':libre===1?'1 libre':`${libre} libres`;
-    const fillColor = libre===0?'var(--red-v)':libre<=1?'var(--amber-v)':'#3b82f6';
+    const barClr = libre===0?'var(--red-v)':libre<=1?'var(--amber-v)':'#3b82f6';
 
+    // Slots visuales
     const slots = [];
-    // Slot del conductor
-    if(conductor) {
-      const cNombre = pName(conductor);
-      slots.push(`<div class="asiento ocup" style="border-color:#3b82f6;background:rgba(59,130,246,.06)">
-        <div class="asiento-av" style="background:#1e40af;font-size:.6rem">🚗</div>
-        <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:.7rem">${cNombre.split(' ')[0]}</span>
+    if(cond) {
+      slots.push(`<div class="asiento ocup" style="border-color:#3b82f6;background:rgba(59,130,246,.07)">
+        <div class="asiento-av" style="background:#1e40af">🚗</div>
+        <span style="font-size:.7rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${pName(cond).split(' ')[0]}</span>
       </div>`);
     } else {
-      slots.push(`<div class="asiento lib" style="border-color:#3b82f6"><i class="fas fa-car" style="font-size:.55rem;margin-right:.2rem;color:#3b82f6"></i>Conductor</div>`);
+      slots.push(`<div class="asiento lib" style="border-color:#3b82f6;color:#3b82f6"><i class="fas fa-steering-wheel" style="font-size:.6rem"></i> Conductor</div>`);
     }
-    // Slots pasajeros
-    pasajeros.forEach(id => {
+    pas.forEach(id => {
       slots.push(`<div class="asiento ocup">
         <div class="asiento-av" style="background:${pColor(id)}">${ini(pName(id))}</div>
-        <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:.7rem">${pName(id).split(' ')[0]}</span>
+        <span style="font-size:.7rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${pName(id).split(' ')[0]}</span>
       </div>`);
     });
-    // Slots libres
-    const libresCount = plazas - pasajeros.length - (conductor?1:0);
-    for(let i=0; i<Math.max(0,libresCount); i++) {
-      slots.push(`<div class="asiento lib"><i class="fas fa-plus" style="font-size:.55rem;margin-right:.2rem"></i>Libre</div>`);
+    for(let i=0; i<Math.max(0, libre); i++) {
+      slots.push(`<div class="asiento lib"><i class="fas fa-plus" style="font-size:.55rem"></i> Libre</div>`);
     }
 
     return `<div class="coche-card">
       <div class="coche-hd">
-        <div class="coche-nm"><i class="fas fa-car" style="color:#3b82f6"></i>${c.nombre||'Sin nombre'}</div>
+        <div class="coche-nm"><i class="fas fa-car" style="color:#3b82f6"></i> ${c.nombre||'Sin nombre'}</div>
         <div style="display:flex;align-items:center;gap:.4rem">
           <span class="cabana-cap ${capCls}">${capTxt}</span>
           <button class="icon-btn edit" onclick="openModCocheEdit('${c.id}')"><i class="fas fa-pen"></i></button>
-          <button class="icon-btn del" onclick="delCoche('${c.id}')"><i class="fas fa-trash"></i></button>
+          <button class="icon-btn del"  onclick="delCoche('${c.id}')"><i class="fas fa-trash"></i></button>
         </div>
       </div>
       <div class="coche-body">
         ${c.ruta?`<div style="font-size:.75rem;color:#3b82f6;margin-bottom:.5rem"><i class="fas fa-route"></i> ${c.ruta}</div>`:''}
-        ${c.notas?`<div style="font-size:.73rem;color:var(--ink2);margin-bottom:.625rem">${c.notas}</div>`:''}
-        <div style="font-size:.72rem;color:var(--ink2);margin-bottom:.35rem;display:flex;justify-content:space-between">
-          <span><strong>${ocupados}</strong> / ${plazas} plazas</span>
-          <span style="color:${fillColor}">${pct}% lleno</span>
+        ${c.notas?`<div style="font-size:.73rem;color:var(--ink2);margin-bottom:.5rem">${c.notas}</div>`:''}
+        <div style="display:flex;justify-content:space-between;font-size:.72rem;color:var(--ink2);margin-bottom:.35rem">
+          <span><strong>${ocup}</strong> / ${plazas} plazas</span>
+          <span style="color:${barClr}">${pct}% lleno</span>
         </div>
-        <div class="capacity-bar" style="margin-bottom:.875rem">
-          <div class="capacity-fill" style="width:${pct}%;background:${fillColor}"></div>
+        <div class="capacity-bar" style="margin-bottom:.75rem">
+          <div class="capacity-fill" style="width:${pct}%;background:${barClr}"></div>
         </div>
         <div class="asiento-grid">${slots.join('')}</div>
       </div>
     </div>`;
   }).join('');
 }
+
+function openModCoche() {
+  document.getElementById('mCocheT').textContent = 'Nuevo coche';
+  document.getElementById('cocheId').value = '';
+  ['cocheNom','cocheRuta','cocheNotas'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('cochePlazas').value = '5';
+  document.getElementById('cocheConductor').innerHTML =
+    '<option value="">— Sin asignar —</option>' +
+    D.personas.map(p => `<option value="${p.id}">${p.nombre}</option>`).join('');
+  buildPicker('cochePick', []);
+  om('modCoche');
+}
+
+function openModCocheEdit(id) {
+  const c = D.coches.find(x => x.id === id);
+  if(!c) return;
+  document.getElementById('mCocheT').textContent = 'Editar coche';
+  document.getElementById('cocheId').value    = c.id;
+  document.getElementById('cocheNom').value   = c.nombre||'';
+  document.getElementById('cochePlazas').value = c.plazas||5;
+  document.getElementById('cocheRuta').value  = c.ruta||'';
+  document.getElementById('cocheNotas').value = c.notas||'';
+  document.getElementById('cocheConductor').innerHTML =
+    '<option value="">— Sin asignar —</option>' +
+    D.personas.map(p => `<option value="${p.id}">${p.nombre}</option>`).join('');
+  document.getElementById('cocheConductor').value = c.conductor||'';
+  buildPicker('cochePick', c.pasajeros||[]);
+  om('modCoche');
+}
+
+async function saveCoche() {
+  const nom = document.getElementById('cocheNom').value.trim();
+  if(!nom) { toast('El nombre es obligatorio','err'); return; }
+  const plazas    = parseInt(document.getElementById('cochePlazas').value)||5;
+  const conductor = document.getElementById('cocheConductor').value||null;
+  const pasajeros = getSelected('cochePick').filter(id => id !== conductor);
+  const totalOcup = pasajeros.length + (conductor?1:0);
+  if(totalOcup > plazas) {
+    toast(`Hay más asignados (${totalOcup}) que plazas (${plazas})`,'err');
+    return;
+  }
+  const obj = {
+    nombre:    nom,
+    plazas:    plazas,
+    conductor: conductor,
+    ruta:      document.getElementById('cocheRuta').value||null,
+    notas:     document.getElementById('cocheNotas').value||null,
+  };
+  const eid = document.getElementById('cocheId').value;
+  try {
+    let cid = eid;
+    if(eid) {
+      const {error} = await sb.from('coches').update(obj).eq('id', eid);
+      if(error) throw error;
+    } else {
+      const {data, error} = await sb.from('coches').insert(obj).select().single();
+      if(error) throw error;
+      cid = data.id;
+    }
+    // Actualizar pasajeros
+    await sb.from('coche_pasajeros').delete().eq('coche_id', cid);
+    if(pasajeros.length) {
+      await sb.from('coche_pasajeros')
+        .insert(pasajeros.map(pid => ({coche_id: cid, persona_id: pid})));
+    }
+    // Actualizar estado local
+    const local = {id:cid, ...obj, pasajeros};
+    if(eid) { Object.assign(D.coches.find(c=>c.id===eid), local); }
+    else    { D.coches.push(local); }
+    cm('modCoche');
+    renderCoches();
+    toast(eid ? 'Coche actualizado' : 'Coche añadido','ok');
+  } catch(e) { toast('Error: '+e.message,'err'); }
+}
+
 async function delCoche(id) {
   if(!confirm('¿Eliminar este vehículo?')) return;
   try {
-    await sb.from('coches').delete().eq('id',id);
-    D.coches = D.coches.filter(c=>c.id!==id);
-    renderCoches(); toast('Vehículo eliminado','info');
-  } catch(e){ toast('Error: '+e.message,'err'); }
+    await sb.from('coches').delete().eq('id', id);
+    D.coches = D.coches.filter(c => c.id !== id);
+    renderCoches();
+    toast('Vehículo eliminado','info');
+  } catch(e) { toast('Error: '+e.message,'err'); }
 }
-
 
 /* ═══════════════════════════════════════
    MATERIALES POR DEPARTAMENTO (Supabase)
