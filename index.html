@@ -438,6 +438,108 @@ nav{flex:1;overflow-y:auto;padding:.875rem .875rem;}
 .mob-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:199;
   backdrop-filter:blur(2px);}
 
+
+/* ── GRUPOS ── */
+.grupo-card{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);
+  box-shadow:var(--sh-sm);overflow:hidden;transition:all .2s;position:relative;}
+.grupo-card:hover{box-shadow:var(--sh);transform:translateY(-2px);}
+.grupo-stripe{height:5px;}
+.grupo-body{padding:1.1rem 1.25rem;}
+.grupo-nm{font-weight:700;font-size:1rem;margin-bottom:.25rem;}
+.grupo-desc{font-size:.75rem;color:var(--ink2);margin-bottom:.875rem;}
+.grupo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;}
+/* ── JUEGOS ── */
+.juego-card{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);
+  box-shadow:var(--sh-sm);transition:all .2s;overflow:hidden;}
+.juego-card:hover{box-shadow:var(--sh);}
+.juego-hd{padding:1rem 1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.75rem;}
+.juego-ico{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;
+  justify-content:center;font-size:1rem;flex-shrink:0;}
+.juego-nm{font-weight:700;font-size:.95rem;}
+.juego-tipo{font-size:.72rem;color:var(--ink2);}
+.juego-scores{padding:.875rem 1.25rem;}
+.score-row{display:flex;align-items:center;gap:.75rem;margin-bottom:.5rem;}
+.score-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.score-nm{font-size:.82rem;flex:1;}
+.score-input{width:70px;padding:.3rem .5rem;border:1.5px solid var(--border);border-radius:6px;
+  font-size:.85rem;text-align:center;background:var(--surf2);color:var(--ink);outline:none;}
+.score-input:focus{border-color:var(--indigo);}
+.score-max{font-size:.72rem;color:var(--ink3);}
+.ranking-bar{height:5px;background:var(--surf3);border-radius:99px;overflow:hidden;margin-top:.25rem;}
+.ranking-fill{height:100%;border-radius:99px;}
+/* ── CABAÑAS ── */
+.cabana-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1rem;}
+.cabana-card{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);
+  box-shadow:var(--sh-sm);overflow:hidden;transition:all .2s;}
+.cabana-card:hover{box-shadow:var(--sh);}
+.cabana-hd{padding:1.1rem 1.25rem;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;}
+.cabana-nm{font-weight:700;font-size:.95rem;display:flex;align-items:center;gap:.5rem;}
+.cabana-cap{font-size:.75rem;padding:.25rem .65rem;border-radius:99px;font-weight:700;}
+.cabana-cap.ok{background:var(--green-l);color:var(--green);}
+.cabana-cap.warn{background:var(--amber-l);color:var(--amber);}
+.cabana-cap.full{background:var(--red-l);color:var(--red-v);}
+.cabana-body{padding:1rem 1.25rem;}
+.cabana-slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:.4rem;margin-bottom:.75rem;}
+.slot{display:flex;align-items:center;gap:.35rem;padding:.4rem .6rem;border-radius:8px;
+  font-size:.75rem;border:1px solid var(--border);}
+.slot.occupied{background:var(--surf2);}
+.slot.empty{background:transparent;border-style:dashed;color:var(--ink3);}
+.slot-av{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:.58rem;font-weight:700;color:#fff;flex-shrink:0;}
+.cabana-ft{display:flex;align-items:center;justify-content:space-between;
+  padding-top:.75rem;border-top:1px solid var(--border);}
+.capacity-bar{height:6px;background:var(--surf3);border-radius:99px;overflow:hidden;margin-top:.5rem;}
+.capacity-fill{height:100%;border-radius:99px;transition:width .6s ease;}
+/* Juegos layout */
+.juegos-layout{display:grid;grid-template-columns:1fr 280px;gap:1.25rem;align-items:start;}
+.ranking-side{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);
+  padding:1.1rem;box-shadow:var(--sh-sm);position:sticky;top:2rem;}
+.ranking-row{display:flex;align-items:center;gap:.75rem;padding:.6rem 0;border-bottom:1px solid var(--border);}
+.ranking-row:last-child{border-bottom:none;}
+.rank-num{font-size:1rem;font-weight:800;width:24px;text-align:center;flex-shrink:0;}
+.rank-num.gold{color:#d97706;}
+.rank-num.silver{color:#6b7280;}
+.rank-num.bronze{color:#92400e;}
+@media(max-width:768px){
+  .juegos-layout{grid-template-columns:1fr;}
+  .ranking-side{position:static;}
+  .cabana-slots{grid-template-columns:repeat(auto-fill,minmax(90px,1fr));}
+}
+
+
+/* ── LOCK OVERLAY ── */
+.lock-overlay{position:fixed;inset:0;background:rgba(15,23,42,.75);z-index:800;
+  display:none;align-items:center;justify-content:center;backdrop-filter:blur(6px);}
+.lock-overlay.visible{display:flex;}
+.lock-card{background:var(--surf);border-radius:var(--r-lg);padding:2.25rem 2rem;width:90%;max-width:360px;
+  text-align:center;box-shadow:var(--sh-lg);border:1px solid var(--border);
+  animation:mUp .25s ease;}
+.lock-icon{width:58px;height:58px;border-radius:16px;background:linear-gradient(135deg,#1e293b,#334155);
+  display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem;
+  font-size:1.5rem;color:#94a3b8;box-shadow:0 4px 16px rgba(0,0,0,.3);}
+.lock-title{font-family:'Lora',serif;font-size:1.3rem;margin-bottom:.3rem;}
+.lock-sub{font-size:.8rem;color:var(--ink3);margin-bottom:1.5rem;}
+.lock-err{color:var(--red-v);font-size:.78rem;margin-top:.75rem;display:none;}
+/* ── LOCK BADGE EN NAV ── */
+.ni .lock-ico{margin-left:auto;font-size:.65rem;color:var(--ink3);opacity:.7;}
+/* ── COCHES ── */
+.coche-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;}
+.coche-card{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);
+  box-shadow:var(--sh-sm);overflow:hidden;transition:all .2s;}
+.coche-card:hover{box-shadow:var(--sh);}
+.coche-hd{padding:1rem 1.25rem;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;}
+.coche-nm{font-weight:700;font-size:.95rem;display:flex;align-items:center;gap:.5rem;}
+.coche-body{padding:1rem 1.25rem;}
+.asiento-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:.35rem;margin-bottom:.75rem;}
+.asiento{display:flex;align-items:center;gap:.35rem;padding:.4rem .6rem;border-radius:8px;font-size:.73rem;border:1px solid var(--border);}
+.asiento.ocup{background:var(--surf2);}
+.asiento.lib{background:transparent;border-style:dashed;color:var(--ink3);}
+.asiento-av{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:.57rem;font-weight:700;color:#fff;flex-shrink:0;}
+@media(max-width:768px){.coche-grid{grid-template-columns:1fr;}}
+
 /* ── CSV IMPORT ── */
 .csv-drop{border:2.5px dashed var(--border2);border-radius:var(--r);padding:2.5rem;text-align:center;
   cursor:pointer;transition:all .25s;background:var(--surf2);}
@@ -521,9 +623,9 @@ html{scroll-behavior:smooth;}
     <div style="text-align:center;margin-bottom:1.5rem">
       <div class="lcross" style="width:64px;height:64px;font-size:1.6rem;box-shadow:0 8px 24px rgba(67,56,202,.3)"><i class="fas fa-cross"></i></div>
     </div>
-    <h1 style="background:linear-gradient(135deg,#4338ca,#818cf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Campamento TML</h1>
+    <h1 style="background:linear-gradient(135deg,#4338ca,#818cf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Campamento Org</h1>
     <p style="margin-bottom:.4rem">Organización del culto y equipos</p>
-    <p style="font-size:.72rem;color:var(--ink4);margin-bottom:2rem;padding:.4rem .75rem;background:var(--surf2);border-radius:6px;border:1px solid var(--border)">Organización TML</p>
+    <p style="font-size:.72rem;color:var(--ink4);margin-bottom:2rem;padding:.4rem .75rem;background:var(--surf2);border-radius:6px;border:1px solid var(--border)">🏕️ Sistema de gestión para campamentos evangélicos</p>
     <label style="display:block;font-size:.75rem;font-weight:700;color:var(--ink2);margin-bottom:.4rem;letter-spacing:.03em">CONTRASEÑA DE ACCESO</label>
     <input class="finput" type="password" id="pwIn" placeholder="Introduce la contraseña…" autocomplete="off">
     <button class="lbtn" onclick="login()"><i class="fas fa-sign-in-alt"></i>&nbsp; Acceder al panel</button>
@@ -540,7 +642,7 @@ html{scroll-behavior:smooth;}
     <div class="sb-brand">
       <div class="sb-logo">
         <div class="sb-icon" style="background:linear-gradient(135deg,#4338ca,#818cf8);box-shadow:0 4px 12px rgba(67,56,202,.3)"><i class="fas fa-cross"></i></div>
-        <div><div class="sb-name" style="background:linear-gradient(135deg,#4338ca,#818cf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">CampamentoOrg</div><div class="sb-sub">Panel de organización</div></div>
+        <div><div class="sb-name" style="background:linear-gradient(135deg,#4338ca,#818cf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">CampamentoTML</div><div class="sb-sub">Panel de organización</div></div>
       </div>
     </div>
 
@@ -559,6 +661,12 @@ html{scroll-behavior:smooth;}
       <div class="nav-g">
         <div class="nav-glbl">Culto</div>
         <div class="ni" data-p="programa" onclick="go(this,'programa')"><i class="fas fa-list-check"></i>Programa del Culto</div>
+      </div>
+      <div class="nav-g">
+        <div class="nav-glbl">Campamento</div>
+        <div class="ni" data-p="grupos" onclick="tryUnlock(this,'grupos')"><i class="fas fa-flag"></i>Grupos y Juegos<i class="fas fa-lock lock-ico"></i></div>
+        <div class="ni" data-p="cabanas" onclick="tryUnlock(this,'cabanas')"><i class="fas fa-house-chimney"></i>Cabañas<span class="badge warn" id="cabBadge" style="display:none">0</span><i class="fas fa-lock lock-ico"></i></div>
+        <div class="ni" data-p="coches" onclick="tryUnlock(this,'coches')"><i class="fas fa-car"></i>Coches<i class="fas fa-lock lock-ico"></i></div>
       </div>
     </nav>
 
@@ -734,6 +842,74 @@ html{scroll-behavior:smooth;}
           <div id="prog-side-panel"></div>
         </div>
       </div>
+    </div>
+
+
+    <!-- ══════════ GRUPOS & JUEGOS ══════════ -->
+    <div class="page" id="page-grupos">
+      <div style="background:linear-gradient(135deg,#c2410c 0%,#ea580c 50%,#fb923c 100%);border-radius:var(--r-lg);padding:1.5rem 1.75rem;margin-bottom:1.75rem;color:#fff;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;box-shadow:0 8px 24px rgba(194,65,12,.25)">
+        <div>
+          <div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;opacity:.75;margin-bottom:.3rem">Campamento</div>
+          <h1 style="font-family:'Lora',serif;font-size:1.8rem;font-weight:600;margin-bottom:.25rem">Grupos y Juegos</h1>
+          <p style="font-size:.82rem;opacity:.8">Gestiona grupos y gymkanas con puntuaciones en tiempo real</p>
+        </div>
+        <div style="display:flex;gap:.6rem;flex-wrap:wrap">
+          <button class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.25)" onclick="openModGrupo()"><i class="fas fa-plus"></i>Nuevo grupo</button>
+          <button class="btn btn-sm" style="background:#fff;color:#c2410c;border-color:#fff" onclick="openModJuego()"><i class="fas fa-gamepad"></i>Nuevo juego</button>
+        </div>
+      </div>
+      <!-- Tabs -->
+      <div class="tabs" style="margin-bottom:1.5rem">
+        <button class="tab active" onclick="grupoTab('grupos',this)">🏳️ Grupos</button>
+        <button class="tab" onclick="grupoTab('juegos',this)">🎮 Juegos / Gymkana</button>
+        <button class="tab" onclick="grupoTab('ranking',this)">🏆 Ranking general</button>
+      </div>
+      <!-- Vista: Grupos -->
+      <div id="gt-grupos">
+        <div class="grupo-grid" id="grupos-grid"></div>
+        <div class="empty" id="grupos-empty" style="display:none"><i class="fas fa-flag"></i><p>Crea el primer grupo del campamento</p></div>
+      </div>
+      <!-- Vista: Juegos -->
+      <div id="gt-juegos" style="display:none">
+        <div class="juegos-layout">
+          <div>
+            <div id="juegos-list"></div>
+            <div class="empty" id="juegos-empty" style="display:none"><i class="fas fa-gamepad"></i><p>Añade el primer juego o gymkana</p></div>
+          </div>
+          <div class="ranking-side">
+            <div style="font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);margin-bottom:1rem"><i class="fas fa-trophy" style="color:#d97706"></i> Clasificación</div>
+            <div id="juegos-ranking-side"></div>
+          </div>
+        </div>
+      </div>
+      <!-- Vista: Ranking -->
+      <div id="gt-ranking" style="display:none">
+        <div class="card">
+          <div class="card-hd"><div class="card-title"><i class="fas fa-trophy" style="color:#d97706"></i>Clasificación General</div></div>
+          <div class="card-body" id="ranking-general"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════ CABAÑAS ══════════ -->
+    <div class="page" id="page-cabanas">
+      <div style="background:linear-gradient(135deg,#0f766e 0%,#0d9488 50%,#2dd4bf 100%);border-radius:var(--r-lg);padding:1.5rem 1.75rem;margin-bottom:1.75rem;color:#fff;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;box-shadow:0 8px 24px rgba(15,118,110,.3)">
+        <div>
+          <div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;opacity:.75;margin-bottom:.3rem">Campamento</div>
+          <h1 style="font-family:'Lora',serif;font-size:1.8rem;font-weight:600;margin-bottom:.25rem">Cabañas</h1>
+          <p style="font-size:.82rem;opacity:.8">Asigna personas a cabañas y controla la ocupación</p>
+        </div>
+        <div style="display:flex;gap:.6rem;flex-wrap:wrap">
+          <button class="btn btn-sm" style="background:#fff;color:#0f766e;border-color:#fff" onclick="openModCabana()"><i class="fas fa-plus"></i>Nueva cabaña</button>
+        </div>
+      </div>
+      <!-- Stats cabañas -->
+      <div class="stats-row" id="cab-stats" style="margin-bottom:1.5rem"></div>
+      <!-- Alerta sin asignar -->
+      <div id="cab-alert"></div>
+      <!-- Grid cabañas -->
+      <div class="cabana-grid" id="cabanas-grid"></div>
+      <div class="empty" id="cabanas-empty" style="display:none"><i class="fas fa-house-chimney"></i><p>Añade las cabañas del campamento</p></div>
     </div>
 
   </main>
@@ -960,6 +1136,135 @@ html{scroll-behavior:smooth;}
   </div>
 </div>
 
+
+<!-- ══ MODAL: Grupo ══ -->
+<div class="mov" id="modGrupo">
+  <div class="mbox">
+    <div class="mhd"><h3 id="mGrupoT">Nuevo grupo</h3><button class="mcls" onclick="cm('modGrupo')">&times;</button></div>
+    <input type="hidden" id="gId">
+    <div class="frow">
+      <div class="fgroup"><label class="flbl">Nombre del grupo*</label><input class="fctl" id="gNom" placeholder="Ej: Grupo Rojo"></div>
+      <div class="fgroup"><label class="flbl">Color</label><input class="fctl" type="color" id="gColor" value="#c2410c" style="height:42px;padding:.35rem"></div>
+    </div>
+    <div class="fgroup"><label class="flbl">Descripción <span>(opcional)</span></label><input class="fctl" id="gDesc" placeholder="Breve descripción…"></div>
+    <div class="fgroup"><label class="flbl">Miembros del grupo</label>
+      <div class="person-picker" id="gMiembrosPick"></div>
+      <div class="fctrl-hint">Selecciona las personas que pertenecen a este grupo</div>
+    </div>
+    <div class="mft"><button class="btn btn-ghost" onclick="cm('modGrupo')">Cancelar</button><button class="btn btn-primary" onclick="saveGrupo()"><i class="fas fa-save"></i>Guardar grupo</button></div>
+  </div>
+</div>
+
+<!-- ══ MODAL: Juego ══ -->
+<div class="mov" id="modJuego">
+  <div class="mbox">
+    <div class="mhd"><h3 id="mJuegoT">Nuevo juego</h3><button class="mcls" onclick="cm('modJuego')">&times;</button></div>
+    <input type="hidden" id="jId">
+    <div class="frow">
+      <div class="fgroup"><label class="flbl">Nombre del juego*</label><input class="fctl" id="jNom" placeholder="Ej: Gymkana bíblica"></div>
+      <div class="fgroup"><label class="flbl">Tipo</label>
+        <select class="fctl" id="jTipo">
+          <option>Gymkana</option><option>Deportivo</option><option>Bíblico</option>
+          <option>Creativo</option><option>Nocturno</option><option>Final</option>
+        </select>
+      </div>
+    </div>
+    <div class="frow">
+      <div class="fgroup"><label class="flbl">Puntuación máxima</label><input class="fctl" type="number" id="jPunMax" min="1" value="10"></div>
+      <div class="fgroup"><label class="flbl">Duración (min)</label><input class="fctl" type="number" id="jDur" min="5" value="30"></div>
+    </div>
+    <div class="fgroup"><label class="flbl">Estado</label>
+      <select class="fctl" id="jEst">
+        <option value="pendiente">⏳ Pendiente</option>
+        <option value="en_curso">▶️ En curso</option>
+        <option value="finalizado">✅ Finalizado</option>
+      </select>
+    </div>
+    <div class="fgroup"><label class="flbl">Descripción</label><textarea class="fctl" id="jDesc" rows="2" placeholder="Descripción del juego…"></textarea></div>
+    <div class="mft"><button class="btn btn-ghost" onclick="cm('modJuego')">Cancelar</button><button class="btn btn-primary" onclick="saveJuego()"><i class="fas fa-save"></i>Guardar juego</button></div>
+  </div>
+</div>
+
+<!-- ══ MODAL: Cabaña ══ -->
+<div class="mov" id="modCabana">
+  <div class="mbox wide">
+    <div class="mhd"><h3 id="mCabanaT">Nueva cabaña</h3><button class="mcls" onclick="cm('modCabana')">&times;</button></div>
+    <input type="hidden" id="cabId">
+    <div class="frow">
+      <div class="fgroup"><label class="flbl">Nombre de la cabaña*</label><input class="fctl" id="cabNom" placeholder="Ej: Cabaña El Cedro"></div>
+      <div class="fgroup"><label class="flbl">Capacidad máxima</label><input class="fctl" type="number" id="cabCap" min="1" value="8"></div>
+    </div>
+    <div class="fgroup"><label class="flbl">Descripción <span>(opcional)</span></label><input class="fctl" id="cabDesc" placeholder="Notas sobre la cabaña…"></div>
+    <div class="fgroup"><label class="flbl">Personas asignadas</label>
+      <div class="person-picker" id="cabPick"></div>
+      <div class="fctrl-hint">Selecciona quién duerme en esta cabaña</div>
+    </div>
+    <div class="mft"><button class="btn btn-ghost" onclick="cm('modCabana')">Cancelar</button><button class="btn btn-primary" onclick="saveCabana()"><i class="fas fa-save"></i>Guardar cabaña</button></div>
+  </div>
+</div>
+
+
+    <!-- ══════════ COCHES ══════════ -->
+    <div class="page" id="page-coches">
+      <div style="background:linear-gradient(135deg,#1e3a5f 0%,#1e40af 50%,#3b82f6 100%);border-radius:var(--r-lg);padding:1.5rem 1.75rem;margin-bottom:1.75rem;color:#fff;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;box-shadow:0 8px 24px rgba(30,64,175,.3)">
+        <div>
+          <div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;opacity:.75;margin-bottom:.3rem">Campamento</div>
+          <h1 style="font-family:'Lora',serif;font-size:1.8rem;font-weight:600;margin-bottom:.25rem">Organización de Coches</h1>
+          <p style="font-size:.82rem;opacity:.8">Asigna personas a vehículos y gestiona el transporte</p>
+        </div>
+        <div style="display:flex;gap:.6rem;flex-wrap:wrap">
+          <button class="btn btn-sm" style="background:#fff;color:#1e40af;border-color:#fff" onclick="openModCoche()"><i class="fas fa-plus"></i>Añadir coche</button>
+        </div>
+      </div>
+      <div class="stats-row" id="coche-stats" style="margin-bottom:1.5rem"></div>
+      <div id="coche-alert"></div>
+      <div class="coche-grid" id="coches-grid"></div>
+      <div class="empty" id="coches-empty" style="display:none"><i class="fas fa-car"></i><p>Añade los vehículos del campamento</p></div>
+    </div>
+
+<!-- ══ LOCK OVERLAY ══ -->
+<div class="lock-overlay" id="lockOverlay">
+  <div class="lock-card">
+    <div class="lock-icon"><i class="fas fa-shield-halved"></i></div>
+    <div class="lock-title">Zona privada</div>
+    <div class="lock-sub" id="lockSubtitle">Esta sección requiere contraseña de administrador</div>
+    <input class="finput" type="password" id="lockPwInput" placeholder="Contraseña de administrador…"
+      style="margin-bottom:0;text-align:center" autocomplete="off">
+    <button class="lbtn" onclick="submitLock()" style="margin-top:.875rem">
+      <i class="fas fa-unlock"></i>&nbsp;Desbloquear
+    </button>
+    <div class="lock-err" id="lockErr"><i class="fas fa-exclamation-circle"></i> Contraseña incorrecta</div>
+    <button onclick="closeLock()" style="display:block;margin:1rem auto 0;background:none;border:none;
+      color:var(--ink3);font-size:.82rem;cursor:pointer;font-family:inherit">Cancelar</button>
+  </div>
+</div>
+
+<!-- ══ MODAL: Coche ══ -->
+<div class="mov" id="modCoche">
+  <div class="mbox wide">
+    <div class="mhd"><h3 id="mCocheT">Nuevo coche</h3><button class="mcls" onclick="cm('modCoche')">&times;</button></div>
+    <input type="hidden" id="cocheId">
+    <div class="frow">
+      <div class="fgroup"><label class="flbl">Nombre / Matrícula*</label><input class="fctl" id="cocheNom" placeholder="Ej: Ford Focus — 1234 ABC"></div>
+      <div class="fgroup"><label class="flbl">Plazas disponibles</label><input class="fctl" type="number" id="cochePlazas" min="1" max="9" value="5"></div>
+    </div>
+    <div class="frow">
+      <div class="fgroup"><label class="flbl">Conductor/a</label>
+        <select class="fctl" id="cocheConductor"><option value="">— Sin asignar —</option></select>
+      </div>
+      <div class="fgroup"><label class="flbl">Ruta / Destino <span>(opcional)</span></label><input class="fctl" id="cocheRuta" placeholder="Ej: Salida 9:00 — Campamento"></div>
+    </div>
+    <div class="fgroup"><label class="flbl">Pasajeros asignados</label>
+      <div class="person-picker" id="cochePick"></div>
+      <div class="fctrl-hint">Selecciona los pasajeros (sin contar al conductor)</div>
+    </div>
+    <div class="fgroup"><label class="flbl">Notas <span>(opcional)</span></label>
+      <input class="fctl" id="cocheNotas" placeholder="Observaciones del vehículo…">
+    </div>
+    <div class="mft"><button class="btn btn-ghost" onclick="cm('modCoche')">Cancelar</button><button class="btn btn-primary" onclick="saveCoche()"><i class="fas fa-save"></i>Guardar coche</button></div>
+  </div>
+</div>
+
 <div class="toasts" id="toasts"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -967,9 +1272,9 @@ html{scroll-behavior:smooth;}
 /* ═══════════════════════════════════════
    ⚙️  CONFIGURA AQUÍ TUS CREDENCIALES
 ═══════════════════════════════════════ */
-const SUPABASE_URL  = 'https://cvignxrpesgxpxiikkpx.supabase.co';   // ← tu Project URL
-const SUPABASE_KEY  = 'sb_publishable_J0_5eGWdyTn0g3IbIlVlhg_yLz7162n';    // ← tu anon public key
-const PW = 'campamento2026';
+const SUPABASE_URL  = 'https://cvignxrpesgxpxiikkpx.supabase.co';
+const SUPABASE_KEY  = 'sb_publishable_J0_5eGWdyTn0g3IbIlVlhg_yLz7162n';
+const PW = 'tml2026';
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -999,7 +1304,7 @@ const ACT_TIPOS = {
 /* ═══════════════════════════════════════
    ESTADO EN MEMORIA
 ═══════════════════════════════════════ */
-let D = {personas:[],departamentos:[],canciones:[],actividades:[],servicios:[]};
+let D = {personas:[],departamentos:[],canciones:[],actividades:[],servicios:[],grupos:[],juegos:[],cabanas:[],coches:[]};
 let currentDept = null;
 let editingSong = null, editingAct = null, editingItem = null;
 let songFilterVal = '';
@@ -1081,7 +1386,15 @@ async function loadAll() {
       {data: actividades},
       {data: servicios},
       {data: items},
-      {data: pa}
+      {data: pa},
+      {data: grupos},
+      {data: gm},
+      {data: juegos},
+      {data: jpunts},
+      {data: cabanas},
+      {data: cabasig},
+      {data: coches},
+      {data: cochepas},
     ] = await Promise.all([
       sb.from('personas').select('*').order('nombre'),
       sb.from('departamentos').select('*').order('nombre'),
@@ -1092,6 +1405,14 @@ async function loadAll() {
       sb.from('servicios').select('*').order('fecha').order('hora'),
       sb.from('programa_items').select('*').order('posicion'),
       sb.from('programa_asignados').select('*'),
+      sb.from('grupos').select('*').order('nombre'),
+      sb.from('grupo_miembros').select('*'),
+      sb.from('juegos').select('*').order('created_at'),
+      sb.from('juego_puntuaciones').select('*'),
+      sb.from('cabanas').select('*').order('nombre'),
+      sb.from('cabana_asignaciones').select('*'),
+      sb.from('coches').select('*').order('nombre'),
+      sb.from('coche_pasajeros').select('*'),
     ]);
 
     D.personas = (personas || []);
@@ -1124,6 +1445,28 @@ async function loadAll() {
           asignados: (pa || []).filter(x => x.item_id === i.id).map(x => x.persona_id),
         })),
     }));
+
+    D.grupos = (grupos || []).map(g => ({
+      ...g,
+      miembros: (gm || []).filter(x => x.grupo_id === g.id).map(x => x.persona_id),
+    }));
+
+    D.juegos = (juegos || []).map(j => ({
+      ...j,
+      dur: j.duracion,
+      puntuaciones: (jpunts || []).filter(x => x.juego_id === j.id),
+    }));
+
+    D.cabanas = (cabanas || []).map(c => ({
+      ...c,
+      asignados: (cabasig || []).filter(x => x.cabana_id === c.id).map(x => x.persona_id),
+    }));
+
+    D.coches = (coches || []).map(c => ({
+      ...c,
+      pasajeros: (cochepas || []).filter(x => x.coche_id === c.id).map(x => x.persona_id),
+    }));
+
   } catch(e) {
     toast('Error cargando datos: ' + e.message, 'err');
   }
@@ -1305,6 +1648,7 @@ function go(el, pg) {
     dashboard: renderDash, personas: renderPersonas,
     departamentos: renderDepts, alabanza: renderAlabanza,
     actividades: renderActs, programa: renderProg,
+    grupos: renderGrupos, cabanas: renderCabanas, coches: renderCoches,
   };
   if(renders[pg]) renders[pg]();
 }
@@ -2020,6 +2364,633 @@ async function delItem(iid, svcId) {
     const svc=(D.servicios||[]).find(x=>x.id===svcId);
     if(svc) svc.prog=svc.prog.filter(i=>i.id!==iid);
     renderProg(); toast('Elemento eliminado','info');
+  } catch(e){ toast('Error: '+e.message,'err'); }
+}
+
+
+/* ═══════════════════════════════════════
+   GRUPOS
+═══════════════════════════════════════ */
+let currentGrupoTab = 'grupos';
+
+function grupoTab(tab, btn) {
+  currentGrupoTab = tab;
+  document.querySelectorAll('#page-grupos .tab').forEach(t => t.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  document.getElementById('gt-grupos').style.display  = tab==='grupos'  ? 'block':'none';
+  document.getElementById('gt-juegos').style.display  = tab==='juegos'  ? 'block':'none';
+  document.getElementById('gt-ranking').style.display = tab==='ranking' ? 'block':'none';
+  if(tab==='juegos') renderJuegos();
+  if(tab==='ranking') renderRankingGeneral();
+}
+
+function renderGrupos() {
+  const g = document.getElementById('grupos-grid');
+  const e = document.getElementById('grupos-empty');
+  if(!D.grupos.length) { g.innerHTML=''; e.style.display='block'; return; }
+  e.style.display='none';
+  g.innerHTML = D.grupos.map(gr => {
+    const miembrosHTML = (gr.miembros||[]).map(id => `
+      <div class="slot occupied">
+        <div class="slot-av" style="background:${pColor(id)}">${ini(pName(id))}</div>
+        <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${pName(id).split(' ')[0]}</span>
+      </div>`).join('');
+    const pts = totalPuntosGrupo(gr.id);
+    return `<div class="grupo-card">
+      <div class="grupo-stripe" style="background:${gr.color}"></div>
+      <div class="grupo-body">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.25rem">
+          <div class="grupo-nm" style="color:${gr.color}">${gr.nombre}</div>
+          <div style="display:flex;gap:.3rem">
+            <button class="icon-btn edit" onclick="openModGrupoEdit('${gr.id}')"><i class="fas fa-pen"></i></button>
+            <button class="icon-btn del" onclick="delGrupo('${gr.id}')"><i class="fas fa-trash"></i></button>
+          </div>
+        </div>
+        ${gr.descripcion?`<div class="grupo-desc">${gr.descripcion}</div>`:''}
+        <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.875rem">
+          <span class="pill" style="background:${hexLight(gr.color,.12)};color:${gr.color}">${gr.miembros.length} miembros</span>
+          <span class="pill pill-amber"><i class="fas fa-star" style="font-size:.6rem"></i>${pts} pts</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:.35rem">
+          ${miembrosHTML||'<span style="font-size:.75rem;color:var(--ink3);font-style:italic">Sin miembros asignados</span>'}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  // Actualizar ranking juegos si está visible
+  if(currentGrupoTab==='juegos') renderJuegos();
+}
+
+function totalPuntosGrupo(grupoId) {
+  return D.juegos.reduce((sum, j) => {
+    const p = (j.puntuaciones||[]).find(x => String(x.grupo_id)===String(grupoId));
+    return sum + (p ? parseInt(p.puntuacion)||0 : 0);
+  }, 0);
+}
+
+function openModGrupo() {
+  document.getElementById('mGrupoT').textContent='Nuevo grupo';
+  document.getElementById('gId').value='';
+  document.getElementById('gNom').value='';
+  document.getElementById('gDesc').value='';
+  document.getElementById('gColor').value='#c2410c';
+  buildPicker('gMiembrosPick',[]);
+  om('modGrupo');
+}
+function openModGrupoEdit(id) {
+  const g = D.grupos.find(x=>x.id===id); if(!g) return;
+  document.getElementById('mGrupoT').textContent='Editar grupo';
+  document.getElementById('gId').value=g.id;
+  document.getElementById('gNom').value=g.nombre;
+  document.getElementById('gDesc').value=g.descripcion||'';
+  document.getElementById('gColor').value=g.color;
+  buildPicker('gMiembrosPick', g.miembros||[]);
+  om('modGrupo');
+}
+async function saveGrupo() {
+  const nom = document.getElementById('gNom').value.trim();
+  if(!nom){toast('El nombre es obligatorio','err');return;}
+  const miembros = getSelected('gMiembrosPick');
+  const obj = {nombre:nom, color:document.getElementById('gColor').value, descripcion:document.getElementById('gDesc').value};
+  const eid = document.getElementById('gId').value;
+  try {
+    let gid = eid;
+    if(eid) {
+      await sb.from('grupos').update(obj).eq('id',eid);
+    } else {
+      const {data,error} = await sb.from('grupos').insert(obj).select().single();
+      if(error) throw error; gid=data.id;
+    }
+    await sb.from('grupo_miembros').delete().eq('grupo_id',gid);
+    if(miembros.length) await sb.from('grupo_miembros').insert(miembros.map(pid=>({grupo_id:gid,persona_id:pid})));
+    const local = {id:gid,...obj,miembros};
+    if(eid){ Object.assign(D.grupos.find(g=>g.id===eid), local); }
+    else{ D.grupos.push(local); }
+    cm('modGrupo'); renderGrupos(); toast(eid?'Grupo actualizado':'Grupo creado','ok');
+  } catch(e){ toast('Error: '+e.message,'err'); }
+}
+async function delGrupo(id) {
+  if(!confirm('¿Eliminar este grupo?')) return;
+  try {
+    await sb.from('grupos').delete().eq('id',id);
+    D.grupos = D.grupos.filter(g=>g.id!==id);
+    renderGrupos(); toast('Grupo eliminado','info');
+  } catch(e){ toast('Error: '+e.message,'err'); }
+}
+
+/* ═══════════════════════════════════════
+   JUEGOS
+═══════════════════════════════════════ */
+function renderJuegos() {
+  const list = document.getElementById('juegos-list');
+  const empty = document.getElementById('juegos-empty');
+  if(!D.juegos.length){ list.innerHTML=''; empty.style.display='block'; renderRankingSide(); return; }
+  empty.style.display='none';
+  const estCfg = {
+    pendiente:  {l:'⏳ Pendiente', cls:'pill-gray'},
+    en_curso:   {l:'▶️ En curso',  cls:'pill-amber'},
+    finalizado: {l:'✅ Finalizado',cls:'pill-green'},
+  };
+  const tipoCfg = {
+    Gymkana:   {c:'#c2410c',bg:'#fff7ed',i:'fa-flag-checkered'},
+    Deportivo: {c:'#0369a1',bg:'#f0f9ff',i:'fa-futbol'},
+    Bíblico:   {c:'#047857',bg:'#ecfdf5',i:'fa-book-open'},
+    Creativo:  {c:'#7c3aed',bg:'#f5f3ff',i:'fa-palette'},
+    Nocturno:  {c:'#1c1917',bg:'#f5f5f4',i:'fa-moon'},
+    Final:     {c:'#d97706',bg:'#fffbeb',i:'fa-trophy'},
+  };
+  list.innerHTML = D.juegos.map(j => {
+    const cfg = tipoCfg[j.tipo]||{c:'#4338ca',bg:'#eef2ff',i:'fa-gamepad'};
+    const ec = estCfg[j.estado]||estCfg.pendiente;
+    const sortedGrupos = [...D.grupos].sort((a,b)=>{
+      const pa=(j.puntuaciones||[]).find(x=>String(x.grupo_id)===String(a.id));
+      const pb=(j.puntuaciones||[]).find(x=>String(x.grupo_id)===String(b.id));
+      return (parseInt(pb?.puntuacion)||0)-(parseInt(pa?.puntuacion)||0);
+    });
+    const scoresHTML = sortedGrupos.map(gr => {
+      const punt = (j.puntuaciones||[]).find(x=>String(x.grupo_id)===String(gr.id));
+      const val = punt ? parseInt(punt.puntuacion)||0 : 0;
+      const pct = j.puntuacion_max>0 ? Math.round(val/j.puntuacion_max*100) : 0;
+      return `<div class="score-row">
+        <div class="score-dot" style="background:${gr.color}"></div>
+        <div class="score-nm">${gr.nombre}</div>
+        <input class="score-input" type="number" min="0" max="${j.puntuacion_max}" value="${val}"
+          onchange="updatePuntuacion('${j.id}','${gr.id}',this.value)"
+          title="Puntuación de ${gr.nombre}">
+        <div class="score-max">/ ${j.puntuacion_max}</div>
+      </div>
+      <div class="ranking-bar"><div class="ranking-fill" style="width:${pct}%;background:${gr.color}"></div></div>`;
+    }).join('');
+    return `<div class="juego-card" style="margin-bottom:1rem">
+      <div class="juego-hd">
+        <div class="juego-ico" style="background:${cfg.bg};color:${cfg.c}"><i class="fas ${cfg.i}"></i></div>
+        <div style="flex:1">
+          <div class="juego-nm">${j.nombre}</div>
+          <div class="juego-tipo">${j.tipo}${j.dur?' · '+fm(j.dur):''}</div>
+        </div>
+        <span class="pill ${ec.cls}">${ec.l}</span>
+        <div style="display:flex;gap:.3rem;margin-left:.5rem">
+          <button class="icon-btn edit" onclick="openModJuegoEdit('${j.id}')"><i class="fas fa-pen"></i></button>
+          <button class="icon-btn del" onclick="delJuego('${j.id}')"><i class="fas fa-trash"></i></button>
+        </div>
+      </div>
+      <div class="juego-scores">
+        ${D.grupos.length ? scoresHTML : '<div class="empty" style="padding:1rem"><i class="fas fa-flag"></i><p>Crea grupos primero</p></div>'}
+      </div>
+    </div>`;
+  }).join('');
+  renderRankingSide();
+}
+
+async function updatePuntuacion(juegoId, grupoId, valor) {
+  const val = Math.max(0, parseInt(valor)||0);
+  try {
+    const {data,error} = await sb.from('juego_puntuaciones')
+      .upsert({juego_id:juegoId, grupo_id:grupoId, puntuacion:val}, {onConflict:'juego_id,grupo_id'})
+      .select().single();
+    if(error) throw error;
+    // Actualizar en memoria
+    const j = D.juegos.find(x=>x.id===juegoId); if(!j) return;
+    j.puntuaciones = j.puntuaciones||[];
+    const idx = j.puntuaciones.findIndex(x=>String(x.grupo_id)===String(grupoId));
+    if(idx>=0) j.puntuaciones[idx].puntuacion=val;
+    else j.puntuaciones.push({juego_id:juegoId,grupo_id:grupoId,puntuacion:val});
+    renderRankingSide();
+    if(currentGrupoTab==='ranking') renderRankingGeneral();
+  } catch(e){ toast('Error guardando: '+e.message,'err'); }
+}
+
+function renderRankingSide() {
+  const el = document.getElementById('juegos-ranking-side'); if(!el) return;
+  const sorted = [...D.grupos].sort((a,b)=>totalPuntosGrupo(b.id)-totalPuntosGrupo(a.id));
+  const maxPts = sorted.length ? totalPuntosGrupo(sorted[0].id)||1 : 1;
+  el.innerHTML = sorted.length ? sorted.map((g,i) => {
+    const pts = totalPuntosGrupo(g.id);
+    const pct = Math.round(pts/maxPts*100);
+    const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
+    return `<div class="ranking-row">
+      <div class="rank-num ${i===0?'gold':i===1?'silver':i===2?'bronze':''}">${medal||i+1}</div>
+      <div style="flex:1">
+        <div style="display:flex;align-items:center;gap:.4rem;margin-bottom:.2rem">
+          <div style="width:8px;height:8px;border-radius:50%;background:${g.color}"></div>
+          <span style="font-weight:600;font-size:.85rem">${g.nombre}</span>
+        </div>
+        <div class="ranking-bar"><div class="ranking-fill" style="width:${pct}%;background:${g.color}"></div></div>
+      </div>
+      <strong style="font-size:.9rem;margin-left:.5rem;color:${g.color}">${pts}</strong>
+    </div>`;
+  }).join('') : '<div class="empty" style="padding:1rem"><i class="fas fa-flag"></i><p>Sin grupos aún</p></div>';
+}
+
+function renderRankingGeneral() {
+  const el = document.getElementById('ranking-general'); if(!el) return;
+  const sorted = [...D.grupos].sort((a,b)=>totalPuntosGrupo(b.id)-totalPuntosGrupo(a.id));
+  const totalJuegos = D.juegos.length;
+  const maxPts = D.juegos.reduce((s,j)=>s+(parseInt(j.puntuacion_max)||0),0);
+  el.innerHTML = sorted.length ? `
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem">
+      ${sorted.map((g,i)=>{
+        const pts = totalPuntosGrupo(g.id);
+        const pct = maxPts>0 ? Math.round(pts/maxPts*100) : 0;
+        const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
+        return `<div style="background:${hexLight(g.color,.07)};border:2px solid ${hexLight(g.color,.25)};border-radius:var(--r);padding:1.25rem;text-align:center">
+          <div style="font-size:2.5rem;margin-bottom:.5rem">${medal||'#'+(i+1)}</div>
+          <div style="font-weight:800;font-size:1.1rem;color:${g.color};margin-bottom:.2rem">${g.nombre}</div>
+          <div style="font-size:2rem;font-weight:800;font-family:'Lora',serif;margin:.5rem 0">${pts}</div>
+          <div style="font-size:.72rem;color:var(--ink3)">puntos de ${maxPts} posibles</div>
+          <div class="capacity-bar" style="margin-top:.75rem">
+            <div class="capacity-fill" style="width:${pct}%;background:${g.color}"></div>
+          </div>
+          <div style="font-size:.75rem;color:var(--ink2);margin-top:.35rem">${g.miembros.length} miembros · ${totalJuegos} juegos</div>
+        </div>`;
+      }).join('')}
+    </div>` : '<div class="empty"><i class="fas fa-flag"></i><p>Crea grupos y añade puntuaciones</p></div>';
+}
+
+function openModJuego() {
+  document.getElementById('mJuegoT').textContent='Nuevo juego';
+  document.getElementById('jId').value='';
+  ['jNom','jDesc'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('jTipo').value='Gymkana';
+  document.getElementById('jPunMax').value='10';
+  document.getElementById('jDur').value='30';
+  document.getElementById('jEst').value='pendiente';
+  om('modJuego');
+}
+function openModJuegoEdit(id) {
+  const j = D.juegos.find(x=>x.id===id); if(!j) return;
+  document.getElementById('mJuegoT').textContent='Editar juego';
+  document.getElementById('jId').value=j.id;
+  document.getElementById('jNom').value=j.nombre;
+  document.getElementById('jTipo').value=j.tipo;
+  document.getElementById('jPunMax').value=j.puntuacion_max||10;
+  document.getElementById('jDur').value=j.dur||30;
+  document.getElementById('jEst').value=j.estado||'pendiente';
+  document.getElementById('jDesc').value=j.descripcion||'';
+  om('modJuego');
+}
+async function saveJuego() {
+  const nom = document.getElementById('jNom').value.trim();
+  if(!nom){toast('El nombre es obligatorio','err');return;}
+  const obj = {nombre:nom, tipo:document.getElementById('jTipo').value,
+    puntuacion_max:parseInt(document.getElementById('jPunMax').value)||10,
+    duracion:parseInt(document.getElementById('jDur').value)||30,
+    estado:document.getElementById('jEst').value,
+    descripcion:document.getElementById('jDesc').value};
+  const eid = document.getElementById('jId').value;
+  try {
+    if(eid) {
+      await sb.from('juegos').update(obj).eq('id',eid);
+      Object.assign(D.juegos.find(j=>j.id===eid),{...obj,dur:obj.duracion});
+    } else {
+      const {data,error}=await sb.from('juegos').insert(obj).select().single();
+      if(error) throw error; D.juegos.push({...data,dur:data.duracion,puntuaciones:[]});
+    }
+    cm('modJuego'); renderJuegos(); toast(eid?'Juego actualizado':'Juego creado','ok');
+  } catch(e){ toast('Error: '+e.message,'err'); }
+}
+async function delJuego(id) {
+  if(!confirm('¿Eliminar este juego y sus puntuaciones?')) return;
+  try {
+    await sb.from('juegos').delete().eq('id',id);
+    D.juegos = D.juegos.filter(j=>j.id!==id);
+    renderJuegos(); toast('Juego eliminado','info');
+  } catch(e){ toast('Error: '+e.message,'err'); }
+}
+
+/* ═══════════════════════════════════════
+   CABAÑAS
+═══════════════════════════════════════ */
+function renderCabanas() {
+  // Stats
+  const totalCap = D.cabanas.reduce((s,c)=>s+c.capacidad,0);
+  const totalAsig = D.cabanas.reduce((s,c)=>s+(c.asignados||[]).length,0);
+  const sinAsignar = D.personas.filter(p=>{
+    const pid=String(p.id);
+    return !D.cabanas.some(c=>(c.asignados||[]).map(String).includes(pid));
+  });
+  document.getElementById('cab-stats').innerHTML=`
+    <div class="sc c-sky"><div class="sc-icon"><i class="fas fa-house-chimney"></i></div><div class="sc-val">${D.cabanas.length}</div><div class="sc-lbl">Cabañas</div></div>
+    <div class="sc c-green"><div class="sc-icon"><i class="fas fa-bed"></i></div><div class="sc-val">${totalCap}</div><div class="sc-lbl">Plazas totales</div></div>
+    <div class="sc c-indigo"><div class="sc-icon"><i class="fas fa-user-check"></i></div><div class="sc-val">${totalAsig}</div><div class="sc-lbl">Asignadas</div></div>
+    <div class="sc c-red"><div class="sc-icon"><i class="fas fa-user-xmark"></i></div><div class="sc-val">${sinAsignar.length}</div><div class="sc-lbl">Sin cabaña</div>${sinAsignar.length?`<div class="sc-sub" style="color:var(--red-v)">${sinAsignar.length} persona${sinAsignar.length!==1?'s':''}</div>`:''}</div>
+  `;
+  // Alert sin asignar
+  const alertDiv = document.getElementById('cab-alert');
+  if(sinAsignar.length) {
+    alertDiv.innerHTML=`<div class="alert alert-warn" style="margin-bottom:1.25rem">
+      <i class="fas fa-triangle-exclamation"></i>
+      <div class="alert-body">
+        <h4>${sinAsignar.length} persona${sinAsignar.length!==1?'s':''} sin cabaña asignada</h4>
+        <p style="margin-top:.25rem">${sinAsignar.map(p=>`<span style="display:inline-flex;align-items:center;gap:.3rem;margin:.15rem;padding:.2rem .55rem;border-radius:99px;background:#fff;border:1px solid var(--amber-m);font-size:.75rem"><span style="width:14px;height:14px;border-radius:50%;background:${p.color};flex-shrink:0;display:inline-block"></span>${p.nombre.split(' ')[0]}</span>`).join('')}</p>
+      </div>
+    </div>`;
+  } else if(D.personas.length>0) {
+    alertDiv.innerHTML=`<div class="alert alert-info" style="margin-bottom:1.25rem"><i class="fas fa-circle-check"></i><div class="alert-body"><h4>¡Todo el mundo tiene cabaña asignada!</h4></div></div>`;
+  } else { alertDiv.innerHTML=''; }
+
+  // Badge nav
+  const nb=document.getElementById('cabBadge');
+  if(sinAsignar.length){nb.style.display='';nb.textContent=sinAsignar.length;}else{nb.style.display='none';}
+
+  // Grid
+  const g=document.getElementById('cabanas-grid'), e=document.getElementById('cabanas-empty');
+  if(!D.cabanas.length){g.innerHTML='';e.style.display='block';return;}
+  e.style.display='none';
+  g.innerHTML = D.cabanas.map(c => {
+    const asig = c.asignados||[];
+    const libre = c.capacidad - asig.length;
+    const pct = Math.round(asig.length/c.capacidad*100);
+    const capCls = libre===0?'full':libre<=2?'warn':'ok';
+    const capTxt = libre===0?'Completa':libre===1?'1 libre':`${libre} libres`;
+    // Slots ocupados
+    const slots = [];
+    for(let i=0;i<c.capacidad;i++){
+      if(i<asig.length){
+        const id=asig[i];
+        slots.push(`<div class="slot occupied">
+          <div class="slot-av" style="background:${pColor(id)}">${ini(pName(id))}</div>
+          <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:.72rem">${pName(id).split(' ')[0]}</span>
+        </div>`);
+      } else {
+        slots.push(`<div class="slot empty"><i class="fas fa-plus" style="font-size:.6rem;margin-right:.2rem"></i>Libre</div>`);
+      }
+    }
+    const fillColor = libre===0?'var(--red-v)':libre<=2?'var(--amber-v)':'var(--green-v)';
+    return `<div class="cabana-card">
+      <div class="cabana-hd">
+        <div class="cabana-nm"><i class="fas fa-house-chimney" style="color:var(--sky)"></i>${c.nombre}</div>
+        <div style="display:flex;align-items:center;gap:.4rem">
+          <span class="cabana-cap ${capCls}">${capTxt}</span>
+          <button class="icon-btn edit" onclick="openModCabanaEdit('${c.id}')"><i class="fas fa-pen"></i></button>
+          <button class="icon-btn del" onclick="delCabana('${c.id}')"><i class="fas fa-trash"></i></button>
+        </div>
+      </div>
+      <div class="cabana-body">
+        ${c.descripcion?`<div style="font-size:.75rem;color:var(--ink2);margin-bottom:.75rem">${c.descripcion}</div>`:''}
+        <div style="font-size:.72rem;color:var(--ink2);margin-bottom:.4rem;display:flex;align-items:center;justify-content:space-between">
+          <span><strong>${asig.length}</strong> / ${c.capacidad} plazas</span>
+          <span style="color:${fillColor}">${pct}% ocupada</span>
+        </div>
+        <div class="capacity-bar" style="margin-bottom:.875rem">
+          <div class="capacity-fill" style="width:${pct}%;background:${fillColor}"></div>
+        </div>
+        <div class="cabana-slots">${slots.join('')}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openModCabana() {
+  document.getElementById('mCabanaT').textContent='Nueva cabaña';
+  document.getElementById('cabId').value='';
+  document.getElementById('cabNom').value='';
+  document.getElementById('cabDesc').value='';
+  document.getElementById('cabCap').value='8';
+  buildPicker('cabPick',[]);
+  om('modCabana');
+}
+function openModCabanaEdit(id) {
+  const c = D.cabanas.find(x=>x.id===id); if(!c) return;
+  document.getElementById('mCabanaT').textContent='Editar cabaña';
+  document.getElementById('cabId').value=c.id;
+  document.getElementById('cabNom').value=c.nombre;
+  document.getElementById('cabDesc').value=c.descripcion||'';
+  document.getElementById('cabCap').value=c.capacidad;
+  buildPicker('cabPick', c.asignados||[]);
+  om('modCabana');
+}
+async function saveCabana() {
+  const nom = document.getElementById('cabNom').value.trim();
+  if(!nom){toast('El nombre es obligatorio','err');return;}
+  const asig = getSelected('cabPick');
+  const cap = parseInt(document.getElementById('cabCap').value)||8;
+  if(asig.length > cap){ toast(`Hay más personas (${asig.length}) que plazas (${cap})`,'err'); return; }
+  const obj={nombre:nom, capacidad:cap, descripcion:document.getElementById('cabDesc').value};
+  const eid=document.getElementById('cabId').value;
+  try {
+    let cid=eid;
+    if(eid){
+      await sb.from('cabanas').update(obj).eq('id',eid);
+    } else {
+      const {data,error}=await sb.from('cabanas').insert(obj).select().single();
+      if(error) throw error; cid=data.id;
+    }
+    await sb.from('cabana_asignaciones').delete().eq('cabana_id',cid);
+    if(asig.length) await sb.from('cabana_asignaciones').insert(asig.map(pid=>({cabana_id:cid,persona_id:pid})));
+    const local={id:cid,...obj,asignados:asig};
+    if(eid){ Object.assign(D.cabanas.find(c=>c.id===eid),local); }
+    else{ D.cabanas.push(local); }
+    cm('modCabana'); renderCabanas(); toast(eid?'Cabaña actualizada':'Cabaña creada','ok');
+  } catch(e){ toast('Error: '+e.message,'err'); }
+}
+async function delCabana(id) {
+  if(!confirm('¿Eliminar esta cabaña?')) return;
+  try {
+    await sb.from('cabanas').delete().eq('id',id);
+    D.cabanas = D.cabanas.filter(c=>c.id!==id);
+    renderCabanas(); toast('Cabaña eliminada','info');
+  } catch(e){ toast('Error: '+e.message,'err'); }
+}
+
+
+/* ═══════════════════════════════════════
+   LOCK SYSTEM
+═══════════════════════════════════════ */
+const LOCK_PW = 'admin';
+const UNLOCKED_SECTIONS = new Set();
+let lockPendingPage = null;
+let lockPendingEl = null;
+
+function tryUnlock(el, pg) {
+  if(UNLOCKED_SECTIONS.has(pg)) { go(el, pg); return; }
+  lockPendingPage = pg; lockPendingEl = el;
+  document.getElementById('lockSubtitle').textContent = `Introduce la contraseña para acceder a "${pg.charAt(0).toUpperCase()+pg.slice(1)}"`;
+  document.getElementById('lockPwInput').value = '';
+  document.getElementById('lockErr').style.display = 'none';
+  document.getElementById('lockOverlay').classList.add('visible');
+  setTimeout(() => document.getElementById('lockPwInput').focus(), 100);
+}
+
+function submitLock() {
+  const val = document.getElementById('lockPwInput').value;
+  if(val === LOCK_PW) {
+    UNLOCKED_SECTIONS.add(lockPendingPage);
+    closeLock();
+    // Update nav icon to unlocked
+    document.querySelectorAll(`.ni[data-p="${lockPendingPage}"] .lock-ico`).forEach(i => {
+      i.className = 'fas fa-lock-open lock-ico'; i.style.color='var(--green-v)';
+    });
+    go(lockPendingEl, lockPendingPage);
+  } else {
+    const err = document.getElementById('lockErr');
+    err.style.display = 'block';
+    document.getElementById('lockPwInput').value = '';
+    document.getElementById('lockPwInput').focus();
+    setTimeout(() => err.style.display='none', 3000);
+  }
+}
+
+function closeLock() {
+  document.getElementById('lockOverlay').classList.remove('visible');
+  lockPendingPage = null; lockPendingEl = null;
+}
+
+// Enter en el input del lock
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('lockPwInput').addEventListener('keypress', e => {
+    if(e.key === 'Enter') submitLock();
+  });
+  document.getElementById('lockOverlay').addEventListener('click', e => {
+    if(e.target === document.getElementById('lockOverlay')) closeLock();
+  });
+});
+
+/* ═══════════════════════════════════════
+   COCHES
+═══════════════════════════════════════ */
+function renderCoches() {
+  const totalPlazas = D.coches.reduce((s,c) => s + c.plazas, 0);
+  const totalPax = D.coches.reduce((s,c) => s + (c.pasajeros||[]).length + (c.conductor?1:0), 0);
+  const sinCoche = D.personas.filter(p => {
+    const pid = String(p.id);
+    return !D.coches.some(c =>
+      (c.pasajeros||[]).map(String).includes(pid) || String(c.conductor)===pid
+    );
+  });
+
+  document.getElementById('coche-stats').innerHTML = `
+    <div class="sc c-sky"><div class="sc-icon"><i class="fas fa-car"></i></div><div class="sc-val">${D.coches.length}</div><div class="sc-lbl">Vehículos</div></div>
+    <div class="sc c-indigo"><div class="sc-icon"><i class="fas fa-chair"></i></div><div class="sc-val">${totalPlazas}</div><div class="sc-lbl">Plazas totales</div></div>
+    <div class="sc c-green"><div class="sc-icon"><i class="fas fa-user-check"></i></div><div class="sc-val">${totalPax}</div><div class="sc-lbl">Asignadas</div></div>
+    <div class="sc c-red"><div class="sc-icon"><i class="fas fa-user-slash"></i></div><div class="sc-val">${sinCoche.length}</div><div class="sc-lbl">Sin coche</div>${sinCoche.length?`<div class="sc-sub" style="color:var(--red-v)">${sinCoche.length} persona${sinCoche.length!==1?'s':''}</div>`:''}</div>
+  `;
+
+  const alertDiv = document.getElementById('coche-alert');
+  if(sinCoche.length) {
+    alertDiv.innerHTML = `<div class="alert alert-warn" style="margin-bottom:1.25rem">
+      <i class="fas fa-triangle-exclamation"></i>
+      <div class="alert-body">
+        <h4>${sinCoche.length} persona${sinCoche.length!==1?'s':''} sin coche asignado</h4>
+        <p style="margin-top:.25rem">${sinCoche.map(p=>`<span style="display:inline-flex;align-items:center;gap:.3rem;margin:.15rem;padding:.2rem .55rem;border-radius:99px;background:#fff;border:1px solid var(--amber-m);font-size:.75rem"><span style="width:14px;height:14px;border-radius:50%;background:${p.color};flex-shrink:0;display:inline-block"></span>${p.nombre.split(' ')[0]}</span>`).join('')}</p>
+      </div>
+    </div>`;
+  } else if(D.personas.length > 0) {
+    alertDiv.innerHTML = `<div class="alert alert-info" style="margin-bottom:1.25rem"><i class="fas fa-circle-check"></i><div class="alert-body"><h4>¡Todos tienen coche asignado!</h4></div></div>`;
+  } else { alertDiv.innerHTML = ''; }
+
+  const g = document.getElementById('coches-grid'), e = document.getElementById('coches-empty');
+  if(!D.coches.length){ g.innerHTML=''; e.style.display='block'; return; }
+  e.style.display='none';
+
+  g.innerHTML = D.coches.map(c => {
+    const pasajeros = c.pasajeros||[];
+    const conductor = c.conductor;
+    const ocupados = pasajeros.length + (conductor?1:0);
+    const libre = c.plazas - ocupados;
+    const pct = c.plazas>0 ? Math.round(ocupados/c.plazas*100) : 0;
+    const capCls = libre===0?'full':libre<=1?'warn':'ok';
+    const capTxt = libre===0?'Completo':libre===1?'1 libre':`${libre} libres`;
+    const fillColor = libre===0?'var(--red-v)':libre<=1?'var(--amber-v)':'#3b82f6';
+
+    // Slots: conductor primero, luego pasajeros, luego libres
+    const slots = [];
+    if(conductor) {
+      slots.push(`<div class="asiento ocup" style="border-color:#3b82f6;background:rgba(59,130,246,.06)">
+        <div class="asiento-av" style="background:#1e40af">🚗</div>
+        <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:.7rem">${pName(conductor).split(' ')[0]}</span>
+      </div>`);
+    } else {
+      slots.push(`<div class="asiento lib" style="border-color:#3b82f6"><i class="fas fa-steering-wheel" style="font-size:.6rem;margin-right:.2rem;color:#3b82f6"></i>Conductor</div>`);
+    }
+    pasajeros.forEach(id => {
+      slots.push(`<div class="asiento ocup">
+        <div class="asiento-av" style="background:${pColor(id)}">${ini(pName(id))}</div>
+        <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:.7rem">${pName(id).split(' ')[0]}</span>
+      </div>`);
+    });
+    const libresSlots = c.plazas - pasajeros.length - (conductor?1:0);
+    for(let i=0;i<libresSlots;i++) slots.push(`<div class="asiento lib"><i class="fas fa-plus" style="font-size:.55rem;margin-right:.2rem"></i>Libre</div>`);
+
+    return `<div class="coche-card">
+      <div class="coche-hd">
+        <div class="coche-nm"><i class="fas fa-car" style="color:#3b82f6"></i>${c.nombre}</div>
+        <div style="display:flex;align-items:center;gap:.4rem">
+          <span class="cabana-cap ${capCls}">${capTxt}</span>
+          <button class="icon-btn edit" onclick="openModCocheEdit('${c.id}')"><i class="fas fa-pen"></i></button>
+          <button class="icon-btn del" onclick="delCoche('${c.id}')"><i class="fas fa-trash"></i></button>
+        </div>
+      </div>
+      <div class="coche-body">
+        ${c.ruta?`<div style="font-size:.75rem;color:var(--sky);margin-bottom:.5rem"><i class="fas fa-route"></i> ${c.ruta}</div>`:''}
+        ${c.notas?`<div style="font-size:.73rem;color:var(--ink2);margin-bottom:.625rem">${c.notas}</div>`:''}
+        <div style="font-size:.72rem;color:var(--ink2);margin-bottom:.35rem;display:flex;justify-content:space-between">
+          <span><strong>${ocupados}</strong> / ${c.plazas} plazas</span>
+          <span style="color:${fillColor}">${pct}% lleno</span>
+        </div>
+        <div class="capacity-bar" style="margin-bottom:.875rem">
+          <div class="capacity-fill" style="width:${pct}%;background:${fillColor}"></div>
+        </div>
+        <div class="asiento-grid">${slots.join('')}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openModCoche() {
+  document.getElementById('mCocheT').textContent = 'Nuevo coche';
+  document.getElementById('cocheId').value = '';
+  ['cocheNom','cocheRuta','cocheNotas'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('cochePlazas').value = '5';
+  document.getElementById('cocheConductor').innerHTML = '<option value="">— Sin asignar —</option>'+D.personas.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join('');
+  buildPicker('cochePick',[]);
+  om('modCoche');
+}
+function openModCocheEdit(id) {
+  const c = D.coches.find(x=>x.id===id); if(!c) return;
+  document.getElementById('mCocheT').textContent = 'Editar coche';
+  document.getElementById('cocheId').value = c.id;
+  document.getElementById('cocheNom').value = c.nombre;
+  document.getElementById('cochePlazas').value = c.plazas;
+  document.getElementById('cocheRuta').value = c.ruta||'';
+  document.getElementById('cocheNotas').value = c.notas||'';
+  document.getElementById('cocheConductor').innerHTML = '<option value="">— Sin asignar —</option>'+D.personas.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join('');
+  document.getElementById('cocheConductor').value = c.conductor||'';
+  buildPicker('cochePick', c.pasajeros||[]);
+  om('modCoche');
+}
+async function saveCoche() {
+  const nom = document.getElementById('cocheNom').value.trim();
+  if(!nom){toast('El nombre es obligatorio','err');return;}
+  const plazas = parseInt(document.getElementById('cochePlazas').value)||5;
+  const conductor = document.getElementById('cocheConductor').value||null;
+  const pasajeros = getSelected('cochePick').filter(id=>id!==conductor);
+  const totalOcupados = pasajeros.length + (conductor?1:0);
+  if(totalOcupados > plazas){toast(`Hay más asignados (${totalOcupados}) que plazas (${plazas})`,'err');return;}
+  const obj = {nombre:nom, plazas, conductor, ruta:document.getElementById('cocheRuta').value, notas:document.getElementById('cocheNotas').value};
+  const eid = document.getElementById('cocheId').value;
+  try {
+    let cid = eid;
+    if(eid){
+      await sb.from('coches').update(obj).eq('id',eid);
+    } else {
+      const {data,error}=await sb.from('coches').insert(obj).select().single();
+      if(error) throw error; cid=data.id;
+    }
+    await sb.from('coche_pasajeros').delete().eq('coche_id',cid);
+    if(pasajeros.length) await sb.from('coche_pasajeros').insert(pasajeros.map(pid=>({coche_id:cid,persona_id:pid})));
+    const local = {id:cid,...obj,pasajeros};
+    if(eid){ Object.assign(D.coches.find(c=>c.id===eid),local); }
+    else{ D.coches.push(local); }
+    cm('modCoche'); renderCoches(); toast(eid?'Coche actualizado':'Coche añadido','ok');
+  } catch(e){ toast('Error: '+e.message,'err'); }
+}
+async function delCoche(id) {
+  if(!confirm('¿Eliminar este vehículo?')) return;
+  try {
+    await sb.from('coches').delete().eq('id',id);
+    D.coches = D.coches.filter(c=>c.id!==id);
+    renderCoches(); toast('Vehículo eliminado','info');
   } catch(e){ toast('Error: '+e.message,'err'); }
 }
 
