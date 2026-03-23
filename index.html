@@ -249,7 +249,7 @@ nav{flex:1;overflow-y:auto;padding:.875rem .875rem;}
 .prog-side h3{font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);
   margin-bottom:1rem;display:flex;align-items:center;gap:.45rem;}
 
-/* ── ACTIVITIES ── */
+/* ── ACTIVIDADES ── */
 .act-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;}
 .acard{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);
   padding:1.1rem 1.25rem;box-shadow:var(--sh-sm);transition:all .2s;position:relative;}
@@ -438,7 +438,6 @@ nav{flex:1;overflow-y:auto;padding:.875rem .875rem;}
 .mob-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:199;
   backdrop-filter:blur(2px);}
 
-
 /* ── GRUPOS ── */
 .grupo-card{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);
   box-shadow:var(--sh-sm);overflow:hidden;transition:all .2s;position:relative;}
@@ -507,7 +506,6 @@ nav{flex:1;overflow-y:auto;padding:.875rem .875rem;}
   .cabana-slots{grid-template-columns:repeat(auto-fill,minmax(90px,1fr));}
 }
 
-
 /* ── LOCK OVERLAY ── */
 .lock-overlay{position:fixed;inset:0;background:rgba(15,23,42,.75);z-index:800;
   display:none;align-items:center;justify-content:center;backdrop-filter:blur(6px);}
@@ -539,7 +537,6 @@ nav{flex:1;overflow-y:auto;padding:.875rem .875rem;}
 .asiento-av{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;
   font-size:.57rem;font-weight:700;color:#fff;flex-shrink:0;}
 @media(max-width:768px){.coche-grid{grid-template-columns:1fr;}}
-
 
 /* ── MATERIALES CHECKLIST ── */
 .checklist-item{display:flex;align-items:center;gap:.65rem;padding:.55rem .75rem;border-radius:8px;
@@ -626,12 +623,10 @@ html{scroll-behavior:smooth;}
   .ph-actions{flex-wrap:wrap;width:100%;}
   .sc-val{font-size:1.5rem;}
 }
-
 </style>
 </head>
 <body>
 
-<!-- LOGIN -->
 <div id="loginScreen">
   <div style="position:absolute;inset:0;overflow:hidden;pointer-events:none">
     <div style="position:absolute;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(67,56,202,.12) 0%,transparent 70%);top:-100px;left:-150px"></div>
@@ -651,7 +646,6 @@ html{scroll-behavior:smooth;}
   </div>
 </div>
 
-<!-- APP -->
 <div id="app">
   <button class="mob-tog" onclick="toggleSb()"><i class="fas fa-bars" id="mobIcon"></i><span id="mobLabel" style="font-size:.8rem">Menú</span></button>
 <div class="mob-overlay" id="mobOverlay" onclick="toggleSb()"></div>
@@ -697,7 +691,6 @@ html{scroll-behavior:smooth;}
 
   <main class="main">
 
-    <!-- ══════════ DASHBOARD ══════════ -->
     <div class="page active" id="page-dashboard">
       <div style="background:linear-gradient(135deg,#4338ca 0%,#6366f1 50%,#818cf8 100%);border-radius:var(--r-lg);padding:1.5rem 1.75rem;margin-bottom:1.75rem;color:#fff;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;box-shadow:0 8px 24px rgba(67,56,202,.25)">
         <div>
@@ -720,9 +713,16 @@ html{scroll-behavior:smooth;}
         <div class="card"><div class="card-hd"><div class="card-title"><i class="fas fa-music"></i>Canciones preparadas</div><button class="btn btn-ghost btn-sm" onclick="go(document.querySelector('[data-p=alabanza]'),'alabanza')">Ver todas</button></div><div class="card-body" id="d-songs"></div></div>
         <div class="card"><div class="card-hd"><div class="card-title"><i class="fas fa-clock"></i>Tiempo estimado del culto</div></div><div class="card-body" id="d-time"></div></div>
       </div>
+      <div style="display:grid;grid-template-columns:1fr;gap:1.25rem;margin-top:1.5rem">
+        <div class="card">
+          <div class="card-hd">
+            <div class="card-title"><i class="fas fa-box-open"></i>Materiales Generales de Departamentos</div>
+          </div>
+          <div class="card-body" id="d-mats"></div>
+        </div>
+      </div>
     </div>
 
-    <!-- ══════════ PERSONAS ══════════ -->
     <div class="page" id="page-personas">
       <div class="ph">
         <div class="ph-title"><h1>Personas</h1><p>Equipo y participantes del campamento</p></div>
@@ -742,9 +742,7 @@ html{scroll-behavior:smooth;}
       <div class="empty" id="p-empty" style="display:none"><i class="fas fa-users"></i><p>Añade personas al equipo</p></div>
     </div>
 
-    <!-- ══════════ DEPARTAMENTOS ══════════ -->
     <div class="page" id="page-departamentos">
-      <!-- LIST VIEW -->
       <div id="dept-list">
         <div class="ph">
           <div class="ph-title"><h1>Departamentos</h1><p>Equipos y áreas de trabajo del campamento</p></div>
@@ -754,7 +752,6 @@ html{scroll-behavior:smooth;}
         </div>
         <div class="dept-grid" id="dept-grid"></div>
       </div>
-      <!-- DETAIL VIEW -->
       <div id="dept-detail" style="display:none">
         <button class="back-btn" onclick="backDept()"><i class="fas fa-arrow-left"></i>Volver a departamentos</button>
         <div class="dept-2col">
@@ -799,7 +796,6 @@ html{scroll-behavior:smooth;}
       </div>
     </div>
 
-    <!-- ══════════ ALABANZA ══════════ -->
     <div class="page" id="page-alabanza">
       <div class="ph">
         <div class="ph-title"><h1>Alabanza</h1><p>Canciones y equipo de adoración</p></div>
@@ -825,7 +821,6 @@ html{scroll-behavior:smooth;}
       </div>
     </div>
 
-    <!-- ══════════ ACTIVIDADES ══════════ -->
     <div class="page" id="page-actividades">
       <div class="ph">
         <div class="ph-title"><h1>Actividades</h1><p>Juegos, dinámicas y talleres del campamento</p></div>
@@ -850,7 +845,6 @@ html{scroll-behavior:smooth;}
       <div class="empty" id="act-empty" style="display:none"><i class="fas fa-gamepad"></i><p>Añade actividades al campamento</p></div>
     </div>
 
-    <!-- ══════════ PROGRAMA ══════════ -->
     <div class="page" id="page-programa">
       <div class="ph">
         <div class="ph-title"><h1>Programa del Culto</h1><p>Orden del servicio con tiempos estimados</p></div>
@@ -875,7 +869,6 @@ html{scroll-behavior:smooth;}
     </div>
 
 
-    <!-- ══════════ GRUPOS & JUEGOS ══════════ -->
     <div class="page" id="page-grupos">
       <div style="background:linear-gradient(135deg,#c2410c 0%,#ea580c 50%,#fb923c 100%);border-radius:var(--r-lg);padding:1.5rem 1.75rem;margin-bottom:1.75rem;color:#fff;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;box-shadow:0 8px 24px rgba(194,65,12,.25)">
         <div>
@@ -888,18 +881,15 @@ html{scroll-behavior:smooth;}
           <button class="btn btn-sm" style="background:#fff;color:#c2410c;border-color:#fff" onclick="openModJuego()"><i class="fas fa-gamepad"></i>Nuevo juego</button>
         </div>
       </div>
-      <!-- Tabs -->
       <div class="tabs" style="margin-bottom:1.5rem">
         <button class="tab active" onclick="grupoTab('grupos',this)">🏳️ Grupos</button>
         <button class="tab" onclick="grupoTab('juegos',this)">🎮 Juegos / Gymkana</button>
         <button class="tab" onclick="grupoTab('ranking',this)">🏆 Ranking general</button>
       </div>
-      <!-- Vista: Grupos -->
       <div id="gt-grupos">
         <div class="grupo-grid" id="grupos-grid"></div>
         <div class="empty" id="grupos-empty" style="display:none"><i class="fas fa-flag"></i><p>Crea el primer grupo del campamento</p></div>
       </div>
-      <!-- Vista: Juegos -->
       <div id="gt-juegos" style="display:none">
         <div class="juegos-layout">
           <div>
@@ -912,7 +902,6 @@ html{scroll-behavior:smooth;}
           </div>
         </div>
       </div>
-      <!-- Vista: Ranking -->
       <div id="gt-ranking" style="display:none">
         <div class="card">
           <div class="card-hd"><div class="card-title"><i class="fas fa-trophy" style="color:#d97706"></i>Clasificación General</div></div>
@@ -921,7 +910,6 @@ html{scroll-behavior:smooth;}
       </div>
     </div>
 
-    <!-- ══════════ CABAÑAS ══════════ -->
     <div class="page" id="page-cabanas">
       <div style="background:linear-gradient(135deg,#0f766e 0%,#0d9488 50%,#2dd4bf 100%);border-radius:var(--r-lg);padding:1.5rem 1.75rem;margin-bottom:1.75rem;color:#fff;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;box-shadow:0 8px 24px rgba(15,118,110,.3)">
         <div>
@@ -933,15 +921,11 @@ html{scroll-behavior:smooth;}
           <button class="btn btn-sm" style="background:#fff;color:#0f766e;border-color:#fff" onclick="openModCabana()"><i class="fas fa-plus"></i>Nueva cabaña</button>
         </div>
       </div>
-      <!-- Stats cabañas -->
       <div class="stats-row" id="cab-stats" style="margin-bottom:1.5rem"></div>
-      <!-- Alerta sin asignar -->
       <div id="cab-alert"></div>
-      <!-- Grid cabañas -->
       <div class="cabana-grid" id="cabanas-grid"></div>
       <div class="empty" id="cabanas-empty" style="display:none"><i class="fas fa-house-chimney"></i><p>Añade las cabañas del campamento</p></div>
 
-      <!-- ── SECCIÓN COCHES ── -->
       <div style="margin-top:2rem;padding-top:1.5rem;border-top:2px solid var(--border)">
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem;margin-bottom:1.25rem">
           <div>
@@ -960,7 +944,6 @@ html{scroll-behavior:smooth;}
   </main>
 </div>
 
-<!-- ══ MODAL: Persona ══ -->
 <div class="mov" id="modPersona">
   <div class="mbox">
     <div class="mhd"><h3 id="mPersonaT">Nueva persona</h3><button class="mcls" onclick="cm('modPersona')">&times;</button></div>
@@ -985,7 +968,6 @@ html{scroll-behavior:smooth;}
   </div>
 </div>
 
-<!-- ══ MODAL: Departamento ══ -->
 <div class="mov" id="modDepto">
   <div class="mbox">
     <div class="mhd"><h3 id="mDeptoT">Nuevo departamento</h3><button class="mcls" onclick="cm('modDepto')">&times;</button></div>
@@ -1008,7 +990,6 @@ html{scroll-behavior:smooth;}
   </div>
 </div>
 
-<!-- ══ MODAL: Canción ══ -->
 <div class="mov" id="modSong">
   <div class="mbox wide">
     <div class="mhd"><h3 id="mSongT">Nueva canción</h3><button class="mcls" onclick="cm('modSong')">&times;</button></div>
@@ -1075,7 +1056,6 @@ html{scroll-behavior:smooth;}
   </div>
 </div>
 
-<!-- ══ MODAL: Actividad ══ -->
 <div class="mov" id="modAct">
   <div class="mbox wide">
     <div class="mhd"><h3 id="mActT">Nueva actividad</h3><button class="mcls" onclick="cm('modAct')">&times;</button></div>
@@ -1108,7 +1088,6 @@ html{scroll-behavior:smooth;}
   </div>
 </div>
 
-<!-- ══ MODAL: Servicio ══ -->
 <div class="mov" id="modSvc">
   <div class="mbox">
     <div class="mhd"><h3>Nuevo servicio de culto</h3><button class="mcls" onclick="cm('modSvc')">&times;</button></div>
@@ -1122,7 +1101,6 @@ html{scroll-behavior:smooth;}
   </div>
 </div>
 
-<!-- ══ MODAL: Item del programa ══ -->
 <div class="mov" id="modItem">
   <div class="mbox wide">
     <div class="mhd"><h3 id="mItemT">Añadir al programa</h3><button class="mcls" onclick="cm('modItem')">&times;</button></div>
@@ -1164,7 +1142,6 @@ html{scroll-behavior:smooth;}
 </div>
 
 
-<!-- ══ MODAL: Importar CSV ══ -->
 <div class="mov" id="modCSV">
   <div class="mbox wide">
     <div class="grad-hd" style="margin:-1.75rem -1.75rem 1.5rem;border-radius:var(--r-lg) var(--r-lg) 0 0">
@@ -1172,7 +1149,6 @@ html{scroll-behavior:smooth;}
       <p>Sube un archivo .csv con los datos del equipo y los importaremos automáticamente</p>
     </div>
 
-    <!-- PASO 1: Subir archivo -->
     <div id="csvStep1">
       <div class="csv-drop" id="csvDropZone">
         <i class="fas fa-cloud-arrow-up"></i>
@@ -1188,7 +1164,6 @@ html{scroll-behavior:smooth;}
       <div class="mft"><button class="btn btn-ghost" onclick="cm('modCSV')">Cancelar</button></div>
     </div>
 
-    <!-- PASO 2: Mapear columnas -->
     <div id="csvStep2" style="display:none">
       <div style="font-size:.88rem;font-weight:700;margin-bottom:1rem;display:flex;align-items:center;gap:.5rem">
         <span style="background:var(--indigo);color:#fff;width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:.72rem">2</span>
@@ -1203,7 +1178,6 @@ html{scroll-behavior:smooth;}
       </div>
     </div>
 
-    <!-- PASO 3: Progreso -->
     <div id="csvStep3" style="display:none;text-align:center;padding:1rem 0">
       <i class="fas fa-spinner fa-spin" style="font-size:2rem;color:var(--indigo);margin-bottom:1rem;display:block"></i>
       <div id="csvProgressTxt" style="font-size:.88rem;font-weight:600;margin-bottom:1rem">Importando…</div>
@@ -1213,7 +1187,6 @@ html{scroll-behavior:smooth;}
 </div>
 
 
-<!-- ══ MODAL: Grupo ══ -->
 <div class="mov" id="modGrupo">
   <div class="mbox">
     <div class="mhd"><h3 id="mGrupoT">Nuevo grupo</h3><button class="mcls" onclick="cm('modGrupo')">&times;</button></div>
@@ -1231,7 +1204,6 @@ html{scroll-behavior:smooth;}
   </div>
 </div>
 
-<!-- ══ MODAL: Juego ══ -->
 <div class="mov" id="modJuego">
   <div class="mbox">
     <div class="mhd"><h3 id="mJuegoT">Nuevo juego</h3><button class="mcls" onclick="cm('modJuego')">&times;</button></div>
@@ -1261,7 +1233,6 @@ html{scroll-behavior:smooth;}
   </div>
 </div>
 
-<!-- ══ MODAL: Cabaña ══ -->
 <div class="mov" id="modCabana">
   <div class="mbox wide">
     <div class="mhd"><h3 id="mCabanaT">Nueva cabaña</h3><button class="mcls" onclick="cm('modCabana')">&times;</button></div>
@@ -1280,9 +1251,6 @@ html{scroll-behavior:smooth;}
 </div>
 
 
-    <!-- ══════════ COCHES ══════════ -->
-
-<!-- ══ LOCK OVERLAY ══ -->
 <div class="lock-overlay" id="lockOverlay">
   <div class="lock-card">
     <div class="lock-icon"><i class="fas fa-shield-halved"></i></div>
@@ -1300,7 +1268,6 @@ html{scroll-behavior:smooth;}
 </div>
 
 
-<!-- ══ MODAL: Coche ══ -->
 <div class="mov" id="modCoche">
   <div class="mbox wide">
     <div class="mhd">
@@ -1858,20 +1825,59 @@ function renderDash() {
     </div>`;
   }).join('') : '<div class="empty" style="padding:1.5rem"><i class="fas fa-sitemap"></i><p>Sin departamentos</p></div>';
 
-  const sorted = [...D.personas].sort((a,b)=>workload(b.id).score-workload(a.id).score);
-  const maxScore = sorted.length ? workload(sorted[0].id).score||1 : 1;
-  document.getElementById('d-workload').innerHTML = sorted.length ? sorted.map(p => {
-    const wl=workload(p.id); const pct=Math.round(wl.score/maxScore*100);
-    return `<div class="bar-row">
-      <div class="bar-hd">
-        <span class="bar-nm"><span style="width:20px;height:20px;border-radius:50%;background:${p.color};display:inline-flex;align-items:center;justify-content:center;font-size:.6rem;font-weight:700;color:#fff">${ini(p.nombre)}</span>${p.nombre.split(' ')[0]}</span>
-        <span>${wlPill(wl.level)}</span>
-      </div>
-      <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${p.color}"></div></div>
-      <div style="font-size:.68rem;color:var(--ink3);margin-top:.2rem">${wl.depts} dept${wl.canciones?` · 🎵${wl.canciones}`:''}${wl.devoc?` · 📖${wl.devoc}`:''}${wl.pred?` · 📢${wl.pred}`:''}</div>
-    </div>`;
-  }).join('') : '<div class="empty" style="padding:1.5rem"><i class="fas fa-users"></i><p>Sin personas añadidas</p></div>';
 
+  // --- 1. NUEVA VISTA DE TABLA PARA CARGA DE TRABAJO ---
+  const sorted = [...D.personas].sort((a,b)=>workload(b.id).score-workload(a.id).score);
+
+  if (sorted.length) {
+    const tableRows = sorted.map(p => {
+      const wl = workload(p.id);
+
+      const stats = [];
+      if(wl.depts) stats.push(`<span style="display:inline-block;background:var(--surf2);padding:.15rem .4rem;border-radius:4px;margin:2px;white-space:nowrap;"><i class="fas fa-sitemap" style="color:var(--ink3)"></i> ${wl.depts} Dept</span>`);
+      if(wl.canciones) stats.push(`<span style="display:inline-block;background:var(--surf2);padding:.15rem .4rem;border-radius:4px;margin:2px;white-space:nowrap;"><i class="fas fa-music" style="color:var(--amber-v)"></i> ${wl.canciones} Canc</span>`);
+      if(wl.devoc) stats.push(`<span style="display:inline-block;background:var(--surf2);padding:.15rem .4rem;border-radius:4px;margin:2px;white-space:nowrap;"><i class="fas fa-book-open" style="color:var(--green-v)"></i> ${wl.devoc} Devoc</span>`);
+      if(wl.pred) stats.push(`<span style="display:inline-block;background:var(--surf2);padding:.15rem .4rem;border-radius:4px;margin:2px;white-space:nowrap;"><i class="fas fa-microphone" style="color:var(--violet)"></i> ${wl.pred} Predic</span>`);
+      if(wl.act) stats.push(`<span style="display:inline-block;background:var(--surf2);padding:.15rem .4rem;border-radius:4px;margin:2px;white-space:nowrap;"><i class="fas fa-gamepad" style="color:var(--sky)"></i> ${wl.act} Activ</span>`);
+
+      return `<tr style="border-bottom:1px solid var(--border); transition: background .15s;" onmouseover="this.style.background='var(--surf2)'" onmouseout="this.style.background='transparent'">
+        <td style="padding:.5rem;">
+          <div style="display:flex;align-items:center;gap:.6rem;">
+            <div class="av av-sm" style="background:${p.color};flex-shrink:0">${ini(p.nombre)}</div>
+            <div style="font-weight:600;white-space:nowrap;">${p.nombre.split(' ')[0]}</div>
+          </div>
+        </td>
+        <td style="padding:.5rem; font-size:.7rem; color:var(--ink2);">
+          ${stats.join('')||'<span style="color:var(--ink3);font-style:italic">Ninguna</span>'}
+        </td>
+        <td style="padding:.5rem; text-align:right;">
+          ${wlPill(wl.level)}
+        </td>
+      </tr>`;
+    }).join('');
+
+    document.getElementById('d-workload').innerHTML = `
+      <div style="overflow-x:auto; width:100%;">
+        <table style="width:100%; border-collapse:collapse; text-align:left; font-size:.82rem;">
+          <thead>
+            <tr style="border-bottom:2px solid var(--border); color:var(--ink3); font-size:.75rem; text-transform:uppercase; letter-spacing:.05em;">
+              <th style="padding-bottom:.5rem; font-weight:700;">Persona</th>
+              <th style="padding-bottom:.5rem; font-weight:700;">Tareas Asignadas</th>
+              <th style="padding-bottom:.5rem; font-weight:700; text-align:right;">Nivel</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${tableRows}
+          </tbody>
+        </table>
+      </div>
+    `;
+  } else {
+    document.getElementById('d-workload').innerHTML = '<div class="empty" style="padding:1.5rem"><i class="fas fa-users"></i><p>Sin personas añadidas</p></div>';
+  }
+
+
+  // --- CANCIONES Y TIEMPO ESTIMADO ---
   document.getElementById('d-songs').innerHTML = D.canciones.length ? D.canciones.slice(0,5).map(c => {
     const singers = (c.cantantes||[]).slice(0,3).map(id=>`<span class="av av-sm" style="background:${pColor(id)};border:2px solid #fff">${ini(pName(id))}</span>`).join('');
     return `<div style="display:flex;align-items:center;gap:.75rem;padding:.5rem 0;border-bottom:1px solid var(--border)">
@@ -1902,6 +1908,43 @@ function renderDash() {
 
   const nb=document.getElementById('niBadge');
   if(unassigned.length){nb.style.display='';nb.textContent=unassigned.length;}else{nb.style.display='none';}
+
+
+  // --- 2. TARJETA DE MATERIALES GLOBALES ---
+  const matsContainer = document.getElementById('d-mats');
+  if(matsContainer) {
+    const allDeptsWithMats = Object.keys(D.materiales).filter(deptId => D.materiales[deptId] && D.materiales[deptId].length > 0);
+
+    if (!allDeptsWithMats.length) {
+       matsContainer.innerHTML = '<div class="empty" style="padding:1.5rem"><i class="fas fa-box-open"></i><p>No hay materiales en las listas de los departamentos.</p></div>';
+    } else {
+       matsContainer.innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1rem;">' +
+         allDeptsWithMats.map(deptId => {
+           const dept = D.departamentos.find(d => d.id === deptId);
+           const deptName = dept ? dept.nombre : 'Departamento eliminado';
+           const deptColor = dept ? dept.color : 'var(--ink3)';
+           const items = D.materiales[deptId];
+           const doneCount = items.filter(i => i.done).length;
+           const total = items.length;
+           const isAllDone = doneCount === total;
+
+           const itemsHtml = items.map(m => `
+             <div style="font-size:.75rem;color:${m.done?'var(--ink3)':'var(--ink)'}; text-decoration:${m.done?'line-through':'none'}; display:flex; align-items:flex-start; gap:.4rem; margin-bottom:.3rem;">
+               <i class="fas ${m.done?'fa-check-circle':'fa-circle'}" style="color:${m.done?'var(--green-v)':'var(--border2)'};font-size:.75rem;margin-top:.15rem;flex-shrink:0;"></i> 
+               <span style="line-height:1.3">${m.texto}</span>
+             </div>
+           `).join('');
+
+           return `<div style="background:var(--surf2);border:1px solid var(--border);border-radius:var(--r-sm);padding:1rem;">
+             <div style="font-size:.85rem;font-weight:700;color:${deptColor};margin-bottom:.75rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);padding-bottom:.4rem;">
+               <span style="display:flex;align-items:center;gap:.4rem;"><i class="fas ${dept ? dept.icono : 'fa-box'}"></i> ${deptName}</span>
+               <span style="font-size:.7rem;padding:.15rem .45rem;border-radius:99px;background:${isAllDone?'var(--green-l)':'var(--surf)'};color:${isAllDone?'var(--green-v)':'var(--ink2)'};border:1px solid ${isAllDone?'var(--green-m)':'var(--border2)'}">${doneCount}/${total}</span>
+             </div>
+             <div>${itemsHtml}</div>
+           </div>`;
+         }).join('') + '</div>';
+    }
+  }
 }
 
 /* ═══════════════════════════════════════
@@ -2956,8 +2999,8 @@ document.addEventListener('DOMContentLoaded', () => {
 function renderCoches() {
   const coches = D.coches || [];
   const totalPlazas = coches.reduce((s,c) => s + (parseInt(c.plazas)||0), 0);
-  const totalOcup   = coches.reduce((s,c) => s + (c.pasajeros||[]).length + (c.conductor?1:0), 0);
-  const sinCoche    = D.personas.filter(p => {
+  const totalOcup  = coches.reduce((s,c) => s + (c.pasajeros||[]).length + (c.conductor?1:0), 0);
+  const sinCoche   = D.personas.filter(p => {
     const id = String(p.id);
     return !coches.some(c =>
       (c.pasajeros||[]).map(String).includes(id) || String(c.conductor)===id
