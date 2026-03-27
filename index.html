@@ -297,15 +297,62 @@ nav{flex:1;overflow-y:auto;padding:1rem .875rem;}
 .tab{padding:.5rem 1.25rem;border-radius:8px;font-size:.85rem;font-weight:600;cursor:pointer; transition:all .2s;color:var(--ink3);border:1px solid var(--border);background:var(--surf);}
 .tab.active{background:var(--primary-l);color:var(--primary-d);border-color:var(--primary-m);}
 
+@media(max-width:960px){
+  .song-layout,.prog-wrap,.dept-2col,.juegos-layout{grid-template-columns:1fr;}
+  .prog-side,.ranking-side{position:static;}
+}
+
 @media(max-width:768px){
   :root{--sb:260px;}
   .sidebar{transform:translateX(-100%);transition:transform .3s cubic-bezier(0.16, 1, 0.3, 1);}
   .sidebar.open{transform:translateX(0);box-shadow:0 0 30px rgba(0,0,0,.15);}
-  .main{margin-left:0!important;padding:1.25rem!important;padding-top:4.5rem!important;}
-  .mob-tog{display:flex!important;position:fixed;top:1rem;left:1.25rem;z-index:301;background:var(--surf);border:1px solid var(--border);padding:.5rem .75rem;border-radius:var(--r-sm);box-shadow:var(--sh);align-items:center;gap:.5rem;font-weight:600;}
+  
+  /* Ajuste de márgenes del panel principal para que no se salga de la pantalla */
+  .main{margin-left:0!important;padding:1rem!important;padding-top:4.5rem!important; overflow-x:hidden;}
+  .mob-tog{display:flex!important;position:fixed;top:1rem;left:1rem;z-index:301;background:var(--surf);border:1px solid var(--border);padding:.5rem .75rem;border-radius:var(--r-sm);box-shadow:var(--sh);align-items:center;gap:.5rem;font-weight:600;}
+  
+  /* Encabezados y botones adaptables */
   .ph{flex-direction:column;align-items:flex-start;gap:.75rem;}
-  .ph-actions{width:100%;}
-  .mbox,.mbox.wide{width:95%!important;max-width:95vw!important;padding:1.5rem!important;}
+  .ph-actions{width:100%; display:flex; flex-wrap:wrap; gap:.5rem;}
+  .ph-actions .btn, .ph-actions select { flex:1; min-width: 120px; justify-content:center;}
+  
+  /* Modales y Formularios a 1 sola columna */
+  .frow {grid-template-columns: 1fr !important; gap:0.5rem;}
+  .mbox, .mbox.wide {width:95% !important; max-width:95vw !important; padding:1.25rem !important; margin: 10px auto;}
+  
+  /* Tarjetas y Rejillas (Grids) apiladas hacia abajo */
+  .people-grid, .dept-grid, .grupo-grid, .cabana-grid, .coche-grid, .stats-row {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Paneles de inicio que estaban a 2 columnas pasan a 1 */
+  [style*="grid-template-columns:1fr 1fr"], 
+  [style*="grid-template-columns:minmax(0, 1fr) 350px"] {
+    grid-template-columns: 1fr !important;
+  }
+  
+  /* Pestañas (Tabs) scrolleables en horizontal */
+  .tabs { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 5px; }
+  .tab { white-space: nowrap; flex-shrink: 0; }
+
+  /* Evitar el auto-zoom nativo de los iPhone al tocar un campo de texto */
+  input.fctl, select.fctl, textarea.fctl, .finput { font-size: 16px !important; }
+}
+
+/* Permitir scroll en la tabla de carga de trabajo para que no rompa el diseño */
+#d-workload table { min-width: 400px; }
+#d-workload { overflow-x: auto !important; -webkit-overflow-scrolling: touch; }
+
+/* Estilos de Impresión */
+@media print {
+  .sidebar, .mob-tog, .ph-actions, .btn, .icon-btn, .tabs, .mov, #loginScreen, .lock-overlay { display: none !important; }
+  .main { margin-left: 0 !important; padding: 0 !important; width: 100% !important; }
+  body { background: #fff !important; color: #000 !important; }
+  .card, .pcard, .cabana-card, .coche-card, .grupo-card, .song-card { break-inside: avoid; border: 1px solid #ccc !important; box-shadow: none !important; margin-bottom: 1rem !important; }
+  .page { display: block !important; page-break-after: always; margin-bottom: 2rem; }
+  #page-dashboard, #page-personas, #page-departamentos { display: none !important; }
+  #page-programa, #page-horario, #page-cabanas, #page-grupos { display: block !important; }
+  .ph-title h1 { font-size: 24pt !important; border-bottom: 2px solid #000; padding-bottom: 5px; }
 }
 
 @media print {
@@ -1110,25 +1157,56 @@ function workload(id) {
 function wlPill(l) { const m={low:['wl-low','🟢 Baja'],med:['wl-med','🟡 Media'],high:['wl-high','🔴 Alta']}; return `<span class="${m[l][0]}">${m[l][1]}</span>`; }
 
 /* ═══════════════════════════════════════
-   DASHBOARD
+   DASHBOARD (ACTUALIZADO CON MEJORAS VISUALES)
 ═══════════════════════════════════════ */
 function renderDash() {
   const un = D.personas.filter(p => !D.departamentos.some(d => d.miembros.includes(p.id) || d.responsable===p.id));
+  
+  // 1. Stats y alerta de 'Sin departamento' con número total
   document.getElementById('d-stats').innerHTML = `<div class="sc c-primary"><div class="sc-icon"><i class="fas fa-users"></i></div><div class="sc-info"><div class="sc-val">${D.personas.length}</div><div class="sc-lbl">Personas</div></div></div><div class="sc c-amber"><div class="sc-icon"><i class="fas fa-flag"></i></div><div class="sc-info"><div class="sc-val">${D.grupos.length}</div><div class="sc-lbl">Grupos</div></div></div><div class="sc c-sky"><div class="sc-icon"><i class="fas fa-bed"></i></div><div class="sc-info"><div class="sc-val">${D.cabanas.reduce((s,c)=>s+c.capacidad,0)}</div><div class="sc-lbl">Plazas Cama</div></div></div>`;
+  
+  // Actualizamos el título de la tarjeta para que muestre el número en una píldora roja
+  const sinDeptoCard = document.getElementById('d-sin-depto');
+  if(sinDeptoCard && sinDeptoCard.previousElementSibling) {
+      sinDeptoCard.previousElementSibling.innerHTML = `<div class="card-title"><i class="fas fa-user-xmark" style="color:var(--red-v)"></i> Sin Departamento <span class="pill pill-red" style="margin-left:.5rem">${un.length}</span></div>`;
+  }
+  
   document.getElementById('d-sin-depto').innerHTML = un.length ? un.map(p=>`<div style="display:flex;align-items:center;gap:.75rem;padding:.6rem 0;border-bottom:1px solid var(--border)"><div class="av av-sm" style="background:${p.color}">${ini(p.nombre)}</div><div style="font-size:.85rem;font-weight:600">${p.nombre}</div></div>`).join('') : '<div style="text-align:center;color:var(--ink3);padding:2rem;"><i class="fas fa-check-circle" style="font-size:2.5rem;margin-bottom:.5rem;color:var(--green-v)"></i><br>Todos asignados</div>';
   document.getElementById('niBadge').style.display = un.length ? 'inline-block':'none'; document.getElementById('niBadge').textContent = un.length;
   
+  // Horario Preview
   const ev = D.horario.slice(0,4);
   document.getElementById('d-horario-preview').innerHTML = ev.length ? ev.map(h=>`<div style="display:flex;gap:1rem;margin-bottom:1rem;"><div style="font-weight:800;color:var(--primary);width:45px;text-align:right;font-family:'Lora',serif;font-size:1.1rem">${h.hora_inicio.substring(0,5)}</div><div style="border-left:2px solid var(--border2);padding-left:1rem;padding-bottom:.5rem;"><div style="font-weight:700;font-size:.95rem;"><i class="fas ${HORARIO_CFG[h.tipo]?.i||'fa-clock'}" style="color:${HORARIO_CFG[h.tipo]?.c||'#000'}"></i> ${h.titulo}</div><div style="font-size:.75rem;color:var(--ink3)">${h.ubicacion||''}</div></div></div>`).join('') : '<div class="empty" style="padding:1rem"><i class="fas fa-calendar"></i><p>Sin eventos en horario</p></div>';
 
-  document.getElementById('d-depts').innerHTML = D.departamentos.length ? D.departamentos.map(d=>`<div onclick="go(document.querySelector('[data-p=departamentos]'),'departamentos'); openDeptDetail('${d.id}')" style="display:flex;align-items:center;gap:.75rem;padding:.75rem;border-radius:10px;cursor:pointer;transition:background .2s;" onmouseover="this.style.background='var(--surf2)'" onmouseout="this.style.background='transparent'"><div style="width:38px;height:38px;border-radius:10px;background:${hexLight(d.color,.15)};color:${d.color};display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0"><i class="fas ${d.icono}"></i></div><div style="flex:1"><div style="font-weight:700;font-size:.9rem">${d.nombre}</div><div style="font-size:.75rem;color:var(--ink3)">Resp: ${d.responsable?pName(d.responsable):'Nadie'}</div></div><span class="pill pill-gray">${d.miembros.length + (d.responsable?1:0)} pers</span></div>`).join('') : '<div class="empty"><p>Sin departamentos</p></div>';
+  // 2. Departamentos (Equipos) con responsable más visual
+  document.getElementById('d-depts').innerHTML = D.departamentos.length ? D.departamentos.map(d=>{
+    const respHtml = d.responsable ? `<div style="display:flex;align-items:center;gap:.4rem;margin-top:.3rem;"><div class="av" style="width:20px;height:20px;font-size:.55rem;background:${pColor(d.responsable)}">${ini(pName(d.responsable))}</div><span style="font-size:.75rem;color:var(--primary);font-weight:700;">${pName(d.responsable).split(' ')[0]}</span></div>` : `<div style="font-size:.75rem;color:var(--ink4);margin-top:.3rem;"><i class="fas fa-user-slash"></i> Sin responsable</div>`;
+    return `<div onclick="go(document.querySelector('[data-p=departamentos]'),'departamentos'); openDeptDetail('${d.id}')" style="display:flex;align-items:center;gap:.75rem;padding:.75rem;border-radius:10px;cursor:pointer;transition:background .2s;border:1px solid transparent;" onmouseover="this.style.background='var(--surf2)';this.style.borderColor='var(--border)'" onmouseout="this.style.background='transparent';this.style.borderColor='transparent'">
+      <div style="width:42px;height:42px;border-radius:12px;background:${hexLight(d.color,.15)};color:${d.color};display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0"><i class="fas ${d.icono}"></i></div>
+      <div style="flex:1"><div style="font-weight:800;font-size:.95rem">${d.nombre}</div>${respHtml}</div>
+      <span class="pill pill-gray">${d.miembros.length + (d.responsable?1:0)} <i class="fas fa-user" style="font-size:.6rem;margin-left:2px"></i></span>
+    </div>`;
+  }).join('') : '<div class="empty"><p>Sin departamentos</p></div>';
 
-  document.getElementById('d-songs').innerHTML = D.canciones.length ? D.canciones.slice(0,4).map(c=>`<div style="display:flex;align-items:center;gap:.75rem;padding:.6rem 0;border-bottom:1px solid var(--border)"><div style="color:var(--amber-v)"><i class="fas fa-music"></i></div><div style="flex:1;min-width:0"><div style="font-weight:700;font-size:.9rem">${c.titulo}</div><div style="font-size:.75rem;color:var(--ink3)">${c.artista||'—'}</div></div><span class="status-dot status-${c.estado}"></span></div>`).join('') : '<div class="empty"><p>Sin canciones</p></div>';
+  // 3. Canciones con avatares de los cantantes
+  document.getElementById('d-songs').innerHTML = D.canciones.length ? D.canciones.slice(0,5).map(c=>{
+    const cantantesHTML = (c.cantantes||[]).slice(0,3).map(id=>`<div class="av av-sm" style="background:${pColor(id)};border:2px solid var(--surf)" title="${pName(id)}">${ini(pName(id))}</div>`).join('');
+    const extraCantantes = (c.cantantes||[]).length > 3 ? `<div class="av av-sm" style="background:var(--surf3);color:var(--ink2);border:2px solid var(--surf)">+${(c.cantantes||[]).length - 3}</div>` : '';
+    
+    return `<div style="display:flex;align-items:center;gap:.75rem;padding:.6rem 0;border-bottom:1px solid var(--border)">
+      <div style="color:var(--amber-v);font-size:1.1rem;"><i class="fas fa-music"></i></div>
+      <div style="flex:1;min-width:0"><div style="font-weight:700;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${c.titulo}</div><div style="font-size:.75rem;color:var(--ink3)">${c.artista||'—'}</div></div>
+      <div class="av-stack" style="margin-right:.5rem">${cantantesHTML}${extraCantantes}</div>
+      <span class="status-dot status-${c.estado}" title="${c.estado}"></span>
+    </div>`;
+  }).join('') : '<div class="empty"><p>Sin canciones</p></div>';
 
+  // Materials
   const mC = document.getElementById('d-mats'), mD = Object.keys(D.materiales).filter(id => D.materiales[id] && D.materiales[id].length);
   if (!mD.length) mC.innerHTML = '<div class="empty" style="padding:1.5rem"><i class="fas fa-box-open"></i><p>No hay listas de materiales</p></div>';
   else mC.innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:1rem;">' + mD.map(id => { const d=D.departamentos.find(x=>x.id===id), items=D.materiales[id], doneC=items.filter(i=>i.done).length; return `<div style="background:var(--surf2);border:1px solid var(--border);border-radius:var(--r-sm);padding:1rem;"><div style="font-size:.85rem;font-weight:700;color:${d?d.color:'#000'};margin-bottom:.75rem;display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding-bottom:.4rem;"><span><i class="fas ${d?d.icono:'fa-box'}"></i> ${d?d.nombre:'?'}</span><span style="color:var(--ink2)">${doneC}/${items.length}</span></div><div>${items.map(m=>`<div style="font-size:.8rem;color:${m.done?'var(--ink4)':'var(--ink)'};text-decoration:${m.done?'line-through':'none'};margin-bottom:.3rem;"><i class="fas ${m.done?'fa-check-circle':'fa-circle'}" style="color:${m.done?'var(--green-v)':'var(--border2)'};margin-right:4px"></i>${m.texto}</div>`).join('')}</div></div>`; }).join('') + '</div>';
 
+  // Workload
   const sw = [...D.personas].sort((a,b)=>workload(b.id).score-workload(a.id).score);
   if(sw.length) document.getElementById('d-workload').innerHTML = `<table style="width:100%;border-collapse:collapse;text-align:left;"><thead><tr style="border-bottom:2px solid var(--border);background:var(--surf2)"><th style="padding:1rem;font-size:.75rem;text-transform:uppercase;color:var(--ink3)">Persona</th><th style="padding:1rem;font-size:.75rem;text-transform:uppercase;color:var(--ink3)">Tareas</th><th style="padding:1rem;font-size:.75rem;text-transform:uppercase;color:var(--ink3);text-align:right">Nivel</th></tr></thead><tbody>${sw.map(p=>{ const w=workload(p.id); let t=[]; if(w.depts) t.push(`<span class="chip"><i class="fas fa-sitemap"></i> ${w.depts}</span>`); if(w.canciones) t.push(`<span class="chip"><i class="fas fa-music"></i> ${w.canciones}</span>`); if(w.devoc) t.push(`<span class="chip"><i class="fas fa-book-open"></i> ${w.devoc}</span>`); if(w.pred) t.push(`<span class="chip"><i class="fas fa-microphone"></i> ${w.pred}</span>`); if(w.horarioResp) t.push(`<span class="chip"><i class="fas fa-calendar"></i> ${w.horarioResp}</span>`); return `<tr style="border-bottom:1px solid var(--border)"><td style="padding:1rem;display:flex;align-items:center;gap:.75rem"><div class="av av-sm" style="background:${p.color}">${ini(p.nombre)}</div><strong>${p.nombre.split(' ')[0]}</strong></td><td style="padding:1rem">${t.join(' ')||'<span style="color:var(--ink4)">Nada asignado</span>'}</td><td style="padding:1rem;text-align:right">${wlPill(w.level)}</td></tr>`; }).join('')}</tbody></table>`;
 }
