@@ -665,7 +665,45 @@ nav{flex:1;overflow-y:auto;padding:1rem .875rem;}
       <div class="fgroup"><label class="flbl">Autor</label><input class="fctl" id="sArt"></div>
     </div>
     <div class="frow">
-      <div class="fgroup"><label class="flbl">Tonalidad</label><input class="fctl" id="sTono"></div>
+      <div class="fgroup"><label class="flbl">Tonalidad</label>
+  <select class="fctl" id="sTono">
+    <option value="">— Sin tonalidad —</option>
+    <optgroup label="🎵 Mayores">
+      <option>Do mayor (C)</option>
+      <option>Sol mayor (G)</option>
+      <option>Re mayor (D)</option>
+      <option>La mayor (A)</option>
+      <option>Mi mayor (E)</option>
+      <option>Si mayor (B)</option>
+      <option>Fa# mayor (F#)</option>
+      <option>Do# mayor (C#)</option>
+      <option>Fa mayor (F)</option>
+      <option>Si♭ mayor (Bb)</option>
+      <option>Mi♭ mayor (Eb)</option>
+      <option>La♭ mayor (Ab)</option>
+      <option>Re♭ mayor (Db)</option>
+      <option>Sol♭ mayor (Gb)</option>
+      <option>Do♭ mayor (Cb)</option>
+    </optgroup>
+    <optgroup label="🎶 Menores">
+      <option>La menor (Am)</option>
+      <option>Mi menor (Em)</option>
+      <option>Si menor (Bm)</option>
+      <option>Fa# menor (F#m)</option>
+      <option>Do# menor (C#m)</option>
+      <option>Sol# menor (G#m)</option>
+      <option>Re# menor (D#m)</option>
+      <option>La# menor (A#m)</option>
+      <option>Re menor (Dm)</option>
+      <option>Sol menor (Gm)</option>
+      <option>Do menor (Cm)</option>
+      <option>Fa menor (Fm)</option>
+      <option>Si♭ menor (Bbm)</option>
+      <option>Mi♭ menor (Ebm)</option>
+      <option>La♭ menor (Abm)</option>
+    </optgroup>
+  </select>
+</div>
       <div class="fgroup"><label class="flbl">Duración (min)</label><input class="fctl" type="number" id="sDur" value="4"></div>
     </div>
     <div class="fgroup"><label class="flbl">Estado</label>
