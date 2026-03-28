@@ -756,7 +756,16 @@ nav{flex:1;overflow-y:auto;padding:1rem .875rem;}
     <div class="fgroup"><label class="flbl">Estado</label>
       <select class="fctl" id="sEst"><option value="confirmado">✅ Confirmada</option><option value="pendiente">⏳ Pendiente</option><option value="quizas">❓ Quizás</option></select>
     </div>
-    <div class="fgroup"><label class="flbl">Cantantes</label><div class="person-picker" id="sCantPick"></div></div>
+    <div class="frow">
+  <div class="fgroup">
+    <label class="flbl" style="color:var(--rose-v)"><i class="fas fa-microphone"></i> Voces / Cantantes</label>
+    <div class="person-picker" id="sCantPick"></div>
+  </div>
+  <div class="fgroup">
+    <label class="flbl" style="color:var(--sky-d)"><i class="fas fa-guitar"></i> Instrumentistas</label>
+    <div class="person-picker" id="sInstPick"></div>
+  </div>
+</div>
     <div class="fgroup"><label class="flbl">Notas</label><input class="fctl" id="sNot"></div>
     <div class="mft"><button class="btn btn-ghost" onclick="cm('modSong')">Cancelar</button><button class="btn btn-primary" onclick="saveSong()">Guardar</button></div>
   </div>
@@ -1137,7 +1146,7 @@ async function loadAll() {
     D.personas = per || [];
     D.horario = hor || [];
     D.departamentos = (dep||[]).map(d => ({...d, desc: d.descripcion, miembros: (dm||[]).filter(x=>x.departamento_id===d.id).map(x=>x.persona_id)}));
-    D.canciones = (can||[]).map(c => ({...c, dur: c.duracion, cantantes: (cc||[]).filter(x=>x.cancion_id===c.id).map(x=>x.persona_id)}));
+    D.canciones = (can||[]).map(c => ({...c, dur: c.duracion, cantantes: (cc||[]).filter(x=>x.cancion_id===c.id && (!x.rol || x.rol==='cantante')).map(x=>x.persona_id), instrumentistas: (cc||[]).filter(x=>x.cancion_id===c.id && x.rol==='instrumentista').map(x=>x.persona_id)}));
     D.grupos = (gru||[]).map(g => ({...g, miembros: (gm||[]).filter(x=>x.grupo_id===g.id).map(x=>x.persona_id)}));
     D.juegos = (jue||[]).map(j => ({...j, dur: j.duracion, puntuaciones: (jpu||[]).filter(x=>x.juego_id===j.id)}));
     D.cabanas = (cab||[]).map(c => ({...c, asignados: (ca||[]).filter(x=>x.cabana_id===c.id).map(x=>x.persona_id)}));
@@ -1180,9 +1189,9 @@ function toast(msg, type='info') {
   const t=document.createElement('div'); t.className='toast'; t.style.borderLeft=`4px solid ${co[type]}`; t.innerHTML=`<i class="fas fa-${ic[type]}" style="color:${co[type]};font-size:1.2rem"></i><span style="flex:1">${msg}</span>`; c.appendChild(t);
   setTimeout(()=>{ t.style.cssText='opacity:0;transform:translateX(100%);transition:.3s'; setTimeout(()=>t.remove(),300); },3500);
 }
-function workload(id) {
-  const i=String(id), d=D.departamentos.filter(x=>x.miembros.includes(i)||x.responsable===i).length, c=D.canciones.filter(x=>(x.cantantes||[]).includes(i)).length, de=(D.servicios||[]).reduce((a,s)=>a+(s.prog||[]).filter(x=>x.tipo==='devocional'&&(x.asignados||[]).includes(i)).length,0), pr=(D.servicios||[]).reduce((a,s)=>a+(s.prog||[]).filter(x=>x.tipo==='predicacion'&&(x.asignados||[]).includes(i)).length,0), hr=D.horario.filter(x=>x.responsable_id===i).length;
-  const s=d*2+c+de*2+pr*3+hr; return {depts:d, canciones:c, devoc:de, pred:pr, horarioResp:hr, score:s, level:s<=3?'low':s<=8?'med':'high'};
+ function workload(id) {
+  const i=String(id), d=D.departamentos.filter(x=>x.miembros.includes(i)||x.responsable===i).length, c=D.canciones.filter(x=>(x.cantantes||[]).includes(i) || (x.instrumentistas||[]).includes(i)).length, de=(D.servicios||[]).reduce((a,s)=>a+(s.prog||[]).filter(x=>x.tipo==='devocional'&&(x.asignados||[]).includes(i)).length,0), pr=(D.servicios||[]).reduce((a,s)=>a+(s.prog||[]).filter(x=>x.tipo==='predicacion'&&(x.asignados||[]).includes(i)).length,0), hr=D.horario.filter(x=>x.responsable_id===i).length;
+  const s=d*2+c+de*2+pr*3+hr; return {depts:d, canciones:c, devoc:de, pred:pr, horarioResp:hr, score:s, level:s<=3?'low':s<=8?'med':'high'};
 }
 function wlPill(l) { const m={low:['wl-low','🟢 Baja'],med:['wl-med','🟡 Media'],high:['wl-high','🔴 Alta']}; return `<span class="${m[l][0]}">${m[l][1]}</span>`; }
 
@@ -1218,18 +1227,22 @@ function renderDash() {
     </div>`;
   }).join('') : '<div class="empty"><p>Sin departamentos</p></div>';
 
-  // 3. Canciones con avatares de los cantantes
-  document.getElementById('d-songs').innerHTML = D.canciones.length ? D.canciones.slice(0,5).map(c=>{
-    const cantantesHTML = (c.cantantes||[]).slice(0,3).map(id=>`<div class="av av-sm" style="background:${pColor(id)};border:2px solid var(--surf)" title="${pName(id)}">${ini(pName(id))}</div>`).join('');
-    const extraCantantes = (c.cantantes||[]).length > 3 ? `<div class="av av-sm" style="background:var(--surf3);color:var(--ink2);border:2px solid var(--surf)">+${(c.cantantes||[]).length - 3}</div>` : '';
-    
-    return `<div style="display:flex;align-items:center;gap:.75rem;padding:.6rem 0;border-bottom:1px solid var(--border)">
-      <div style="color:var(--amber-v);font-size:1.1rem;"><i class="fas fa-music"></i></div>
-      <div style="flex:1;min-width:0"><div style="font-weight:700;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${c.titulo}</div><div style="font-size:.75rem;color:var(--ink3)">${c.artista||'—'}</div></div>
-      <div class="av-stack" style="margin-right:.5rem">${cantantesHTML}${extraCantantes}</div>
-      <span class="status-dot status-${c.estado}" title="${c.estado}"></span>
-    </div>`;
-  }).join('') : '<div class="empty"><p>Sin canciones</p></div>';
+  // 3. Canciones con diseño visual "Premium" en cápsulas por rol (Inicio)
+  document.getElementById('d-songs').innerHTML = D.canciones.length ? D.canciones.slice(0,5).map(c=>{
+    // Cápsula de Voces (Fondo rosa, icono, avatares solapados)
+    const cantHTML = (c.cantantes||[]).slice(0,3).map(id=>`<div class="av av-sm" style="background:${pColor(id)};border:2px solid #fff;width:24px;height:24px;font-size:.65rem;margin-left:-6px;box-shadow:var(--sh-sm)" title="Voz: ${pName(id)}">${ini(pName(id))}</div>`).join('');
+    const cantGrp = cantHTML ? `<div style="display:flex;align-items:center;background:var(--rose-l);padding:3px 8px 3px 8px;border-radius:99px;border:1px solid var(--rose-m);"><i class="fas fa-microphone" style="color:var(--rose-v);font-size:.75rem;margin-right:8px"></i><div style="display:flex;margin-left:6px">${cantHTML}</div></div>` : '';
+
+    // Cápsula de Instrumentos (Fondo azul, icono, avatares solapados)
+    const instHTML = (c.instrumentistas||[]).slice(0,3).map(id=>`<div class="av av-sm" style="background:${pColor(id)};border:2px solid #fff;width:24px;height:24px;font-size:.65rem;margin-left:-6px;box-shadow:var(--sh-sm)" title="Instrumento: ${pName(id)}">${ini(pName(id))}</div>`).join('');
+    const instGrp = instHTML ? `<div style="display:flex;align-items:center;background:var(--sky-l);padding:3px 8px 3px 8px;border-radius:99px;border:1px solid var(--sky-m);"><i class="fas fa-guitar" style="color:var(--sky-d);font-size:.75rem;margin-right:8px"></i><div style="display:flex;margin-left:6px">${instHTML}</div></div>` : '';
+
+    return `<div style="display:flex;align-items:center;gap:1rem;padding:.75rem 0;border-bottom:1px solid var(--border)">
+      <div style="width:38px;height:38px;background:var(--amber-l);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--amber-v);font-size:1rem;flex-shrink:0;"><i class="fas fa-music"></i></div>
+      <div style="flex:1;min-width:0"><div style="font-weight:700;font-size:.95rem;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${c.titulo}</div><div style="font-size:.75rem;color:var(--ink3)">${c.artista||'—'}</div></div>
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap;justify-content:flex-end;">${cantGrp}${instGrp}</div>
+    </div>`;
+  }).join('') : '<div class="empty"><p>Sin canciones</p></div>';
 
   // Materials
   const mC = document.getElementById('d-mats'), mD = Object.keys(D.materiales).filter(id => D.materiales[id] && D.materiales[id].length);
@@ -1341,15 +1354,13 @@ async function delMaterial(id,did) { try{ await sb.from('departamento_materiales
 ═══════════════════════════════════════ */
 function songFilter(val,btn) { songFilterVal=val; document.querySelectorAll('#page-alabanza .tab').forEach(t=>t.classList.remove('active')); if(btn) btn.classList.add('active'); renderAlabanza(); }
 function renderAlabanza() {
-  let s=D.canciones; if(songFilterVal) s=s.filter(x=>x.estado===songFilterVal); const sl=document.getElementById('song-list'), se=document.getElementById('song-empty');
-  if(!s.length){sl.innerHTML='';se.style.display='block';}else{ se.style.display='none'; sl.innerHTML=s.map(c=>{ const pC={confirmado:'pill-green',pendiente:'pill-amber',quizas:'pill-gray'}[c.estado]||'pill-gray', pT={confirmado:'Confirmada',pendiente:'Pendiente',quizas:'Quizás'}[c.estado]||c.estado; return `<div class="song-card" style="margin-bottom:1rem"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem"><div style="display:flex;gap:1rem;align-items:center"><div class="song-ico"><i class="fas fa-music"></i></div><div><div class="song-nm">${c.titulo}</div><div class="song-art">${c.artista||'Autor desconocido'} ${c.tono?' • <strong>'+c.tono+'</strong>':''}</div></div></div><div style="display:flex;gap:.5rem;align-items:center"><span class="pill ${pC}">${pT}</span><button class="icon-btn edit" onclick="openModSongEdit('${c.id}')"><i class="fas fa-pen"></i></button><button class="icon-btn del" onclick="delSong('${c.id}')"><i class="fas fa-trash"></i></button></div></div><div style="padding-top:1rem;border-top:1px solid var(--border);display:flex;gap:.5rem;flex-wrap:wrap;">${(c.cantantes||[]).map(id=>`<span class="chip"><span class="chip-dot" style="background:${pColor(id)}"></span>${pName(id).split(' ')[0]}</span>`).join('')||'<span style="font-size:.75rem;color:var(--ink4);font-style:italic">Sin voces</span>'}</div></div>`; }).join(''); }
-  const sM={}; D.canciones.forEach(c=>{ (c.cantantes||[]).forEach(id=>{ if(!sM[id])sM[id]={t:0,c:0}; sM[id].t++; if(c.estado==='confirmado')sM[id].c++; }); }); const ids=Object.keys(sM).sort((a,b)=>sM[b].t-sM[a].t);
-  document.getElementById('singer-stats').innerHTML=ids.length?ids.map(id=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid var(--border)"><div style="display:flex;align-items:center;gap:.5rem"><div class="av av-sm" style="background:${pColor(id)}">${ini(pName(id))}</div><span style="font-size:.85rem;font-weight:500">${pName(id).split(' ')[0]}</span></div><span style="font-size:.85rem;font-weight:700;color:var(--primary)">${sM[id].t}</span></div>`).join(''):'<div class="empty"><p>Sin asignaciones</p></div>';
-}
-function openModSong() { document.getElementById('sId').value=''; ['sTit','sArt','sNot','sTono'].forEach(id=>document.getElementById(id).value=''); document.getElementById('sDur').value='4'; document.getElementById('sEst').value='confirmado'; buildPicker('sCantPick',[]); om('modSong'); }
-function openModSongEdit(id) { const c=D.canciones.find(x=>x.id===id); if(!c)return; document.getElementById('sId').value=c.id; document.getElementById('sTit').value=c.titulo; document.getElementById('sArt').value=c.artista||''; document.getElementById('sTono').value=c.tono||''; document.getElementById('sDur').value=c.dur||4; document.getElementById('sEst').value=c.estado||'confirmado'; document.getElementById('sNot').value=c.notas||''; buildPicker('sCantPick',c.cantantes||[]); om('modSong'); }
-async function saveSong() { const t=document.getElementById('sTit').value.trim(); if(!t)return; const ca=getSelected('sCantPick'), obj={titulo:t,artista:document.getElementById('sArt').value.trim(),tono:document.getElementById('sTono').value,duracion:parseInt(document.getElementById('sDur').value)||4,estado:document.getElementById('sEst').value,notas:document.getElementById('sNot').value}, eid=document.getElementById('sId').value; try{ let cid=eid; if(eid){await sb.from('canciones').update(obj).eq('id',eid);}else{const{data,error}=await sb.from('canciones').insert(obj).select().single();if(error)throw error;cid=data.id;} await sb.from('cancion_cantantes').delete().eq('cancion_id',cid); if(ca.length)await sb.from('cancion_cantantes').insert(ca.map(pid=>({cancion_id:cid,persona_id:pid}))); const loc={id:cid,...obj,dur:obj.duracion,cantantes:ca}; if(eid){Object.assign(D.canciones.find(c=>c.id===eid),loc);}else{D.canciones.push(loc);} cm('modSong');renderAlabanza();toast('Guardada','ok'); }catch(e){} }
-async function delSong(id) { if(!confirm('¿Borrar?'))return; try{await sb.from('canciones').delete().eq('id',id);D.canciones=D.canciones.filter(c=>c.id!==id);renderAlabanza();toast('Borrada','info');}catch(e){} }
+  let s=D.canciones; if(songFilterVal) s=s.filter(x=>x.estado===songFilterVal); const sl=document.getElementById('song-list'), se=document.getElementById('song-empty');
+  if(!s.length){sl.innerHTML='';se.style.display='block';}else{ se.style.display='none'; sl.innerHTML=s.map(c=>{ const pC={confirmado:'pill-green',pendiente:'pill-amber',quizas:'pill-gray'}[c.estado]||'pill-gray', pT={confirmado:'Confirmada',pendiente:'Pendiente',quizas:'Quizás'}[c.estado]||c.estado; const cantHTML=(c.cantantes||[]).map(id=>`<span class="chip" style="background:var(--rose-l);color:var(--rose-v);border-color:var(--rose-m)"><i class="fas fa-microphone" style="margin-right:4px"></i>${pName(id).split(' ')[0]}</span>`).join(''); const instHTML=(c.instrumentistas||[]).map(id=>`<span class="chip" style="background:var(--sky-l);color:var(--sky-d);border-color:var(--sky-m)"><i class="fas fa-guitar" style="margin-right:4px"></i>${pName(id).split(' ')[0]}</span>`).join(''); const chipsHTML=cantHTML+instHTML||'<span style="font-size:.75rem;color:var(--ink4);font-style:italic">Sin asignaciones</span>'; return `<div class="song-card" style="margin-bottom:1rem"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem"><div style="display:flex;gap:1rem;align-items:center"><div class="song-ico"><i class="fas fa-music"></i></div><div><div class="song-nm">${c.titulo}</div><div class="song-art">${c.artista||'Autor desconocido'} ${c.tono?' • <strong>'+c.tono+'</strong>':''}</div></div></div><div style="display:flex;gap:.5rem;align-items:center"><span class="pill ${pC}">${pT}</span><button class="icon-btn edit" onclick="openModSongEdit('${c.id}')"><i class="fas fa-pen"></i></button><button class="icon-btn del" onclick="delSong('${c.id}')"><i class="fas fa-trash"></i></button></div></div><div style="padding-top:1rem;border-top:1px solid var(--border);display:flex;gap:.5rem;flex-wrap:wrap;">${chipsHTML}</div></div>`; }).join(''); }
+  const sM={}; D.canciones.forEach(c=>{ if(c.estado==='confirmado'){ (c.cantantes||[]).forEach(id=>{ if(!sM[id])sM[id]={t:0,c:0,i:0}; sM[id].t++; sM[id].c++; }); (c.instrumentistas||[]).forEach(id=>{ if(!sM[id])sM[id]={t:0,c:0,i:0}; sM[id].t++; sM[id].i++; }); } }); const ids=Object.keys(sM).sort((a,b)=>sM[b].t-sM[a].t);
+  document.getElementById('singer-stats').innerHTML=ids.length?ids.map(id=>{ let bdg=''; if(sM[id].c>0)bdg+=`<span style="font-size:.65rem;background:var(--rose-l);color:var(--rose-v);padding:.15rem .4rem;border-radius:4px;margin-right:4px"><i class="fas fa-microphone"></i> ${sM[id].c}</span>`; if(sM[id].i>0)bdg+=`<span style="font-size:.65rem;background:var(--sky-l);color:var(--sky-d);padding:.15rem .4rem;border-radius:4px;"><i class="fas fa-guitar"></i> ${sM[id].i}</span>`; return `<div style="display:flex;align-items:center;justify-content:space-between;padding:.6rem 0;border-bottom:1px solid var(--border)"><div style="display:flex;align-items:center;gap:.75rem"><div class="av av-sm" style="background:${pColor(id)}">${ini(pName(id))}</div><div><div style="font-size:.85rem;font-weight:600">${pName(id).split(' ')[0]}</div><div style="margin-top:2px">${bdg}</div></div></div><span style="font-size:1.1rem;font-weight:800;color:var(--ink)">${sM[id].t}</span></div>`; }).join(''):'<div class="empty"><p>Sin participaciones</p></div>';
+}function openModSong() { document.getElementById('sId').value=''; ['sTit','sArt','sNot','sTono'].forEach(id=>document.getElementById(id).value=''); document.getElementById('sDur').value='4'; document.getElementById('sEst').value='confirmado'; buildPicker('sCantPick',[]); buildPicker('sInstPick',[]); om('modSong'); }
+
+async function saveSong() { const t=document.getElementById('sTit').value.trim(); if(!t)return; const ca=getSelected('sCantPick'), inst=getSelected('sInstPick'), obj={titulo:t,artista:document.getElementById('sArt').value.trim(),tono:document.getElementById('sTono').value,duracion:parseInt(document.getElementById('sDur').value)||4,estado:document.getElementById('sEst').value,notas:document.getElementById('sNot').value}, eid=document.getElementById('sId').value; try{ let cid=eid; if(eid){await sb.from('canciones').update(obj).eq('id',eid);}else{const{data,error}=await sb.from('canciones').insert(obj).select().single();if(error)throw error;cid=data.id;} await sb.from('cancion_cantantes').delete().eq('cancion_id',cid); const inserts=[]; ca.forEach(pid=>inserts.push({cancion_id:cid,persona_id:pid,rol:'cantante'})); inst.forEach(pid=>inserts.push({cancion_id:cid,persona_id:pid,rol:'instrumentista'})); if(inserts.length)await sb.from('cancion_cantantes').insert(inserts); const loc={id:cid,...obj,dur:obj.duracion,cantantes:ca,instrumentistas:inst}; if(eid){Object.assign(D.canciones.find(c=>c.id===eid),loc);}else{D.canciones.push(loc);} cm('modSong');renderAlabanza();toast('Guardada','ok'); }catch(e){} }async function delSong(id) { if(!confirm('¿Borrar?'))return; try{await sb.from('canciones').delete().eq('id',id);D.canciones=D.canciones.filter(c=>c.id!==id);renderAlabanza();toast('Borrada','info');}catch(e){} }
 
 /* ═══════════════════════════════════════
    PROGRAMA (CULTOS)
