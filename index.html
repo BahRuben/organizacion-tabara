@@ -2103,7 +2103,36 @@ function generarPDFLimpio() {
     html += `</div>`;
   }
 
-  // 4. PROGRAMA DE CULTOS
+  // 4. REPERTORIO DE ALABANZA (¡NUEVO!)
+  if(D.canciones && D.canciones.length > 0) {
+    html += `<div class="page-break"></div><h2>🎵 Repertorio de Alabanza</h2>
+      <table>
+        <thead><tr><th width="25%">Canción</th><th width="15%">Tonalidad</th><th width="10%">Dur.</th><th width="25%">Voces</th><th width="25%">Músicos</th></tr></thead>
+        <tbody>`;
+    
+    // Ordenamos alfabéticamente por título
+    const cancionesOrdenadas = [...D.canciones].sort((a,b) => a.titulo.localeCompare(b.titulo));
+
+    cancionesOrdenadas.forEach(c => {
+      // Extraemos solo el primer nombre de cada persona para que no ocupe tanto espacio
+      const voces = (c.cantantes||[]).map(id => pName(id).split(' ')[0]).join(', ') || '-';
+      const musicos = (c.instrumentistas||[]).map(id => pName(id).split(' ')[0]).join(', ') || '-';
+      
+      // Iconito rápido para el estado
+      const estadoMark = c.estado === 'confirmado' ? '✅' : (c.estado === 'pendiente' ? '⏳' : '❓');
+      
+      html += `<tr>
+        <td><strong>${c.titulo}</strong> <span style="font-size:10px">${estadoMark}</span><br><span style="font-size:11px;color:#666">${c.artista || 'Sin autor'}</span></td>
+        <td>${c.tono || '-'}</td>
+        <td>${c.dur || 4} min</td>
+        <td>${voces}</td>
+        <td>${musicos}</td>
+      </tr>`;
+    });
+    html += `</tbody></table>`;
+  }
+
+  // 5. PROGRAMA DE CULTOS
   if(D.servicios && D.servicios.length > 0) {
     html += `<div class="page-break"></div><h2>📖 Programa de los Cultos</h2>`;
     D.servicios.forEach(s => {
@@ -2131,7 +2160,7 @@ function generarPDFLimpio() {
     });
   }
 
-  // 5. CABAÑAS
+  // 6. CABAÑAS
   if(D.cabanas && D.cabanas.length > 0) {
     html += `<div class="page-break"></div><h2>🏠 Distribución de Cabañas</h2><div class="grid">`;
     D.cabanas.forEach(c => {
@@ -2148,7 +2177,7 @@ function generarPDFLimpio() {
     html += `</div>`;
   }
 
-  // 6. GRUPOS DE CAMPAMENTO
+  // 7. GRUPOS DE CAMPAMENTO
   if(D.grupos && D.grupos.length > 0) {
     html += `<div class="page-break"></div><h2>🏳️ Equipos y Grupos</h2><div class="grid">`;
     D.grupos.forEach(g => {
@@ -2165,7 +2194,7 @@ function generarPDFLimpio() {
     html += `</div>`;
   }
 
-  // 7. COCHES Y VEHÍCULOS
+  // 8. COCHES Y VEHÍCULOS
   if(D.coches && D.coches.length > 0) {
     html += `<div class="page-break"></div><h2>🚗 Organización de Vehículos</h2><div class="grid">`;
     D.coches.forEach(c => {
