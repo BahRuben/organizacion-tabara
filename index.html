@@ -911,9 +911,7 @@ let sb;
 try { sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY); } 
 catch(err) { console.error('Supabase init error:', err); sb = null; }
 
-/* ═══════════════════════════════════════
-   CONFIGURACIONES GLOBALES
-═══════════════════════════════════════ */
+/* CONFIGURACIONES GLOBALES */
 const TC = {
   cancion:    {l:'Cántico',      c:'#b45309', bg:'#fffbeb', i:'fa-music'},
   devocional: {l:'Devocional',   c:'#047857', bg:'#ecfdf5', i:'fa-book-open'},
@@ -941,107 +939,7 @@ let editingSong = null, editingItem = null;
 let songFilterVal = '';
 let currentGrupoTab = 'grupos';
 
-/* ═══════════════════════════════════════
-   EXPORTACIÓN A PDF (INFORME COMPLETO)
-═══════════════════════════════════════ */
-function generarPDFLimpio() {
-  let html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Informe - Reîntâlnire cu Tatăl</title>
-    <style>
-      body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #0f172a; padding: 20px; line-height: 1.5; background: #fff; }
-      h1 { color: #0f766e; border-bottom: 3px solid #0f766e; padding-bottom: 10px; font-size: 26px; margin-top: 0; }
-      h2 { color: #b45309; margin-top: 35px; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px; font-size: 20px; page-break-after: avoid; }
-      h3 { color: #4338ca; margin-top: 20px; font-size: 16px; background: #eef2ff; padding: 6px 12px; border-radius: 6px; page-break-after: avoid; }
-      table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; page-break-inside: auto; }
-      tr { page-break-inside: avoid; page-break-after: auto; }
-      th, td { border: 1px solid #cbd5e1; padding: 8px 12px; text-align: left; vertical-align: top; }
-      th { background-color: #f8fafc; font-weight: bold; color: #334155; }
-      .page-break { page-break-before: always; }
-      .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 15px; }
-      .box { border: 1px solid #cbd5e1; padding: 15px; border-radius: 8px; break-inside: avoid; margin-bottom: 15px; background: #f8fafc; }
-      .box-title { font-weight: bold; font-size: 15px; margin-bottom: 10px; color: #0f172a; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; }
-      ul { margin: 0; padding-left: 20px; font-size: 13px; } li { margin-bottom: 4px; }
-      .tag { display: inline-block; background: #ccfbf1; color: #0f766e; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-right: 4px; margin-bottom: 4px;}
-      @media print { body { padding: 0; } .box { border: 1px solid #000; background: #fff; } th { background-color: #eee !important; -webkit-print-color-adjust: exact; } .tag { border: 1px solid #ccc; background: transparent !important; color: #000; } }
-    </style></head><body>
-    <h1>🏕️ Reîntâlnire cu Tatăl - Organización</h1>
-    <p style="font-size:14px; color:#64748b; margin-top:-10px;">Generado el ${new Date().toLocaleDateString()}</p>
-    <div class="grid" style="margin-top:30px;">
-      <div class="box"><div class="box-title">Estadísticas Principales</div><ul><li><strong>Personas:</strong> ${D.personas.length}</li><li><strong>Departamentos:</strong> ${D.departamentos.length}</li><li><strong>Canciones conf.:</strong> ${D.canciones.filter(c=>c.estado==='confirmado').length} de ${D.canciones.length}</li><li><strong>Servicios:</strong> ${D.servicios.length}</li></ul></div>
-      <div class="box"><div class="box-title">Logística</div><ul><li><strong>Cabañas:</strong> ${D.cabanas.length} (${D.cabanas.reduce((a,c)=>a+c.capacidad,0)} plazas)</li><li><strong>Grupos:</strong> ${D.grupos.length}</li><li><strong>Juegos:</strong> ${D.juegos.length}</li><li><strong>Coches:</strong> ${D.coches.length}</li></ul></div>
-    </div>`;
-
-  if(D.personas.length) {
-    const pOrd = [...D.personas].sort((a,b) => a.nombre.localeCompare(b.nombre));
-    html += `<div class="page-break"></div><h2>👥 Directorio del Campamento</h2><table><thead><tr><th>Nombre</th><th>Rol</th><th>Teléfono</th><th>Notas</th></tr></thead><tbody>`;
-    pOrd.forEach(p => { html += `<tr><td><strong>${p.nombre}</strong>${p.otra_iglesia?' <strong>(⛪ Invitado)</strong>':''}</td><td>${p.rol||'-'}</td><td>${p.telefono||'-'}</td><td style="font-size:11px;color:#555;">${p.notas||'-'}</td></tr>`; });
-    html += `</tbody></table>`;
-  }
-
-  if(D.horario.length) {
-      html += `<div class="page-break"></div><h2>📅 Horario General</h2><table><thead><tr><th width="15%">Fecha</th><th width="15%">Hora</th><th>Actividad</th><th>Tipo</th><th>Ubicación</th></tr></thead><tbody>`;
-      D.horario.forEach(h => { html += `<tr><td><strong>${h.fecha.split('-').reverse().join('/')}</strong></td><td>${h.hora_inicio.substring(0,5)} ${h.hora_fin?'- '+h.hora_fin.substring(0,5):''}</td><td><strong>${h.titulo}</strong>${h.descripcion?`<br><span style="font-size:11px;color:#555">${h.descripcion}</span>`:''}</td><td>${h.tipo}</td><td>${h.ubicacion||'-'}</td></tr>`; });
-      html += `</tbody></table>`;
-  }
-
-  if(D.departamentos.length) {
-    html += `<div class="page-break"></div><h2>🏢 Departamentos</h2><div class="grid">`;
-    D.departamentos.forEach(d => {
-      html += `<div class="box" style="border-top:4px solid ${d.color}"><div class="box-title">${d.nombre}</div><p style="margin:0 0 8px;font-size:13px;"><strong>Resp:</strong> ${d.responsable?pName(d.responsable):'-'}</p>
-        <div style="display:flex;flex-wrap:wrap;">${d.miembros.length?d.miembros.map(id=>`<span class="tag">${pName(id).split(' ')[0]}</span>`).join(''):'<span style="font-size:12px;color:#999">Sin miembros</span>'}</div></div>`;
-    }); html += `</div>`;
-  }
-
-  if(D.servicios.length) {
-    html += `<div class="page-break"></div><h2>📖 Programa de los Cultos</h2>`;
-    D.servicios.forEach(s => {
-      html += `<h3>${s.nombre} (${s.fecha?s.fecha.split('-').reverse().join('/'):''} - ${s.hora||''})</h3>`;
-      if(s.prog && s.prog.length) {
-        html += `<table><thead><tr><th width="15%">Hora</th><th width="20%">Tipo</th><th>Elemento</th><th width="35%">Asignados</th></tr></thead><tbody>`;
-        let run = parseInt((s.hora||'00:00').split(':')[0])*60 + parseInt((s.hora||'00:00').split(':')[1]);
-        s.prog.forEach(i => {
-          const ts = String(Math.floor(run/60)).padStart(2,'0') + ':' + String(run%60).padStart(2,'0'); run += parseInt(i.dur)||0;
-          html += `<tr><td><strong>${ts}</strong> <br><span style="font-size:10px;color:#666">(${i.dur} min)</span></td><td>${i.tipo.toUpperCase()}</td><td><strong>${i.titulo||'-'}</strong>${i.notas?`<br><span style="font-size:11px;color:#555">${i.notas}</span>`:''}</td><td>${(i.asignados||[]).map(id=>pName(id)).join(', ')||'-'}</td></tr>`;
-        }); html += `</tbody></table>`;
-      }
-    });
-  }
-
-  if(D.cabanas.length) {
-    html += `<div class="page-break"></div><h2>🏠 Cabañas</h2><div class="grid">`;
-    D.cabanas.forEach(c => { html += `<div class="box"><div class="box-title">${c.nombre} <span style="float:right;color:#0f766e;font-size:12px;">${(c.asignados||[]).length}/${c.capacidad} pl.</span></div><ul>${c.asignados.length?c.asignados.map(id=>`<li>${pName(id)} ${D.personas.find(p=>String(p.id)===String(id))?.otra_iglesia?'(⛪)':''}</li>`).join(''):'<li style="color:#999;list-style:none;">Vacía</li>'}</ul></div>`; }); html += `</div>`;
-  }
-
-  if(D.grupos.length) {
-    html += `<div class="page-break"></div><h2>🏳️ Grupos de Campamento</h2><div class="grid">`;
-    D.grupos.forEach(g => { 
-        const pt = g.portavoz_id ? `<p style="font-size:12px; margin:0 0 5px 0;"><strong>Portavoz:</strong> ${pName(g.portavoz_id)}</p>` : '';
-        const dc = g.descripcion ? `<p style="font-size:11px; color:#555; margin:0 0 10px 0;"><i>${g.descripcion}</i></p>` : '';
-        html += `<div class="box" style="border-left:5px solid ${g.color}"><div class="box-title">${g.nombre} <span style="float:right;color:#666;font-size:12px;">${(g.miembros||[]).length} pers.</span></div>${pt}${dc}<ul>${g.miembros.length?g.miembros.map(id=>`<li>${pName(id)}</li>`).join(''):'<li style="color:#999;list-style:none;">Sin miembros</li>'}</ul></div>`; 
-    }); html += `</div>`;
-  }
-  
-  if(D.juegos.length) {
-    html += `<div class="page-break"></div><h2>🎮 Juegos y Puntuaciones</h2><div class="grid">`;
-    D.juegos.forEach(j => { 
-        const mt = j.materiales ? `<p style="font-size:12px; margin:0 0 5px 0;"><strong>Materiales:</strong> ${j.materiales}</p>` : '';
-        const dc = j.descripcion ? `<p style="font-size:11px; color:#555; margin:0 0 10px 0;"><i>${j.descripcion}</i></p>` : '';
-        html += `<div class="box"><div class="box-title">${j.nombre} <span style="float:right;color:#ef4444;font-size:12px;">Máx: ${j.puntuacion_max} pts</span></div>${mt}${dc}<ul>${D.grupos.map(g=>{ const pt=(j.puntuaciones||[]).find(x=>x.grupo_id===g.id); return `<li style="font-size:13px;">${g.nombre}: <strong>${pt?pt.puntuacion:'0'} pts</strong></li>`; }).join('')}</ul></div>`; 
-    }); html += `</div>`;
-  }
-
-  if(D.coches.length) {
-    html += `<div class="page-break"></div><h2>🚗 Vehículos</h2><div class="grid">`;
-    D.coches.forEach(c => { html += `<div class="box"><div class="box-title">${c.nombre} <span style="float:right;color:#0369a1;font-size:12px;">${(c.pasajeros||[]).length+(c.conductor?1:0)}/${c.plazas} pl.</span></div><p style="margin:0 0 5px;font-size:13px;"><strong>Cond:</strong> ${c.conductor?pName(c.conductor):'-'}</p><p style="margin:0 0 5px;font-size:13px;"><strong>Ruta:</strong> ${c.ruta||'-'}</p><ul>${c.pasajeros.length?c.pasajeros.map(id=>`<li>${pName(id)}</li>`).join(''):'<li style="color:#999;list-style:none;">Sin pas. extra</li>'}</ul></div>`; }); html += `</div>`;
-  }
-
-  html += `<div style="margin-top: 40px; text-align: center; font-size: 10px; color: #999; border-top: 1px solid #eee; padding-top: 10px;">Generado automáticamente por el Panel TML</div></body></html>`;
-  const printWin = window.open('', '_blank'); printWin.document.open(); printWin.document.write(html); printWin.document.close();
-  setTimeout(() => printWin.print(), 500);
-}
-
-/* ═══════════════════════════════════════
-   INIT & AUTH
-═══════════════════════════════════════ */
+/* INIT & AUTH */
 document.addEventListener('DOMContentLoaded', () => {
   const pwEl = document.getElementById('pwIn');
   if(pwEl) pwEl.addEventListener('keypress', e => { if(e.key==='Enter') login(); });
@@ -1058,52 +956,26 @@ function login() {
     setTimeout(() => document.getElementById('lerr').style.display='none', 3000);
   }
 }
+
 function isLoggedIn() {
   const exp = localStorage.getItem('ca_exp');
   if(!exp || Date.now() > parseInt(exp)) return false;
-  localStorage.setItem('ca_exp', Date.now() + 12*60*60*1000); return true;
+  localStorage.setItem('ca_exp', Date.now() + 12*60*60*1000); 
+  return true;
 }
+
 function logout() { localStorage.removeItem('ca_exp'); location.reload(); }
 
 async function showApp() { 
   document.getElementById('app').style.display = 'block'; 
-  showLoading(true); // Encendemos la animación de carga
+  showLoading(true);
   await loadAll(); 
-  showLoading(false); // Apagamos la animación
-  renderAll(); // Pintamos los datos
+  showLoading(false);
+  renderAll();
   setTimeout(setupCSVDrop, 300); 
 }
 
-// Esta es la función que faltaba y que pinta todo nada más entrar
-function renderAll() { 
-  renderDash();
-  renderHorario();
-  renderPersonas();
-  renderDepts();
-  renderAlabanza();
-  renderCabanas();
-  // Aseguramos que la pestaña de inicio se active por defecto
-  const tabInicio = document.querySelector('[data-p="dashboard"]');
-  if(tabInicio) go(tabInicio, 'dashboard');
-}
-
-// Animación de carga bonita para que no parezca que está "pensando"
-function showLoading(on) {
-  let el = document.getElementById('loadingOverlay');
-  if(on) {
-    if(!el) {
-      el = document.createElement('div');
-      el.id = 'loadingOverlay';
-      el.style.cssText = 'position:fixed;inset:0;background:rgba(248, 250, 252, 0.85);z-index:9000;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1rem;backdrop-filter:blur(4px);';
-      el.innerHTML = '<div style="width:44px;height:44px;border:4px solid var(--border2);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite"></div><span style="font-size:.95rem;font-weight:600;color:var(--ink)">Cargando campamento...</span><style>@keyframes spin{to{transform:rotate(360deg)}}</style>';
-      document.body.appendChild(el);
-    }
-    el.style.display = 'flex';
-  } else {
-    if(el) el.style.display = 'none';
-  }
-}
-
+// ÚNICA FUNCIÓN showLoading (ELIMINA LA DUPLICADA)
 function showLoading(on) {
   let el = document.getElementById('loadingOverlay');
   if(on) {
@@ -1120,9 +992,18 @@ function showLoading(on) {
   }
 }
 
-/* ═══════════════════════════════════════
-   CARGA DESDE SUPABASE
-═══════════════════════════════════════ */
+function renderAll() { 
+  renderDash();
+  renderHorario();
+  renderPersonas();
+  renderDepts();
+  renderAlabanza();
+  renderCabanas();
+  const tabInicio = document.querySelector('[data-p="dashboard"]');
+  if(tabInicio) go(tabInicio, 'dashboard');
+}
+
+/* CARGA DESDE SUPABASE */
 async function loadAll() {
   if(!sb) return;
   try {
@@ -1157,107 +1038,96 @@ async function loadAll() {
   } catch(e) { console.error(e); }
 }
 
-/* ═══════════════════════════════════════
-  NAV Y UTILS
-═══════════════════════════════════════ */
+/* NAV Y UTILS */
 function go(el, pg) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.getElementById('page-'+pg).classList.add('active');
-  document.querySelectorAll('.ni').forEach(n => n.classList.remove('active'));
-  (el.closest ? el.closest('.ni') : el).classList.add('active');
-  if(window.innerWidth <= 768) { document.getElementById('sidebar').classList.remove('open'); document.getElementById('mobOverlay').style.display='none'; }
-  if(pg==='dashboard') renderDash(); if(pg==='horario') renderHorario(); if(pg==='personas') renderPersonas();
-  if(pg==='departamentos') renderDepts(); if(pg==='alabanza') renderAlabanza(); if(pg==='programa') renderProg();
-  if(pg==='grupos') renderGruposStats(); if(pg==='cabanas') renderCabanas();
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-'+pg).classList.add('active');
+  document.querySelectorAll('.ni').forEach(n => n.classList.remove('active'));
+  (el.closest ? el.closest('.ni') : el).classList.add('active');
+  if(window.innerWidth <= 768) { document.getElementById('sidebar').classList.remove('open'); document.getElementById('mobOverlay').style.display='none'; }
+  if(pg==='dashboard') renderDash(); if(pg==='horario') renderHorario(); if(pg==='personas') renderPersonas();
+  if(pg==='departamentos') renderDepts(); if(pg==='alabanza') renderAlabanza(); if(pg==='programa') renderProg();
+  if(pg==='grupos') renderGruposStats(); if(pg==='cabanas') renderCabanas();
 }
+
 function toggleSb() { const sb=document.getElementById('sidebar'), ov=document.getElementById('mobOverlay'); const open = sb.classList.toggle('open'); ov.style.display = open?'block':'none'; }
 function om(id) { document.getElementById(id).classList.add('open'); }
 function cm(id) { document.getElementById(id).classList.remove('open'); }
 function ini(n) { return n ? n.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase() : '?'; }
 function pColor(id) { const p=D.personas.find(x=>String(x.id)===String(id)); return p?p.color:'#94a3b8'; }
-function pName(id)  { const p=D.personas.find(x=>String(x.id)===String(id)); return p?p.nombre:'—'; }
-function pRol(id)   { const p=D.personas.find(x=>String(x.id)===String(id)); return p?p.rol:''; }
+function pName(id)  { const p=D.personas.find(x=>String(x.id)===String(id)); return p?p.nombre:'—'; }
+function pRol(id)   { const p=D.personas.find(x=>String(x.id)===String(id)); return p?p.rol:''; }
 function hexLight(h,a=0.1) { const r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16); return `rgba(${r},${g},${b},${a})`; }
+
 function buildPicker(cId, sel=[], fil='') {
-  const p = fil ? D.personas.filter(p=>{ const d=D.departamentos.find(x=>x.id===fil); return d&&(d.miembros.includes(p.id)||d.responsable===p.id); }) : D.personas;
-  document.getElementById(cId).innerHTML = p.length ? p.map(p=>`<button type="button" class="ptog${sel.includes(p.id)?' sel':''}" data-id="${p.id}" style="${sel.includes(p.id)?'background:'+p.color+';border-color:'+p.color+';color:#fff':''}" onclick="togP(this,'${p.id}','${p.color}')">${p.otra_iglesia?'⛪ ':''}${p.nombre.split(' ')[0]}</button>`).join('') : '<span style="font-size:.75rem;color:var(--ink3)">No hay personas.</span>';
+  const p = fil ? D.personas.filter(p=>{ const d=D.departamentos.find(x=>x.id===fil); return d&&(d.miembros.includes(p.id)||d.responsable===p.id); }) : D.personas;
+  document.getElementById(cId).innerHTML = p.length ? p.map(p=>`<button type="button" class="ptog${sel.includes(p.id)?' sel':''}" data-id="${p.id}" style="${sel.includes(p.id)?'background:'+p.color+';border-color:'+p.color+';color:#fff':''}" onclick="togP(this,'${p.id}','${p.color}')">${p.otra_iglesia?'⛪ ':''}${p.nombre.split(' ')[0]}</button>`).join('') : '<span style="font-size:.75rem;color:var(--ink3)">No hay personas.</span>';
 }
+
 function togP(btn, id, col) { btn.classList.toggle('sel'); if(btn.classList.contains('sel')){btn.style.background=col;btn.style.borderColor=col;btn.style.color='#fff';}else{btn.style.background='';btn.style.borderColor='';btn.style.color='';} }
 function getSelected(cId) { return [...document.querySelectorAll(`#${cId} .ptog.sel`)].map(b=>b.dataset.id); }
-function toast(msg, type='info') {
-  const c=document.getElementById('toasts'), ic={ok:'check-circle',info:'info-circle',err:'exclamation-triangle'}, co={ok:'var(--green-v)',info:'var(--primary)',err:'var(--red-v)'};
-  const t=document.createElement('div'); t.className='toast'; t.style.borderLeft=`4px solid ${co[type]}`; t.innerHTML=`<i class="fas fa-${ic[type]}" style="color:${co[type]};font-size:1.2rem"></i><span style="flex:1">${msg}</span>`; c.appendChild(t);
-  setTimeout(()=>{ t.style.cssText='opacity:0;transform:translateX(100%);transition:.3s'; setTimeout(()=>t.remove(),300); },3500);
-}
-function workload(id) {
-  const i=String(id), d=D.departamentos.filter(x=>x.miembros.includes(i)||x.responsable===i).length, c=D.canciones.filter(x=>(x.cantantes||[]).includes(i) || (x.instrumentistas||[]).includes(i)).length, de=(D.servicios||[]).reduce((a,s)=>a+(s.prog||[]).filter(x=>x.tipo==='devocional'&&(x.asignados||[]).includes(i)).length,0), pr=(D.servicios||[]).reduce((a,s)=>a+(s.prog||[]).filter(x=>x.tipo==='predicacion'&&(x.asignados||[]).includes(i)).length,0), hr=D.horario.filter(x=>x.responsable_id===i).length;
-  const s=d*2+c+de*2+pr*3+hr; return {depts:d, canciones:c, devoc:de, pred:pr, horarioResp:hr, score:s, level:s<=3?'low':s<=8?'med':'high'};
-}
-function wlPill(l) { const m={low:['wl-low','🟢 Baja'],med:['wl-med','🟡 Media'],high:['wl-high','🔴 Alta']}; return `<span class="${m[l][0]}">${m[l][1]}</span>`; }
 
+function toast(msg, type='info') {
+  const c=document.getElementById('toasts'), ic={ok:'check-circle',info:'info-circle',err:'exclamation-triangle'}, co={ok:'var(--green-v)',info:'var(--primary)',err:'var(--red-v)'};
+  const t=document.createElement('div'); t.className='toast'; t.style.borderLeft=`4px solid ${co[type]}`; t.innerHTML=`<i class="fas fa-${ic[type]}" style="color:${co[type]};font-size:1.2rem"></i><span style="flex:1">${msg}</span>`; c.appendChild(t);
+  setTimeout(()=>{ t.style.cssText='opacity:0;transform:translateX(100%);transition:.3s'; setTimeout(()=>t.remove(),300); },3500);
+}
+
+function workload(id) {
+  const i=String(id), d=D.departamentos.filter(x=>x.miembros.includes(i)||x.responsable===i).length, c=D.canciones.filter(x=>(x.cantantes||[]).includes(i) || (x.instrumentistas||[]).includes(i)).length, de=(D.servicios||[]).reduce((a,s)=>a+(s.prog||[]).filter(x=>x.tipo==='devocional'&&(x.asignados||[]).includes(i)).length,0), pr=(D.servicios||[]).reduce((a,s)=>a+(s.prog||[]).filter(x=>x.tipo==='predicacion'&&(x.asignados||[]).includes(i)).length,0), hr=D.horario.filter(x=>x.responsable_id===i).length;
+  const s=d*2+c+de*2+pr*3+hr; return {depts:d, canciones:c, devoc:de, pred:pr, horarioResp:hr, score:s, level:s<=3?'low':s<=8?'med':'high'};
+}
+
+function wlPill(l) { const m={low:['wl-low','🟢 Baja'],med:['wl-med','🟡 Media'],high:['wl-high','🔴 Alta']}; return `<span class="${m[l][0]}">${m[l][1]}</span>`; }
 function getAlabanzaDeptId() { const d = D.departamentos.find(x => x.nombre.toLowerCase().includes('alabanza') || x.nombre.toLowerCase().includes('música') || x.icono === 'fa-music'); return d ? d.id : ''; }
 
-/* ═══════════════════════════════════════
-   DASHBOARD (ACTUALIZADO CON MEJORAS VISUALES)
-═══════════════════════════════════════ */
+/* DASHBOARD RENDERIZADO */
 function renderDash() {
-  const un = D.personas.filter(p => !D.departamentos.some(d => d.miembros.includes(p.id) || d.responsable===p.id));
-  
-  // 1. Stats y alerta de 'Sin departamento' con número total
-  document.getElementById('d-stats').innerHTML = `<div class="sc c-primary"><div class="sc-icon"><i class="fas fa-users"></i></div><div class="sc-info"><div class="sc-val">${D.personas.length}</div><div class="sc-lbl">Personas</div></div></div><div class="sc c-amber"><div class="sc-icon"><i class="fas fa-flag"></i></div><div class="sc-info"><div class="sc-val">${D.grupos.length}</div><div class="sc-lbl">Grupos</div></div></div><div class="sc c-sky"><div class="sc-icon"><i class="fas fa-bed"></i></div><div class="sc-info"><div class="sc-val">${D.cabanas.reduce((s,c)=>s+c.capacidad,0)}</div><div class="sc-lbl">Plazas Cama</div></div></div>`;
-  
-  // Actualizamos el título de la tarjeta para que muestre el número en una píldora roja
-  const sinDeptoCard = document.getElementById('d-sin-depto');
-  if(sinDeptoCard && sinDeptoCard.previousElementSibling) {
-      sinDeptoCard.previousElementSibling.innerHTML = `<div class="card-title"><i class="fas fa-user-xmark" style="color:var(--red-v)"></i> Sin Departamento <span class="pill pill-red" style="margin-left:.5rem">${un.length}</span></div>`;
-  }
-  
-  document.getElementById('d-sin-depto').innerHTML = un.length ? un.map(p=>`<div style="display:flex;align-items:center;gap:.75rem;padding:.6rem 0;border-bottom:1px solid var(--border)"><div class="av av-sm" style="background:${p.color}">${ini(p.nombre)}</div><div style="font-size:.85rem;font-weight:600">${p.nombre}</div></div>`).join('') : '<div style="text-align:center;color:var(--ink3);padding:2rem;"><i class="fas fa-check-circle" style="font-size:2.5rem;margin-bottom:.5rem;color:var(--green-v)"></i><br>Todos asignados</div>';
-  document.getElementById('niBadge').style.display = un.length ? 'inline-block':'none'; document.getElementById('niBadge').textContent = un.length;
-  
-  // Horario Preview
-  const ev = D.horario.slice(0,4);
-  document.getElementById('d-horario-preview').innerHTML = ev.length ? ev.map(h=>`<div style="display:flex;gap:1rem;margin-bottom:1rem;"><div style="font-weight:800;color:var(--primary);width:45px;text-align:right;font-family:'Lora',serif;font-size:1.1rem">${h.hora_inicio.substring(0,5)}</div><div style="border-left:2px solid var(--border2);padding-left:1rem;padding-bottom:.5rem;"><div style="font-weight:700;font-size:.95rem;"><i class="fas ${HORARIO_CFG[h.tipo]?.i||'fa-clock'}" style="color:${HORARIO_CFG[h.tipo]?.c||'#000'}"></i> ${h.titulo}</div><div style="font-size:.75rem;color:var(--ink3)">${h.ubicacion||''}</div></div></div>`).join('') : '<div class="empty" style="padding:1rem"><i class="fas fa-calendar"></i><p>Sin eventos en horario</p></div>';
+  const un = D.personas.filter(p => !D.departamentos.some(d => d.miembros.includes(p.id) || d.responsable===p.id));
+  
+  document.getElementById('d-stats').innerHTML = `<div class="sc c-primary"><div class="sc-icon"><i class="fas fa-users"></i></div><div class="sc-info"><div class="sc-val">${D.personas.length}</div><div class="sc-lbl">Personas</div></div></div><div class="sc c-amber"><div class="sc-icon"><i class="fas fa-flag"></i></div><div class="sc-info"><div class="sc-val">${D.grupos.length}</div><div class="sc-lbl">Grupos</div></div></div><div class="sc c-sky"><div class="sc-icon"><i class="fas fa-bed"></i></div><div class="sc-info"><div class="sc-val">${D.cabanas.reduce((s,c)=>s+c.capacidad,0)}</div><div class="sc-lbl">Plazas Cama</div></div></div>`;
+  
+  document.getElementById('d-sin-depto').innerHTML = un.length ? un.map(p=>`<div style="display:flex;align-items:center;gap:.75rem;padding:.6rem 0;border-bottom:1px solid var(--border)"><div class="av av-sm" style="background:${p.color}">${ini(p.nombre)}</div><div style="font-size:.85rem;font-weight:600">${p.nombre}</div></div>`).join('') : '<div style="text-align:center;color:var(--ink3);padding:2rem;"><i class="fas fa-check-circle" style="font-size:2.5rem;margin-bottom:.5rem;color:var(--green-v)"></i><br>Todos asignados</div>';
+  document.getElementById('niBadge').style.display = un.length ? 'inline-block':'none'; 
+  document.getElementById('niBadge').textContent = un.length;
+  
+  const ev = D.horario.slice(0,4);
+  document.getElementById('d-horario-preview').innerHTML = ev.length ? ev.map(h=>`<div style="display:flex;gap:1rem;margin-bottom:1rem;"><div style="font-weight:800;color:var(--primary);width:45px;text-align:right;font-family:'Lora',serif;font-size:1.1rem">${h.hora_inicio.substring(0,5)}</div><div style="border-left:2px solid var(--border2);padding-left:1rem;padding-bottom:.5rem;"><div style="font-weight:700;font-size:.95rem;"><i class="fas ${HORARIO_CFG[h.tipo]?.i||'fa-clock'}" style="color:${HORARIO_CFG[h.tipo]?.c||'#000'}"></i> ${h.titulo}</div><div style="font-size:.75rem;color:var(--ink3)">${h.ubicacion||''}</div></div></div>`).join('') : '<div class="empty" style="padding:1rem"><i class="fas fa-calendar"></i><p>Sin eventos en horario</p></div>';
 
-  // 2. Departamentos (Equipos) con responsable más visual
-  document.getElementById('d-depts').innerHTML = D.departamentos.length ? D.departamentos.map(d=>{
-    const respHtml = d.responsable ? `<div style="display:flex;align-items:center;gap:.4rem;margin-top:.3rem;"><div class="av" style="width:20px;height:20px;font-size:.55rem;background:${pColor(d.responsable)}">${ini(pName(d.responsable))}</div><span style="font-size:.75rem;color:var(--primary);font-weight:700;">${pName(d.responsable).split(' ')[0]}</span></div>` : `<div style="font-size:.75rem;color:var(--ink4);margin-top:.3rem;"><i class="fas fa-user-slash"></i> Sin responsable</div>`;
-    return `<div onclick="go(document.querySelector('[data-p=departamentos]'),'departamentos'); openDeptDetail('${d.id}')" style="display:flex;align-items:center;gap:.75rem;padding:.75rem;border-radius:10px;cursor:pointer;transition:background .2s;border:1px solid transparent;" onmouseover="this.style.background='var(--surf2)';this.style.borderColor='var(--border)'" onmouseout="this.style.background='transparent';this.style.borderColor='transparent'">
-      <div style="width:42px;height:42px;border-radius:12px;background:${hexLight(d.color,.15)};color:${d.color};display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0"><i class="fas ${d.icono}"></i></div>
-      <div style="flex:1"><div style="font-weight:800;font-size:.95rem">${d.nombre}</div>${respHtml}</div>
-      <span class="pill pill-gray">${d.miembros.length + (d.responsable?1:0)} <i class="fas fa-user" style="font-size:.6rem;margin-left:2px"></i></span>
-    </div>`;
-  }).join('') : '<div class="empty"><p>Sin departamentos</p></div>';
+  document.getElementById('d-depts').innerHTML = D.departamentos.length ? D.departamentos.map(d=>{
+    const respHtml = d.responsable ? `<div style="display:flex;align-items:center;gap:.4rem;margin-top:.3rem;"><div class="av" style="width:20px;height:20px;font-size:.55rem;background:${pColor(d.responsable)}">${ini(pName(d.responsable))}</div><span style="font-size:.75rem;color:var(--primary);font-weight:700;">${pName(d.responsable).split(' ')[0]}</span></div>` : `<div style="font-size:.75rem;color:var(--ink4);margin-top:.3rem;"><i class="fas fa-user-slash"></i> Sin responsable</div>`;
+    return `<div onclick="go(document.querySelector('[data-p=departamentos]'),'departamentos'); openDeptDetail('${d.id}')" style="display:flex;align-items:center;gap:.75rem;padding:.75rem;border-radius:10px;cursor:pointer;transition:background .2s;border:1px solid transparent;" onmouseover="this.style.background='var(--surf2)';this.style.borderColor='var(--border)'" onmouseout="this.style.background='transparent';this.style.borderColor='transparent'">
+      <div style="width:42px;height:42px;border-radius:12px;background:${hexLight(d.color,.15)};color:${d.color};display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0"><i class="fas ${d.icono}"></i></div>
+      <div style="flex:1"><div style="font-weight:800;font-size:.95rem">${d.nombre}</div>${respHtml}</div>
+      <span class="pill pill-gray">${d.miembros.length + (d.responsable?1:0)} <i class="fas fa-user" style="font-size:.6rem;margin-left:2px"></i></span>
+    </div>`;
+  }).join('') : '<div class="empty"><p>Sin departamentos</p></div>';
 
-// 3. Canciones y Estadísticas de Alabanza (Inicio)
-  const aId = getAlabanzaDeptId(); const aDept = D.departamentos.find(x => x.id === aId); let alabStats = '';
-  if (aDept) {
-    const total = aDept.miembros.length + (aDept.responsable ? 1 : 0);
-    const setC = new Set(), setI = new Set();
-    D.canciones.forEach(c => { (c.cantantes || []).forEach(id => setC.add(id)); (c.instrumentistas || []).forEach(id => setI.add(id)); });
-    alabStats = `<div style="display:flex;justify-content:space-between;background:var(--surf2);padding:.6rem 1rem;border-bottom:1px solid var(--border);font-size:.75rem;margin:-1.25rem -1.25rem 1rem -1.25rem;"><span style="color:var(--ink2)"><i class="fas fa-users"></i> Dpto: <strong>${total}</strong></span><span style="color:var(--rose-v)"><i class="fas fa-microphone"></i> Voces Activas: <strong>${setC.size}</strong></span><span style="color:var(--sky-d)"><i class="fas fa-guitar"></i> Músicos Activos: <strong>${setI.size}</strong></span></div>`;
-  }
-  let songsHtml = D.canciones.length ? D.canciones.slice(0,5).map(c=>{
-    const cantHTML = (c.cantantes||[]).slice(0,3).map(id=>`<div class="av av-sm" style="background:${pColor(id)};border:2px solid #fff;width:24px;height:24px;font-size:.65rem;margin-left:-6px;box-shadow:var(--sh-sm)" title="Voz: ${pName(id)}">${ini(pName(id))}</div>`).join('');
-    const cantGrp = cantHTML ? `<div style="display:flex;align-items:center;background:var(--rose-l);padding:3px 8px 3px 8px;border-radius:99px;border:1px solid var(--rose-m);"><i class="fas fa-microphone" style="color:var(--rose-v);font-size:.75rem;margin-right:8px"></i><div style="display:flex;margin-left:6px">${cantHTML}</div></div>` : '';
-    const instHTML = (c.instrumentistas||[]).slice(0,3).map(id=>`<div class="av av-sm" style="background:${pColor(id)};border:2px solid #fff;width:24px;height:24px;font-size:.65rem;margin-left:-6px;box-shadow:var(--sh-sm)" title="Inst: ${pName(id)}">${ini(pName(id))}</div>`).join('');
-    const instGrp = instHTML ? `<div style="display:flex;align-items:center;background:var(--sky-l);padding:3px 8px 3px 8px;border-radius:99px;border:1px solid var(--sky-m);"><i class="fas fa-guitar" style="color:var(--sky-d);font-size:.75rem;margin-right:8px"></i><div style="display:flex;margin-left:6px">${instHTML}</div></div>` : '';
-    return `<div style="display:flex;align-items:center;gap:1rem;padding:.75rem 0;border-bottom:1px solid var(--border)"><div style="width:38px;height:38px;background:var(--amber-l);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--amber-v);font-size:1rem;flex-shrink:0;"><i class="fas fa-music"></i></div><div style="flex:1;min-width:0"><div style="font-weight:700;font-size:.95rem;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${c.titulo}</div><div style="font-size:.75rem;color:var(--ink3)">${c.artista||'—'}</div></div><div style="display:flex;gap:.5rem;flex-wrap:wrap;justify-content:flex-end;">${cantGrp}${instGrp}</div></div>`;
-  }).join('') : '<div class="empty"><p>Sin canciones</p></div>';
-  document.getElementById('d-songs').innerHTML = alabStats + songsHtml;
+  const aId = getAlabanzaDeptId(); const aDept = D.departamentos.find(x => x.id === aId); let alabStats = '';
+  if (aDept) {
+    const total = aDept.miembros.length + (aDept.responsable ? 1 : 0);
+    const setC = new Set(), setI = new Set();
+    D.canciones.forEach(c => { (c.cantantes || []).forEach(id => setC.add(id)); (c.instrumentistas || []).forEach(id => setI.add(id)); });
+    alabStats = `<div style="display:flex;justify-content:space-between;background:var(--surf2);padding:.6rem 1rem;border-bottom:1px solid var(--border);font-size:.75rem;margin:-1.25rem -1.25rem 1rem -1.25rem;"><span style="color:var(--ink2)"><i class="fas fa-users"></i> Dpto: <strong>${total}</strong></span><span style="color:var(--rose-v)"><i class="fas fa-microphone"></i> Voces: <strong>${setC.size}</strong></span><span style="color:var(--sky-d)"><i class="fas fa-guitar"></i> Músicos: <strong>${setI.size}</strong></span></div>`;
+  }
+  let songsHtml = D.canciones.length ? D.canciones.slice(0,5).map(c=>{
+    const cantHTML = (c.cantantes||[]).slice(0,3).map(id=>`<div class="av av-sm" style="background:${pColor(id)};border:2px solid #fff;width:24px;height:24px;font-size:.65rem;margin-left:-6px;box-shadow:var(--sh-sm)" title="Voz: ${pName(id)}">${ini(pName(id))}</div>`).join('');
+    const cantGrp = cantHTML ? `<div style="display:flex;align-items:center;background:var(--rose-l);padding:3px 8px 3px 8px;border-radius:99px;border:1px solid var(--rose-m);"><i class="fas fa-microphone" style="color:var(--rose-v);font-size:.75rem;margin-right:8px"></i><div style="display:flex;margin-left:6px">${cantHTML}</div></div>` : '';
+    const instHTML = (c.instrumentistas||[]).slice(0,3).map(id=>`<div class="av av-sm" style="background:${pColor(id)};border:2px solid #fff;width:24px;height:24px;font-size:.65rem;margin-left:-6px;box-shadow:var(--sh-sm)" title="Inst: ${pName(id)}">${ini(pName(id))}</div>`).join('');
+    const instGrp = instHTML ? `<div style="display:flex;align-items:center;background:var(--sky-l);padding:3px 8px 3px 8px;border-radius:99px;border:1px solid var(--sky-m);"><i class="fas fa-guitar" style="color:var(--sky-d);font-size:.75rem;margin-right:8px"></i><div style="display:flex;margin-left:6px">${instHTML}</div></div>` : '';
+    return `<div style="display:flex;align-items:center;gap:1rem;padding:.75rem 0;border-bottom:1px solid var(--border)"><div style="width:38px;height:38px;background:var(--amber-l);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--amber-v);font-size:1rem;flex-shrink:0;"><i class="fas fa-music"></i></div><div style="flex:1;min-width:0"><div style="font-weight:700;font-size:.95rem;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${c.titulo}</div><div style="font-size:.75rem;color:var(--ink3)">${c.artista||'—'}</div></div><div style="display:flex;gap:.5rem;flex-wrap:wrap;justify-content:flex-end;">${cantGrp}${instGrp}</div></div>`;
+  }).join('') : '<div class="empty"><p>Sin canciones</p></div>';
+  document.getElementById('d-songs').innerHTML = alabStats + songsHtml;
 
-  // Materials con 3 estados
-  const mC = document.getElementById('d-mats'), mD = Object.keys(D.materiales).filter(id => D.materiales[id] && D.materiales[id].length);
-  if (!mD.length) mC.innerHTML = '<div class="empty" style="padding:1.5rem"><i class="fas fa-box-open"></i><p>No hay listas de materiales</p></div>';
-  else mC.innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:1rem;">' + mD.map(id => { const d=D.departamentos.find(x=>x.id===id), items=D.materiales[id], doneC=items.filter(i=>i.estado==='tengo').length; return `<div style="background:var(--surf2);border:1px solid var(--border);border-radius:var(--r-sm);padding:1rem;"><div style="font-size:.85rem;font-weight:700;color:${d?d.color:'#000'};margin-bottom:.75rem;display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding-bottom:.4rem;"><span><i class="fas ${d?d.icono:'fa-box'}"></i> ${d?d.nombre:'?'}</span><span style="color:var(--ink2)">${doneC}/${items.length}</span></div><div>${items.map(m=>{ let isT=m.estado==='tengo', isC=m.estado==='comprar', col=isT?'var(--green-v)':isC?'var(--amber-v)':'var(--border2)', ic=isT?'fa-check-circle':isC?'fa-cart-shopping':'fa-circle'; return `<div style="font-size:.8rem;color:${isT?'var(--ink4)':'var(--ink)'};text-decoration:${isT?'line-through':'none'};margin-bottom:.3rem;"><i class="fas ${ic}" style="color:${col};margin-right:4px"></i>${m.texto}</div>`; }).join('')}</div></div>`; }).join('') + '</div>';
-  // Workload
+  const mC = document.getElementById('d-mats'), mD = Object.keys(D.materiales).filter(id => D.materiales[id] && D.materiales[id].length);
+  if (!mD.length) mC.innerHTML = '<div class="empty" style="padding:1.5rem"><i class="fas fa-box-open"></i><p>No hay listas de materiales</p></div>';
+  else mC.innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:1rem;">' + mD.map(id => { const d=D.departamentos.find(x=>x.id===id), items=D.materiales[id], doneC=items.filter(i=>i.estado==='tengo').length; return `<div style="background:var(--surf2);border:1px solid var(--border);border-radius:var(--r-sm);padding:1rem;"><div style="font-size:.85rem;font-weight:700;color:${d?d.color:'#000'};margin-bottom:.75rem;display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding-bottom:.4rem;"><span><i class="fas ${d?d.icono:'fa-box'}"></i> ${d?d.nombre:'?'}</span><span style="color:var(--ink2)">${doneC}/${items.length}</span></div><div>${items.map(m=>{ let isT=m.estado==='tengo', isC=m.estado==='comprar', col=isT?'var(--green-v)':isC?'var(--amber-v)':'var(--border2)', ic=isT?'fa-check-circle':isC?'fa-cart-shopping':'fa-circle'; return `<div style="font-size:.8rem;color:${isT?'var(--ink4)':'var(--ink)'};text-decoration:${isT?'line-through':'none'};margin-bottom:.3rem;"><i class="fas ${ic}" style="color:${col};margin-right:4px"></i>${m.texto}</div>`; }).join('')}</div></div>`; }).join('') + '</div>';
+  
   const sw = [...D.personas].sort((a,b)=>workload(b.id).score-workload(a.id).score);
   if(sw.length) document.getElementById('d-workload').innerHTML = `<table style="width:100%;border-collapse:collapse;text-align:left;"><thead><tr style="border-bottom:2px solid var(--border);background:var(--surf2)"><th style="padding:1rem;font-size:.75rem;text-transform:uppercase;color:var(--ink3)">Persona</th><th style="padding:1rem;font-size:.75rem;text-transform:uppercase;color:var(--ink3)">Tareas</th><th style="padding:1rem;font-size:.75rem;text-transform:uppercase;color:var(--ink3);text-align:right">Nivel</th></tr></thead><tbody>${sw.map(p=>{ const w=workload(p.id); let t=[]; if(w.depts) t.push(`<span class="chip"><i class="fas fa-sitemap"></i> ${w.depts}</span>`); if(w.canciones) t.push(`<span class="chip"><i class="fas fa-music"></i> ${w.canciones}</span>`); if(w.devoc) t.push(`<span class="chip"><i class="fas fa-book-open"></i> ${w.devoc}</span>`); if(w.pred) t.push(`<span class="chip"><i class="fas fa-microphone"></i> ${w.pred}</span>`); if(w.horarioResp) t.push(`<span class="chip"><i class="fas fa-calendar"></i> ${w.horarioResp}</span>`); return `<tr style="border-bottom:1px solid var(--border)"><td style="padding:1rem;display:flex;align-items:center;gap:.75rem"><div class="av av-sm" style="background:${p.color}">${ini(p.nombre)}</div><strong>${p.nombre.split(' ')[0]}</strong></td><td style="padding:1rem">${t.join(' ')||'<span style="color:var(--ink4)">Nada asignado</span>'}</td><td style="padding:1rem;text-align:right">${wlPill(w.level)}</td></tr>`; }).join('')}</tbody></table>`;
 }
 
-/* ═══════════════════════════════════════
-   HORARIO GENERAL
-═══════════════════════════════════════ */
+/* HORARIO */
 function renderHorario() {
   const tl = document.getElementById('horario-timeline'), ff = document.getElementById('hFilterFecha').value;
   let evs = D.horario; if(ff) evs = evs.filter(h => h.fecha === ff);
@@ -1273,8 +1143,32 @@ function renderHorario() {
       });
   }); tl.innerHTML = html;
 }
-function openModHorario() { document.getElementById('mHorarioT').textContent='Añadir Evento'; document.getElementById('hId').value=''; ['hTit','hUbi','hIni','hFin','hDesc'].forEach(id=>document.getElementById(id).value=''); document.getElementById('hFec').value=document.getElementById('hFilterFecha').value||new Date().toISOString().split('T')[0]; document.getElementById('hResp').innerHTML='<option value="">-- Ninguno --</option>'+D.personas.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join(''); om('modHorario'); }
-function openModHorarioEdit(id) { const h=D.horario.find(x=>x.id===id); if(!h) return; document.getElementById('mHorarioT').textContent='Editar Evento'; document.getElementById('hId').value=h.id; document.getElementById('hTit').value=h.titulo; document.getElementById('hFec').value=h.fecha; document.getElementById('hTipo').value=h.tipo; document.getElementById('hIni').value=h.hora_inicio; document.getElementById('hFin').value=h.hora_fin||''; document.getElementById('hUbi').value=h.ubicacion||''; document.getElementById('hDesc').value=h.descripcion||''; document.getElementById('hResp').innerHTML='<option value="">-- Ninguno --</option>'+D.personas.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join(''); document.getElementById('hResp').value=h.responsable_id||''; om('modHorario'); }
+
+function openModHorario() { 
+  document.getElementById('mHorarioT').textContent='Añadir Evento'; 
+  document.getElementById('hId').value=''; 
+  ['hTit','hUbi','hIni','hFin','hDesc'].forEach(id=>document.getElementById(id).value=''); 
+  document.getElementById('hFec').value=document.getElementById('hFilterFecha').value||new Date().toISOString().split('T')[0]; 
+  document.getElementById('hResp').innerHTML='<option value="">-- Ninguno --</option>'+D.personas.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join(''); 
+  om('modHorario'); 
+}
+
+function openModHorarioEdit(id) { 
+  const h=D.horario.find(x=>x.id===id); if(!h) return; 
+  document.getElementById('mHorarioT').textContent='Editar Evento'; 
+  document.getElementById('hId').value=h.id; 
+  document.getElementById('hTit').value=h.titulo; 
+  document.getElementById('hFec').value=h.fecha; 
+  document.getElementById('hTipo').value=h.tipo; 
+  document.getElementById('hIni').value=h.hora_inicio; 
+  document.getElementById('hFin').value=h.hora_fin||''; 
+  document.getElementById('hUbi').value=h.ubicacion||''; 
+  document.getElementById('hDesc').value=h.descripcion||''; 
+  document.getElementById('hResp').innerHTML='<option value="">-- Ninguno --</option>'+D.personas.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join(''); 
+  document.getElementById('hResp').value=h.responsable_id||''; 
+  om('modHorario'); 
+}
+
 async function saveHorario() {
   const obj = { titulo: document.getElementById('hTit').value.trim(), fecha: document.getElementById('hFec').value, hora_inicio: document.getElementById('hIni').value, hora_fin: document.getElementById('hFin').value||null, tipo: document.getElementById('hTipo').value, ubicacion: document.getElementById('hUbi').value, descripcion: document.getElementById('hDesc').value, responsable_id: document.getElementById('hResp').value||null };
   if(!obj.titulo || !obj.fecha || !obj.hora_inicio) { toast('Título, Fecha y Hora Inicio son obligatorios','err'); return; }
@@ -1282,14 +1176,17 @@ async function saveHorario() {
   try {
       if(eid) { await sb.from('horario_general').update(obj).eq('id', eid); Object.assign(D.horario.find(h=>h.id===eid), obj); } 
       else { const {data,error}=await sb.from('horario_general').insert(obj).select().single(); if(error)throw error; D.horario.push(data); }
-      D.horario.sort((a,b)=> a.fecha.localeCompare(b.fecha)||a.hora_inicio.localeCompare(b.hora_inicio)); cm('modHorario'); renderHorario(); renderDash(); toast('Guardado','ok');
+      D.horario.sort((a,b)=> a.fecha.localeCompare(b.fecha)||a.hora_inicio.localeCompare(b.hora_inicio)); 
+      cm('modHorario'); renderHorario(); renderDash(); toast('Guardado','ok');
   } catch(e) { toast('Error: '+e.message,'err'); }
 }
-async function delHorario(id) { if(!confirm('¿Borrar este evento?')) return; try { await sb.from('horario_general').delete().eq('id',id); D.horario=D.horario.filter(h=>h.id!==id); renderHorario(); renderDash(); toast('Borrado','info'); } catch(e){} }
 
-/* ═══════════════════════════════════════
-   PERSONAS
-═══════════════════════════════════════ */
+async function delHorario(id) { 
+  if(!confirm('¿Borrar este evento?')) return; 
+  try { await sb.from('horario_general').delete().eq('id',id); D.horario=D.horario.filter(h=>h.id!==id); renderHorario(); renderDash(); toast('Borrado','info'); } catch(e){} 
+}
+
+/* PERSONAS */
 function renderPersonas() {
   const sel=document.getElementById('pFilter'); const cur=sel.value;
   sel.innerHTML='<option value="">Todos los departamentos</option>'+D.departamentos.map(d=>`<option value="${d.id}">${d.nombre}</option>`).join(''); if(cur) sel.value=cur;
@@ -1302,8 +1199,28 @@ function renderPersonas() {
     return `<div class="pcard ${x.otra_iglesia?'is-guest':''}">${x.otra_iglesia?'<div class="guest-badge"><i class="fas fa-church"></i> Invitado/a</div>':''}<div class="pcard-acts"><button class="icon-btn edit" onclick="openModPersonaEdit('${x.id}')"><i class="fas fa-pen"></i></button><button class="icon-btn del" onclick="delPersona('${x.id}')"><i class="fas fa-trash"></i></button></div><div class="pcard-top"><div class="av av-lg" style="background:${x.color}">${ini(x.nombre)}</div><div class="pcard-info"><h3>${x.nombre}</h3><p>${x.rol}</p></div></div><div class="pcard-depts">${dp||'<span style="font-size:.72rem;color:var(--ink4);font-style:italic">Sin departamento</span>'}</div></div>`;
   }).join('');
 }
-function openModPersona() { document.getElementById('pId').value=''; ['pNom','pTel','pNotas'].forEach(id=>document.getElementById(id).value=''); document.getElementById('pRol').value='Voluntario/a'; document.getElementById('pColor').value='#0f766e'; document.getElementById('pOtraIglesia').checked=false; om('modPersona'); }
-function openModPersonaEdit(id) { const p=D.personas.find(x=>x.id===id); if(!p)return; document.getElementById('pId').value=p.id; document.getElementById('pNom').value=p.nombre; document.getElementById('pRol').value=p.rol; document.getElementById('pTel').value=p.telefono||''; document.getElementById('pNotas').value=p.notas||''; document.getElementById('pColor').value=p.color; document.getElementById('pOtraIglesia').checked=p.otra_iglesia||false; om('modPersona'); }
+
+function openModPersona() { 
+  document.getElementById('pId').value=''; 
+  ['pNom','pTel','pNotas'].forEach(id=>document.getElementById(id).value=''); 
+  document.getElementById('pRol').value='Voluntario/a'; 
+  document.getElementById('pColor').value='#0f766e'; 
+  document.getElementById('pOtraIglesia').checked=false; 
+  om('modPersona'); 
+}
+
+function openModPersonaEdit(id) { 
+  const p=D.personas.find(x=>x.id===id); if(!p)return; 
+  document.getElementById('pId').value=p.id; 
+  document.getElementById('pNom').value=p.nombre; 
+  document.getElementById('pRol').value=p.rol; 
+  document.getElementById('pTel').value=p.telefono||''; 
+  document.getElementById('pNotas').value=p.notas||''; 
+  document.getElementById('pColor').value=p.color; 
+  document.getElementById('pOtraIglesia').checked=p.otra_iglesia||false; 
+  om('modPersona'); 
+}
+
 async function savePersona() {
   const nom=document.getElementById('pNom').value.trim(); if(!nom){toast('Nombre obligatorio','err');return;}
   const obj={ nombre:nom, rol:document.getElementById('pRol').value, telefono:document.getElementById('pTel').value, notas:document.getElementById('pNotas').value, color:document.getElementById('pColor').value, otra_iglesia: document.getElementById('pOtraIglesia').checked };
@@ -1312,97 +1229,396 @@ async function savePersona() {
     if(eid){ await sb.from('personas').update(obj).eq('id',eid); Object.assign(D.personas.find(p=>p.id===eid), obj); } 
     else { const {data,error}=await sb.from('personas').insert(obj).select().single(); if(error)throw error; D.personas.push(data); }
     cm('modPersona'); renderPersonas(); renderDash(); toast(eid?'Actualizada':'Añadida','ok');
-  } catch(e){}
+  } catch(e){ console.error(e); }
 }
-async function delPersona(id) { if(!confirm('¿Eliminar persona?')) return; try{ await sb.from('personas').delete().eq('id',id); D.personas=D.personas.filter(p=>p.id!==id); D.departamentos.forEach(d=>{d.miembros=d.miembros.filter(m=>m!==id);if(d.responsable===id)d.responsable=null;}); D.canciones.forEach(c=>{c.cantantes=(c.cantantes||[]).filter(x=>x!==id);}); renderPersonas(); renderDash(); toast('Eliminada','info'); }catch(e){} }
 
-/* ═══════════════════════════════════════
-   DEPARTAMENTOS
-═══════════════════════════════════════ */
+async function delPersona(id) { 
+  if(!confirm('¿Eliminar persona?')) return; 
+  try{ 
+    await sb.from('personas').delete().eq('id',id); 
+    D.personas=D.personas.filter(p=>p.id!==id); 
+    D.departamentos.forEach(d=>{d.miembros=d.miembros.filter(m=>m!==id);if(d.responsable===id)d.responsable=null;}); 
+    D.canciones.forEach(c=>{c.cantantes=(c.cantantes||[]).filter(x=>x!==id);}); 
+    renderPersonas(); renderDash(); toast('Eliminada','info'); 
+  }catch(e){ console.error(e); } 
+}
+
+/* DEPARTAMENTOS */
 function renderDepts() {
   document.getElementById('dept-grid').innerHTML=D.departamentos.map(d=>`<div class="dcard" onclick="openDeptDetail('${d.id}')"><div class="dcard-stripe" style="background:${d.color}"></div><div class="dcard-body"><div class="dcard-hd"><div class="dcard-ico" style="background:${hexLight(d.color,.15)};color:${d.color}"><i class="fas ${d.icono}"></i></div><div><div class="dcard-nm">${d.nombre}</div><div class="dcard-resp"><i class="fas fa-user" style="font-size:.6rem"></i> ${d.responsable?pName(d.responsable):'Sin responsable'}</div></div></div>${d.desc?`<div style="font-size:.8rem;color:var(--ink3);margin-bottom:.75rem">${d.desc}</div>`:''}<div class="dcard-ft"><div style="display:flex;align-items:center;gap:.5rem"><div class="av-stack">${(d.responsable?[d.responsable]:[]).concat(d.miembros).slice(0,4).map(id=>`<div class="av av-sm" style="background:${pColor(id)};border:2px solid #fff">${ini(pName(id))}</div>`).join('')}</div><span style="font-size:.75rem;color:var(--ink3);font-weight:600">${d.miembros.length+(d.responsable?1:0)} pers.</span></div><div style="display:flex;gap:.3rem"><button class="icon-btn edit" onclick="event.stopPropagation();openModDeptEdit('${d.id}')"><i class="fas fa-pen"></i></button><button class="icon-btn del" onclick="event.stopPropagation();delDepto('${d.id}')"><i class="fas fa-trash"></i></button></div></div></div></div>`).join('');
 }
+
 function openDeptDetail(id) {
-  currentDept=id; const d=D.departamentos.find(x=>x.id===id); if(!d)return; document.getElementById('dept-list').style.display='none'; document.getElementById('dept-detail').style.display='block';
-  document.getElementById('dd-ico').style.cssText=`background:${hexLight(d.color,.15)};color:${d.color}`; document.getElementById('dd-ico').innerHTML=`<i class="fas ${d.icono}"></i>`; document.getElementById('dd-nm').textContent=d.nombre; document.getElementById('dd-sub').textContent=d.desc||'';
-  let mHTML = ''; if(d.responsable) mHTML+=`<div style="padding:.75rem;background:var(--surf2);border-radius:8px;border:1px solid var(--border);margin-bottom:1rem;"><div style="font-size:.7rem;color:var(--primary);font-weight:700;text-transform:uppercase;margin-bottom:.5rem">⭐ Responsable</div><div style="display:flex;align-items:center;gap:1rem;"><div class="av av-lg" style="background:${pColor(d.responsable)}">${ini(pName(d.responsable))}</div><div><div style="font-weight:700;font-size:1.1rem">${pName(d.responsable)}</div></div></div></div>`;
+  currentDept=id; const d=D.departamentos.find(x=>x.id===id); if(!d)return; 
+  document.getElementById('dept-list').style.display='none'; 
+  document.getElementById('dept-detail').style.display='block';
+  document.getElementById('dd-ico').style.cssText=`background:${hexLight(d.color,.15)};color:${d.color}`; 
+  document.getElementById('dd-ico').innerHTML=`<i class="fas ${d.icono}"></i>`; 
+  document.getElementById('dd-nm').textContent=d.nombre; 
+  document.getElementById('dd-sub').textContent=d.desc||'';
+  let mHTML = ''; 
+  if(d.responsable) mHTML+=`<div style="padding:.75rem;background:var(--surf2);border-radius:8px;border:1px solid var(--border);margin-bottom:1rem;"><div style="font-size:.7rem;color:var(--primary);font-weight:700;text-transform:uppercase;margin-bottom:.5rem">⭐ Responsable</div><div style="display:flex;align-items:center;gap:1rem;"><div class="av av-lg" style="background:${pColor(d.responsable)}">${ini(pName(d.responsable))}</div><div><div style="font-weight:700;font-size:1.1rem">${pName(d.responsable)}</div></div></div></div>`;
   mHTML+=`<div class="people-grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr))">${d.miembros.map(mid=>`<div class="pcard" style="padding:1rem;"><div class="pcard-top" style="margin-bottom:0"><div class="av" style="background:${pColor(mid)}">${ini(pName(mid))}</div><div class="pcard-info"><h3>${pName(mid)}</h3><p>${pRol(mid)}</p></div></div></div>`).join('')}</div>`;
-  document.getElementById('dd-resp-members').innerHTML=mHTML; renderMateriales(id);
-  const aI=[...(d.responsable?[d.responsable]:[]),...d.miembros]; document.getElementById('dd-stats').innerHTML=`<div style="display:flex;justify-content:space-between;margin-bottom:.5rem"><span style="color:var(--ink3)">Equipo</span><strong>${aI.length}</strong></div><div style="display:flex;justify-content:space-between;margin-bottom:1rem"><span style="color:var(--ink3)">Materiales</span><strong>${(D.materiales[id]||[]).length}</strong></div><div style="font-size:.75rem;font-weight:700;color:var(--ink4);text-transform:uppercase;margin-bottom:.5rem;border-top:1px solid var(--border);padding-top:1rem;">Miembros</div>${aI.map(mid=>`<div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.4rem"><div class="av av-sm" style="background:${pColor(mid)}">${ini(pName(mid))}</div><span style="font-size:.8rem">${pName(mid).split(' ')[0]}</span></div>`).join('')}`;
+  document.getElementById('dd-resp-members').innerHTML=mHTML; 
+  renderMateriales(id);
+  const aI=[...(d.responsable?[d.responsable]:[]),...d.miembros]; 
+  document.getElementById('dd-stats').innerHTML=`<div style="display:flex;justify-content:space-between;margin-bottom:.5rem"><span style="color:var(--ink3)">Equipo</span><strong>${aI.length}</strong></div><div style="display:flex;justify-content:space-between;margin-bottom:1rem"><span style="color:var(--ink3)">Materiales</span><strong>${(D.materiales[id]||[]).length}</strong></div><div style="font-size:.75rem;font-weight:700;color:var(--ink4);text-transform:uppercase;margin-bottom:.5rem;border-top:1px solid var(--border);padding-top:1rem;">Miembros</div>${aI.map(mid=>`<div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.4rem"><div class="av av-sm" style="background:${pColor(mid)}">${ini(pName(mid))}</div><span style="font-size:.8rem">${pName(mid).split(' ')[0]}</span></div>`).join('')}`;
 }
-function backDept() { document.getElementById('dept-list').style.display='block'; document.getElementById('dept-detail').style.display='none'; currentDept=null; renderDepts(); }
-function openModDepto() { document.getElementById('dId').value=''; ['dNom','dIco','dDesc'].forEach(id=>document.getElementById(id).value=''); document.getElementById('dColor').value='#0f766e'; document.getElementById('dResp').innerHTML='<option value="">— Sin asignar —</option>'+D.personas.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join(''); buildPicker('dMiembrosPick',[]); om('modDepto'); }
-function openModDeptEdit(id) { const d=D.departamentos.find(x=>x.id===id); if(!d)return; document.getElementById('dId').value=d.id; document.getElementById('dNom').value=d.nombre; document.getElementById('dIco').value=d.icono; document.getElementById('dColor').value=d.color; document.getElementById('dDesc').value=d.desc||''; document.getElementById('dResp').innerHTML='<option value="">— Sin asignar —</option>'+D.personas.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join(''); document.getElementById('dResp').value=d.responsable||''; buildPicker('dMiembrosPick',d.miembros); om('modDepto'); }
+
+function backDept() { 
+  document.getElementById('dept-list').style.display='block'; 
+  document.getElementById('dept-detail').style.display='none'; 
+  currentDept=null; 
+  renderDepts(); 
+}
+
+function openModDepto() { 
+  document.getElementById('dId').value=''; 
+  ['dNom','dIco','dDesc'].forEach(id=>document.getElementById(id).value=''); 
+  document.getElementById('dColor').value='#0f766e'; 
+  document.getElementById('dResp').innerHTML='<option value="">— Sin asignar —</option>'+D.personas.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join(''); 
+  buildPicker('dMiembrosPick',[]); 
+  om('modDepto'); 
+}
+
+function openModDeptEdit(id) { 
+  const d=D.departamentos.find(x=>x.id===id); if(!d)return; 
+  document.getElementById('dId').value=d.id; 
+  document.getElementById('dNom').value=d.nombre; 
+  document.getElementById('dIco').value=d.icono; 
+  document.getElementById('dColor').value=d.color; 
+  document.getElementById('dDesc').value=d.desc||''; 
+  document.getElementById('dResp').innerHTML='<option value="">— Sin asignar —</option>'+D.personas.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join(''); 
+  document.getElementById('dResp').value=d.responsable||''; 
+  buildPicker('dMiembrosPick',d.miembros); 
+  om('modDepto'); 
+}
+
 async function saveDepto() {
   const nom=document.getElementById('dNom').value.trim(); if(!nom){toast('Obligatorio','err');return;}
-  const eid=document.getElementById('dId').value; const obj={nombre:nom,icono:document.getElementById('dIco').value||'fa-circle',color:document.getElementById('dColor').value,responsable:document.getElementById('dResp').value||null,descripcion:document.getElementById('dDesc').value}; const m=getSelected('dMiembrosPick');
-  try{ let did=eid; if(eid){await sb.from('departamentos').update(obj).eq('id',eid);}else{const{data,error}=await sb.from('departamentos').insert(obj).select().single();if(error)throw error;did=data.id;} await sb.from('departamento_miembros').delete().eq('departamento_id',did); if(m.length)await sb.from('departamento_miembros').insert(m.map(pid=>({departamento_id:did,persona_id:pid}))); if(eid){Object.assign(D.departamentos.find(x=>x.id===eid),{...obj,desc:obj.descripcion,miembros:m});}else{D.departamentos.push({id:did,...obj,desc:obj.descripcion,miembros:m});} cm('modDepto');renderDepts();renderDash();if(currentDept)openDeptDetail(currentDept);toast('Guardado','ok'); }catch(e){}
+  const eid=document.getElementById('dId').value; 
+  const obj={nombre:nom,icono:document.getElementById('dIco').value||'fa-circle',color:document.getElementById('dColor').value,responsable:document.getElementById('dResp').value||null,descripcion:document.getElementById('dDesc').value}; 
+  const m=getSelected('dMiembrosPick');
+  try{ 
+    let did=eid; 
+    if(eid){
+      await sb.from('departamentos').update(obj).eq('id',eid);
+    } else {
+      const{data,error}=await sb.from('departamentos').insert(obj).select().single();
+      if(error)throw error;
+      did=data.id;
+    } 
+    await sb.from('departamento_miembros').delete().eq('departamento_id',did); 
+    if(m.length)await sb.from('departamento_miembros').insert(m.map(pid=>({departamento_id:did,persona_id:pid}))); 
+    if(eid){
+      Object.assign(D.departamentos.find(x=>x.id===eid),{...obj,desc:obj.descripcion,miembros:m});
+    }else{
+      D.departamentos.push({id:did,...obj,desc:obj.descripcion,miembros:m});
+    } 
+    cm('modDepto');
+    renderDepts();
+    renderDash();
+    if(currentDept) openDeptDetail(currentDept);
+    toast('Guardado','ok'); 
+  }catch(e){ console.error(e); }
 }
-async function delDepto(id) { if(!confirm('¿Borrar?')) return; try{ await sb.from('departamentos').delete().eq('id',id); D.departamentos=D.departamentos.filter(d=>d.id!==id); renderDepts(); renderDash(); toast('Borrado','info'); }catch(e){} }
+
+async function delDepto(id) { 
+  if(!confirm('¿Borrar?')) return; 
+  try{ 
+    await sb.from('departamentos').delete().eq('id',id); 
+    D.departamentos=D.departamentos.filter(d=>d.id!==id); 
+    renderDepts(); 
+    renderDash(); 
+    toast('Borrado','info'); 
+  }catch(e){ console.error(e); } 
+}
 
 function renderMateriales(dId) {
-  const l=D.materiales[dId]||[], c=document.getElementById('dd-materiales'), p=document.getElementById('dd-mat-progress');
-  if(p){ const d=l.filter(m=>m.estado==='tengo').length; p.innerHTML=l.length?`<span style="font-weight:700;color:var(--primary)">${d}/${l.length}</span> listos`: ''; }
-  if(!l.length){ c.innerHTML='<div class="empty" style="padding:1rem"><p>No hay materiales</p></div>'; return; }
-  c.innerHTML=l.map(m=>{
-    const est = {'pendiente':{c:'var(--ink3)',bg:'var(--surf2)',i:'fa-clock',t:'Pendiente'},'comprar':{c:'var(--amber-v)',bg:'var(--amber-l)',i:'fa-cart-shopping',t:'Comprar'},'tengo':{c:'var(--green-v)',bg:'var(--green-l)',i:'fa-check-circle',t:'Lo tengo'}}[m.estado||'pendiente'];
-    return `<div style="display:flex;align-items:center;padding:.5rem 0;border-bottom:1px solid var(--border);gap:.75rem;">
-      <button onclick="cycleMaterial('${m.id}','${dId}','${m.estado||'pendiente'}')" style="border:none;background:${est.bg};color:${est.c};padding:.3rem .6rem;border-radius:6px;font-size:.7rem;font-weight:700;cursor:pointer;min-width:85px;text-align:center;box-shadow:var(--sh-sm)"><i class="fas ${est.i}"></i> ${est.t}</button>
-      <span style="flex:1;font-size:.9rem;font-weight:500;color:${m.estado==='tengo'?'var(--ink4)':'var(--ink)'};text-decoration:${m.estado==='tengo'?'line-through':'none'}">${m.texto}</span>
-      <button class="icon-btn del" onclick="event.stopPropagation();delMaterial('${m.id}','${dId}')" style="border:none;box-shadow:none;background:transparent"><i class="fas fa-times"></i></button>
-    </div>`;
-  }).join('');
+  const l=D.materiales[dId]||[], c=document.getElementById('dd-materiales'), p=document.getElementById('dd-mat-progress');
+  if(p){ const d=l.filter(m=>m.estado==='tengo').length; p.innerHTML=l.length?`<span style="font-weight:700;color:var(--primary)">${d}/${l.length}</span> listos`: ''; }
+  if(!l.length){ c.innerHTML='<div class="empty" style="padding:1rem"><p>No hay materiales</p></div>'; return; }
+  c.innerHTML=l.map(m=>{
+    const est = {'pendiente':{c:'var(--ink3)',bg:'var(--surf2)',i:'fa-clock',t:'Pendiente'},'comprar':{c:'var(--amber-v)',bg:'var(--amber-l)',i:'fa-cart-shopping',t:'Comprar'},'tengo':{c:'var(--green-v)',bg:'var(--green-l)',i:'fa-check-circle',t:'Lo tengo'}}[m.estado||'pendiente'];
+    return `<div style="display:flex;align-items:center;padding:.5rem 0;border-bottom:1px solid var(--border);gap:.75rem;">
+      <button onclick="cycleMaterial('${m.id}','${dId}','${m.estado||'pendiente'}')" style="border:none;background:${est.bg};color:${est.c};padding:.3rem .6rem;border-radius:6px;font-size:.7rem;font-weight:700;cursor:pointer;min-width:85px;text-align:center;box-shadow:var(--sh-sm)"><i class="fas ${est.i}"></i> ${est.t}</button>
+      <span style="flex:1;font-size:.9rem;font-weight:500;color:${m.estado==='tengo'?'var(--ink4)':'var(--ink)'};text-decoration:${m.estado==='tengo'?'line-through':'none'}">${m.texto}</span>
+      <button class="icon-btn del" onclick="event.stopPropagation();delMaterial('${m.id}','${dId}')" style="border:none;box-shadow:none;background:transparent"><i class="fas fa-times"></i></button>
+    </div>`;
+  }).join('');
 }
-async function addMaterial() { const t=document.getElementById('matNewItem').value.trim(); if(!t||!currentDept)return; const l=D.materiales[currentDept]||[]; try{ const{data,error}=await sb.from('departamento_materiales').insert({departamento_id:currentDept,texto:t,estado:'pendiente',posicion:l.length}).select().single(); if(error)throw error; if(!D.materiales[currentDept])D.materiales[currentDept]=[]; D.materiales[currentDept].push(data); document.getElementById('matNewItem').value=''; renderMateriales(currentDept); }catch(e){ console.error(e); } }
-async function cycleMaterial(id,did,curr) { const next=curr==='pendiente'?'comprar':curr==='comprar'?'tengo':'pendiente'; try{ await sb.from('departamento_materiales').update({estado:next}).eq('id',id); const it=D.materiales[did].find(m=>m.id===id); if(it)it.estado=next; renderMateriales(did); }catch(e){ console.error(e); } }
-async function delMaterial(id,did) { try{ await sb.from('departamento_materiales').delete().eq('id',id); D.materiales[did]=D.materiales[did].filter(m=>m.id!==id); renderMateriales(did); }catch(e){ console.error(e); } }
-/* ═══════════════════════════════════════
-   ALABANZA
-═══════════════════════════════════════ */
-function songFilter(val,btn) { songFilterVal=val; document.querySelectorAll('#page-alabanza .tab').forEach(t=>t.classList.remove('active')); if(btn) btn.classList.add('active'); renderAlabanza(); }
+
+async function addMaterial() { 
+  const t=document.getElementById('matNewItem').value.trim(); 
+  if(!t||!currentDept)return; 
+  const l=D.materiales[currentDept]||[]; 
+  try{ 
+    const{data,error}=await sb.from('departamento_materiales').insert({departamento_id:currentDept,texto:t,estado:'pendiente',posicion:l.length}).select().single(); 
+    if(error)throw error; 
+    if(!D.materiales[currentDept])D.materiales[currentDept]=[]; 
+    D.materiales[currentDept].push(data); 
+    document.getElementById('matNewItem').value=''; 
+    renderMateriales(currentDept); 
+  }catch(e){ console.error(e); } 
+}
+
+async function cycleMaterial(id,did,curr) { 
+  const next=curr==='pendiente'?'comprar':curr==='comprar'?'tengo':'pendiente'; 
+  try{ 
+    await sb.from('departamento_materiales').update({estado:next}).eq('id',id); 
+    const it=D.materiales[did].find(m=>m.id===id); 
+    if(it)it.estado=next; 
+    renderMateriales(did); 
+  }catch(e){ console.error(e); } 
+}
+
+async function delMaterial(id,did) { 
+  try{ 
+    await sb.from('departamento_materiales').delete().eq('id',id); 
+    D.materiales[did]=D.materiales[did].filter(m=>m.id!==id); 
+    renderMateriales(did); 
+  }catch(e){ console.error(e); } 
+}
+
+/* ALABANZA */
+function songFilter(val,btn) { 
+  songFilterVal=val; 
+  document.querySelectorAll('#page-alabanza .tab').forEach(t=>t.classList.remove('active')); 
+  if(btn) btn.classList.add('active'); 
+  renderAlabanza(); 
+}
 
 function renderAlabanza() {
-  let s=D.canciones; if(songFilterVal) s=s.filter(x=>x.estado===songFilterVal); const sl=document.getElementById('song-list'), se=document.getElementById('song-empty');
-  if(!s.length){sl.innerHTML='';se.style.display='block';}else{ se.style.display='none'; sl.innerHTML=s.map(c=>{ const pC={confirmado:'pill-green',pendiente:'pill-amber',quizas:'pill-gray'}[c.estado]||'pill-gray', pT={confirmado:'Confirmada',pendiente:'Pendiente',quizas:'Quizás'}[c.estado]||c.estado; const cantHTML=(c.cantantes||[]).map(id=>`<span class="chip" style="background:var(--rose-l);color:var(--rose-v);border-color:var(--rose-m)"><i class="fas fa-microphone" style="margin-right:4px"></i>${pName(id).split(' ')[0]}</span>`).join(''); const instHTML=(c.instrumentistas||[]).map(id=>`<span class="chip" style="background:var(--sky-l);color:var(--sky-d);border-color:var(--sky-m)"><i class="fas fa-guitar" style="margin-right:4px"></i>${pName(id).split(' ')[0]}</span>`).join(''); const chipsHTML=cantHTML+instHTML||'<span style="font-size:.75rem;color:var(--ink4);font-style:italic">Sin asignaciones</span>'; return `<div class="song-card" style="margin-bottom:1rem"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem"><div style="display:flex;gap:1rem;align-items:center"><div class="song-ico"><i class="fas fa-music"></i></div><div><div class="song-nm">${c.titulo}</div><div class="song-art">${c.artista||'Autor desconocido'} ${c.tono?' • <strong>'+c.tono+'</strong>':''}</div></div></div><div style="display:flex;gap:.5rem;align-items:center"><span class="pill ${pC}">${pT}</span><button class="icon-btn edit" onclick="openModSongEdit('${c.id}')"><i class="fas fa-pen"></i></button><button class="icon-btn del" onclick="delSong('${c.id}')"><i class="fas fa-trash"></i></button></div></div><div style="padding-top:1rem;border-top:1px solid var(--border);display:flex;gap:.5rem;flex-wrap:wrap;">${chipsHTML}</div></div>`; }).join(''); }
-  const sM={}; D.canciones.forEach(c=>{ if(c.estado==='confirmado'){ (c.cantantes||[]).forEach(id=>{ if(!sM[id])sM[id]={t:0,c:0,i:0}; sM[id].t++; sM[id].c++; }); (c.instrumentistas||[]).forEach(id=>{ if(!sM[id])sM[id]={t:0,c:0,i:0}; sM[id].t++; sM[id].i++; }); } }); const ids=Object.keys(sM).sort((a,b)=>sM[b].t-sM[a].t);
-  document.getElementById('singer-stats').innerHTML=ids.length?ids.map(id=>{ let bdg=''; if(sM[id].c>0)bdg+=`<span style="font-size:.65rem;background:var(--rose-l);color:var(--rose-v);padding:.15rem .4rem;border-radius:4px;margin-right:4px"><i class="fas fa-microphone"></i> ${sM[id].c}</span>`; if(sM[id].i>0)bdg+=`<span style="font-size:.65rem;background:var(--sky-l);color:var(--sky-d);padding:.15rem .4rem;border-radius:4px;"><i class="fas fa-guitar"></i> ${sM[id].i}</span>`; return `<div style="display:flex;align-items:center;justify-content:space-between;padding:.6rem 0;border-bottom:1px solid var(--border)"><div style="display:flex;align-items:center;gap:.75rem"><div class="av av-sm" style="background:${pColor(id)}">${ini(pName(id))}</div><div><div style="font-size:.85rem;font-weight:600">${pName(id).split(' ')[0]}</div><div style="margin-top:2px">${bdg}</div></div></div><span style="font-size:1.1rem;font-weight:800;color:var(--ink)">${sM[id].t}</span></div>`; }).join(''):'<div class="empty"><p>Sin participaciones</p></div>';
+  let s=D.canciones; 
+  if(songFilterVal) s=s.filter(x=>x.estado===songFilterVal); 
+  const sl=document.getElementById('song-list'), se=document.getElementById('song-empty');
+  if(!s.length){sl.innerHTML='';se.style.display='block';}else{ 
+    se.style.display='none'; 
+    sl.innerHTML=s.map(c=>{ 
+      const pC={confirmado:'pill-green',pendiente:'pill-amber',quizas:'pill-gray'}[c.estado]||'pill-gray', pT={confirmado:'Confirmada',pendiente:'Pendiente',quizas:'Quizás'}[c.estado]||c.estado; 
+      const cantHTML=(c.cantantes||[]).map(id=>`<span class="chip" style="background:var(--rose-l);color:var(--rose-v);border-color:var(--rose-m)"><i class="fas fa-microphone" style="margin-right:4px"></i>${pName(id).split(' ')[0]}</span>`).join(''); 
+      const instHTML=(c.instrumentistas||[]).map(id=>`<span class="chip" style="background:var(--sky-l);color:var(--sky-d);border-color:var(--sky-m)"><i class="fas fa-guitar" style="margin-right:4px"></i>${pName(id).split(' ')[0]}</span>`).join(''); 
+      const chipsHTML=cantHTML+instHTML||'<span style="font-size:.75rem;color:var(--ink4);font-style:italic">Sin asignaciones</span>'; 
+      return `<div class="song-card" style="margin-bottom:1rem"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem"><div style="display:flex;gap:1rem;align-items:center"><div class="song-ico"><i class="fas fa-music"></i></div><div><div class="song-nm">${c.titulo}</div><div class="song-art">${c.artista||'Autor desconocido'} ${c.tono?' • <strong>'+c.tono+'</strong>':''}</div></div></div><div style="display:flex;gap:.5rem;align-items:center"><span class="pill ${pC}">${pT}</span><button class="icon-btn edit" onclick="openModSongEdit('${c.id}')"><i class="fas fa-pen"></i></button><button class="icon-btn del" onclick="delSong('${c.id}')"><i class="fas fa-trash"></i></button></div></div><div style="padding-top:1rem;border-top:1px solid var(--border);display:flex;gap:.5rem;flex-wrap:wrap;">${chipsHTML}</div></div>`; 
+    }).join(''); 
+  }
+  const sM={}; 
+  D.canciones.forEach(c=>{ 
+    if(c.estado==='confirmado'){ 
+      (c.cantantes||[]).forEach(id=>{ if(!sM[id])sM[id]={t:0,c:0,i:0}; sM[id].t++; sM[id].c++; }); 
+      (c.instrumentistas||[]).forEach(id=>{ if(!sM[id])sM[id]={t:0,c:0,i:0}; sM[id].t++; sM[id].i++; }); 
+    } 
+  }); 
+  const ids=Object.keys(sM).sort((a,b)=>sM[b].t-sM[a].t);
+  document.getElementById('singer-stats').innerHTML=ids.length?ids.map(id=>{ 
+    let bdg=''; 
+    if(sM[id].c>0)bdg+=`<span style="font-size:.65rem;background:var(--rose-l);color:var(--rose-v);padding:.15rem .4rem;border-radius:4px;margin-right:4px"><i class="fas fa-microphone"></i> ${sM[id].c}</span>`; 
+    if(sM[id].i>0)bdg+=`<span style="font-size:.65rem;background:var(--sky-l);color:var(--sky-d);padding:.15rem .4rem;border-radius:4px;"><i class="fas fa-guitar"></i> ${sM[id].i}</span>`; 
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:.6rem 0;border-bottom:1px solid var(--border)"><div style="display:flex;align-items:center;gap:.75rem"><div class="av av-sm" style="background:${pColor(id)}">${ini(pName(id))}</div><div><div style="font-size:.85rem;font-weight:600">${pName(id).split(' ')[0]}</div><div style="margin-top:2px">${bdg}</div></div></div><span style="font-size:1.1rem;font-weight:800;color:var(--ink)">${sM[id].t}</span></div>`; 
+  }).join(''):'<div class="empty"><p>Sin participaciones</p></div>';
 }
 
-function openModSong() { const aId=getAlabanzaDeptId(); document.getElementById('sId').value=''; ['sTit','sArt','sNot','sTono'].forEach(id=>document.getElementById(id).value=''); document.getElementById('sDur').value='4'; document.getElementById('sEst').value='confirmado'; buildPicker('sCantPick',[],aId); buildPicker('sInstPick',[],aId); om('modSong'); }
+function openModSong() { 
+  const aId=getAlabanzaDeptId(); 
+  document.getElementById('sId').value=''; 
+  ['sTit','sArt','sNot','sTono'].forEach(id=>document.getElementById(id).value=''); 
+  document.getElementById('sDur').value='4'; 
+  document.getElementById('sEst').value='confirmado'; 
+  buildPicker('sCantPick',[],aId); 
+  buildPicker('sInstPick',[],aId); 
+  om('modSong'); 
+}
 
-function openModSongEdit(id) { const aId=getAlabanzaDeptId(); const c=D.canciones.find(x=>x.id===id); if(!c)return; document.getElementById('sId').value=c.id; document.getElementById('sTit').value=c.titulo; document.getElementById('sArt').value=c.artista||''; document.getElementById('sTono').value=c.tono||''; document.getElementById('sDur').value=c.dur||4; document.getElementById('sEst').value=c.estado||'confirmado'; document.getElementById('sNot').value=c.notas||''; buildPicker('sCantPick',c.cantantes||[],aId); buildPicker('sInstPick',c.instrumentistas||[],aId); om('modSong'); }
+function openModSongEdit(id) { 
+  const aId=getAlabanzaDeptId(); 
+  const c=D.canciones.find(x=>x.id===id); if(!c)return; 
+  document.getElementById('sId').value=c.id; 
+  document.getElementById('sTit').value=c.titulo; 
+  document.getElementById('sArt').value=c.artista||''; 
+  document.getElementById('sTono').value=c.tono||''; 
+  document.getElementById('sDur').value=c.dur||4; 
+  document.getElementById('sEst').value=c.estado||'confirmado'; 
+  document.getElementById('sNot').value=c.notas||''; 
+  buildPicker('sCantPick',c.cantantes||[],aId); 
+  buildPicker('sInstPick',c.instrumentistas||[],aId); 
+  om('modSong'); 
+}
 
-async function saveSong() { const t=document.getElementById('sTit').value.trim(); if(!t)return; const ca=getSelected('sCantPick'), inst=getSelected('sInstPick'), obj={titulo:t,artista:document.getElementById('sArt').value.trim(),tono:document.getElementById('sTono').value,duracion:parseInt(document.getElementById('sDur').value)||4,estado:document.getElementById('sEst').value,notas:document.getElementById('sNot').value}, eid=document.getElementById('sId').value; try{ let cid=eid; if(eid){await sb.from('canciones').update(obj).eq('id',eid);}else{const{data,error}=await sb.from('canciones').insert(obj).select().single();if(error)throw error;cid=data.id;} await sb.from('cancion_cantantes').delete().eq('cancion_id',cid); const inserts=[]; ca.forEach(pid=>inserts.push({cancion_id:cid,persona_id:pid,rol:'cantante'})); inst.forEach(pid=>inserts.push({cancion_id:cid,persona_id:pid,rol:'instrumentista'})); if(inserts.length)await sb.from('cancion_cantantes').insert(inserts); const loc={id:cid,...obj,dur:obj.duracion,cantantes:ca,instrumentistas:inst}; if(eid){Object.assign(D.canciones.find(c=>c.id===eid),loc);}else{D.canciones.push(loc);} cm('modSong');renderAlabanza();toast('Guardada','ok'); }catch(e){ console.error(e); alert("Error de Base de Datos: " + (e.message || JSON.stringify(e))); } }
+async function saveSong() { 
+  const t=document.getElementById('sTit').value.trim(); if(!t)return; 
+  const ca=getSelected('sCantPick'), inst=getSelected('sInstPick'), obj={titulo:t,artista:document.getElementById('sArt').value.trim(),tono:document.getElementById('sTono').value,duracion:parseInt(document.getElementById('sDur').value)||4,estado:document.getElementById('sEst').value,notas:document.getElementById('sNot').value}, eid=document.getElementById('sId').value; 
+  try{ 
+    let cid=eid; 
+    if(eid){
+      await sb.from('canciones').update(obj).eq('id',eid);
+    }else{
+      const{data,error}=await sb.from('canciones').insert(obj).select().single();
+      if(error)throw error;
+      cid=data.id;
+    } 
+    await sb.from('cancion_cantantes').delete().eq('cancion_id',cid); 
+    const inserts=[]; 
+    ca.forEach(pid=>inserts.push({cancion_id:cid,persona_id:pid,rol:'cantante'})); 
+    inst.forEach(pid=>inserts.push({cancion_id:cid,persona_id:pid,rol:'instrumentista'})); 
+    if(inserts.length)await sb.from('cancion_cantantes').insert(inserts); 
+    const loc={id:cid,...obj,dur:obj.duracion,cantantes:ca,instrumentistas:inst}; 
+    if(eid){
+      Object.assign(D.canciones.find(c=>c.id===eid),loc);
+    }else{
+      D.canciones.push(loc);
+    } 
+    cm('modSong');
+    renderAlabanza();
+    toast('Guardada','ok'); 
+  }catch(e){ console.error(e); alert("Error: " + (e.message || JSON.stringify(e))); } 
+}
 
-async function delSong(id) { if(!confirm('¿Borrar?'))return; try{await sb.from('canciones').delete().eq('id',id);D.canciones=D.canciones.filter(c=>c.id!==id);renderAlabanza();toast('Borrada','info');}catch(e){ console.error(e); } }
-/* ═══════════════════════════════════════
-   PROGRAMA (CULTOS)
-═══════════════════════════════════════ */
+async function delSong(id) { 
+  if(!confirm('¿Borrar?'))return; 
+  try{
+    await sb.from('canciones').delete().eq('id',id);
+    D.canciones=D.canciones.filter(c=>c.id!==id);
+    renderAlabanza();
+    toast('Borrada','info');
+  }catch(e){ console.error(e); } 
+}
+
+/* PROGRAMA */
 function renderProg() {
-  const sel=document.getElementById('svcSelector'), cV=sel.value; sel.innerHTML='<option value="">Seleccionar culto…</option>'+(D.servicios||[]).map(s=>`<option value="${s.id}">${s.nombre} (${s.fecha.split('-').reverse().join('/')})</option>`).join(''); if(cV)sel.value=cV;
+  const sel=document.getElementById('svcSelector'), cV=sel.value; 
+  sel.innerHTML='<option value="">Seleccionar culto…</option>'+(D.servicios||[]).map(s=>`<option value="${s.id}">${s.nombre} (${s.fecha.split('-').reverse().join('/')})</option>`).join(''); 
+  if(cV)sel.value=cV;
   const sid=sel.value, ab=document.getElementById('btnAddItem');
   if(!sid){ ab.disabled=true; document.getElementById('prog-timeline').innerHTML='<div class="empty"><i class="fas fa-hand-pointer"></i><p>Selecciona un culto arriba</p></div>'; document.getElementById('prog-timebar').innerHTML=''; document.getElementById('prog-side-panel').innerHTML=''; return; }
-  ab.disabled=false; const svc=D.servicios.find(x=>x.id===sid); if(!svc)return; const p=svc.prog||[], tl=document.getElementById('prog-timeline');
-  if(!p.length) tl.innerHTML='<div class="empty"><p>Añade elemento</p></div>'; else { let [hh,mm]=(svc.hora||'00:00').split(':').map(Number); let run=hh*60+mm; tl.innerHTML=p.map(i=>{ const c=TC[i.tipo]||TC.anuncio, ts=String(Math.floor(run/60)).padStart(2,'0')+':'+String(run%60).padStart(2,'0'); run+=parseInt(i.dur)||0; return `<div class="ti" style="background:var(--surf);border-radius:12px;padding:1.25rem;margin-bottom:1rem;display:flex;gap:1.25rem;box-shadow:var(--sh-sm);border:1px solid var(--border)"><div style="font-family:'Lora',serif;font-size:1.1rem;font-weight:700;color:var(--primary);width:50px;text-align:right;">${ts}</div><div style="width:4px;background:${c.c};border-radius:99px;"></div><div style="flex:1"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div style="font-size:.75rem;font-weight:800;text-transform:uppercase;color:${c.c};margin-bottom:.3rem"><i class="fas ${c.i}"></i> ${c.l} <span style="color:var(--ink4);font-weight:500;text-transform:none;margin-left:8px"><i class="fas fa-hourglass-half"></i> ${i.dur} min</span></div><div class="ti-acts"><button class="icon-btn edit" onclick="openModItemEdit('${i.id}','${sid}')"><i class="fas fa-pen"></i></button><button class="icon-btn del" onclick="delItem('${i.id}','${sid}')"><i class="fas fa-trash"></i></button></div></div><div style="font-size:1.1rem;font-weight:700;color:var(--ink);margin-bottom:.5rem">${i.titulo||'—'}</div>${i.notas?`<div style="font-size:.85rem;color:var(--ink3);margin-bottom:1rem;background:var(--surf2);padding:.5rem .75rem;border-radius:6px;">${i.notas}</div>`:''}<div style="display:flex;flex-wrap:wrap;gap:.4rem;">${(i.asignados||[]).map(id=>`<span class="chip" style="font-size:.75rem"><span class="chip-dot" style="background:${pColor(id)}"></span>${pName(id).split(' ')[0]}</span>`).join('')}</div></div></div>`; }).join(''); }
-  const td={}; p.forEach(i=>{td[i.tipo]=(td[i.tipo]||0)+(parseInt(i.dur)||0);}); const tot=Object.values(td).reduce((a,v)=>a+v,0); document.getElementById('prog-timebar').innerHTML=Object.keys(td).sort((a,b)=>td[b]-td[a]).map(t=>`<div style="display:flex;justify-content:space-between;font-size:.8rem;margin-bottom:.4rem"><span style="color:var(--ink3)"><i class="fas ${TC[t].i}" style="color:${TC[t].c};width:20px"></i> ${TC[t].l}</span><strong style="color:var(--ink)">${td[t]} min</strong></div>`).join('')+`<div style="border-top:1px solid var(--border);margin-top:1rem;padding-top:1rem;display:flex;justify-content:space-between;font-size:1.1rem;font-family:'Lora',serif;font-weight:700"><span>Total</span><span style="color:var(--primary)">${tot} min</span></div>`;
-  const pc={}; p.forEach(i=>{(i.asignados||[]).forEach(id=>{if(!pc[id])pc[id]=0;pc[id]++;});}); document.getElementById('prog-side-panel').innerHTML=Object.keys(pc).sort((a,b)=>pc[b]-pc[a]).map(id=>`<div style="display:flex;align-items:center;gap:.75rem;padding:.5rem 0;border-bottom:1px solid var(--border)"><div class="av av-sm" style="background:${pColor(id)}">${ini(pName(id))}</div><div style="flex:1;font-size:.85rem;font-weight:600">${pName(id).split(' ')[0]}</div><div style="font-weight:700;color:var(--primary);background:var(--primary-l);padding:.1rem .5rem;border-radius:99px;font-size:.7rem">${pc[id]}</div></div>`).join('');
+  ab.disabled=false; 
+  const svc=D.servicios.find(x=>x.id===sid); if(!svc)return; 
+  const p=svc.prog||[], tl=document.getElementById('prog-timeline');
+  if(!p.length) tl.innerHTML='<div class="empty"><p>Añade elemento</p></div>'; 
+  else { 
+    let [hh,mm]=(svc.hora||'00:00').split(':').map(Number); 
+    let run=hh*60+mm; 
+    tl.innerHTML=p.map(i=>{ 
+      const c=TC[i.tipo]||TC.anuncio, ts=String(Math.floor(run/60)).padStart(2,'0')+':'+String(run%60).padStart(2,'0'); 
+      run+=parseInt(i.dur)||0; 
+      return `<div class="ti" style="background:var(--surf);border-radius:12px;padding:1.25rem;margin-bottom:1rem;display:flex;gap:1.25rem;box-shadow:var(--sh-sm);border:1px solid var(--border)"><div style="font-family:'Lora',serif;font-size:1.1rem;font-weight:700;color:var(--primary);width:50px;text-align:right;">${ts}</div><div style="width:4px;background:${c.c};border-radius:99px;"></div><div style="flex:1"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div style="font-size:.75rem;font-weight:800;text-transform:uppercase;color:${c.c};margin-bottom:.3rem"><i class="fas ${c.i}"></i> ${c.l} <span style="color:var(--ink4);font-weight:500;text-transform:none;margin-left:8px"><i class="fas fa-hourglass-half"></i> ${i.dur} min</span></div><div class="ti-acts"><button class="icon-btn edit" onclick="openModItemEdit('${i.id}','${sid}')"><i class="fas fa-pen"></i></button><button class="icon-btn del" onclick="delItem('${i.id}','${sid}')"><i class="fas fa-trash"></i></button></div></div><div style="font-size:1.1rem;font-weight:700;color:var(--ink);margin-bottom:.5rem">${i.titulo||'—'}</div>${i.notas?`<div style="font-size:.85rem;color:var(--ink3);margin-bottom:1rem;background:var(--surf2);padding:.5rem .75rem;border-radius:6px;">${i.notas}</div>`:''}<div style="display:flex;flex-wrap:wrap;gap:.4rem;">${(i.asignados||[]).map(id=>`<span class="chip" style="font-size:.75rem"><span class="chip-dot" style="background:${pColor(id)}"></span>${pName(id).split(' ')[0]}</span>`).join('')}</div></div></div>`; 
+    }).join(''); 
+  }
+  const td={}; 
+  p.forEach(i=>{td[i.tipo]=(td[i.tipo]||0)+(parseInt(i.dur)||0);}); 
+  const tot=Object.values(td).reduce((a,v)=>a+v,0); 
+  document.getElementById('prog-timebar').innerHTML=Object.keys(td).sort((a,b)=>td[b]-td[a]).map(t=>`<div style="display:flex;justify-content:space-between;font-size:.8rem;margin-bottom:.4rem"><span style="color:var(--ink3)"><i class="fas ${TC[t].i}" style="color:${TC[t].c};width:20px"></i> ${TC[t].l}</span><strong style="color:var(--ink)">${td[t]} min</strong></div>`).join('')+`<div style="border-top:1px solid var(--border);margin-top:1rem;padding-top:1rem;display:flex;justify-content:space-between;font-size:1.1rem;font-family:'Lora',serif;font-weight:700"><span>Total</span><span style="color:var(--primary)">${tot} min</span></div>`;
+  const pc={}; 
+  p.forEach(i=>{(i.asignados||[]).forEach(id=>{if(!pc[id])pc[id]=0;pc[id]++;});}); 
+  document.getElementById('prog-side-panel').innerHTML=Object.keys(pc).sort((a,b)=>pc[b]-pc[a]).map(id=>`<div style="display:flex;align-items:center;gap:.75rem;padding:.5rem 0;border-bottom:1px solid var(--border)"><div class="av av-sm" style="background:${pColor(id)}">${ini(pName(id))}</div><div style="flex:1;font-size:.85rem;font-weight:600">${pName(id).split(' ')[0]}</div><div style="font-weight:700;color:var(--primary);background:var(--primary-l);padding:.1rem .5rem;border-radius:99px;font-size:.7rem">${pc[id]}</div></div>`).join('');
 }
-function openModSvc() { ['svNom'].forEach(id=>document.getElementById(id).value=''); document.getElementById('svHor').value='10:00'; document.getElementById('svFec').value=new Date().toISOString().split('T')[0]; om('modSvc'); }
-async function saveSvc() { const n=document.getElementById('svNom').value.trim(); if(!n)return; try{const{data,error}=await sb.from('servicios').insert({nombre:n,fecha:document.getElementById('svFec').value,hora:document.getElementById('svHor').value}).select().single();if(error)throw error;D.servicios.push({...data,prog:[]});cm('modSvc');document.getElementById('svcSelector').value=data.id;renderProg();toast('Culto creado','ok');}catch(e){} }
-function onItTipo() { const t=document.getElementById('itTipo').value; document.getElementById('itTitLbl').textContent=t==='cancion'?'Canción':t==='predicacion'?'Tema':t==='devocional'?'Tema Devocional':'Título'; document.getElementById('itAsgLbl').textContent=t==='cancion'?'Cantantes':t==='predicacion'?'Predicador':'Asignados'; document.getElementById('itAsgGrp').style.display=t==='pausa'?'none':'block'; if(!editingItem) document.getElementById('itDur').value={cancion:4,devocional:10,predicacion:30,oracion:5,comunion:15,bienvenida:5,ofrendas:5,anuncio:3,pausa:10}[t]||5; const ref=document.getElementById('itRefGrp'); if(t==='cancion'){ref.style.display='block';document.getElementById('itRef').innerHTML='<option value="">— Manual —</option>'+D.canciones.map(c=>`<option value="${c.id}">${c.titulo}</option>`).join('');}else{ref.style.display='none';} buildPicker('itPick',[]); }
-function openModItem() { editingItem=null; document.getElementById('itId').value=''; document.getElementById('itTit').value=''; document.getElementById('itNot').value=''; document.getElementById('itTipo').value='cancion'; document.getElementById('itEst').value='confirmado'; onItTipo(); om('modItem'); }
-function openModItemEdit(iid, sid) { const s=(D.servicios||[]).find(x=>x.id===sid), i=(s.prog||[]).find(x=>x.id===iid); if(!i)return; editingItem={iid,sid}; document.getElementById('itId').value=iid; document.getElementById('itTipo').value=i.tipo; document.getElementById('itDur').value=i.dur||5; document.getElementById('itTit').value=i.titulo||''; document.getElementById('itNot').value=i.notas||''; document.getElementById('itEst').value=i.estado||'confirmado'; onItTipo(); buildPicker('itPick',i.asignados||[]); om('modItem'); }
-async function saveItem() { const t=document.getElementById('itTipo').value, tit=document.getElementById('itTit').value.trim(), dur=parseInt(document.getElementById('itDur').value)||5, not=document.getElementById('itNot').value.trim(), est=document.getElementById('itEst').value, asg=getSelected('itPick'), sid=document.getElementById('svcSelector').value, svc=(D.servicios||[]).find(x=>x.id===sid); if(!svc)return; const eid=document.getElementById('itId').value, pos=eid?(svc.prog.find(i=>i.id===eid)?.posicion||0):svc.prog.length, obj={servicio_id:sid,tipo:t,titulo:tit,duracion:dur,notas:not,estado:est,posicion:pos}; try{ let iid=eid; if(eid){await sb.from('programa_items').update(obj).eq('id',eid);}else{const{data,error}=await sb.from('programa_items').insert(obj).select().single();if(error)throw error;iid=data.id;} await sb.from('programa_asignados').delete().eq('item_id',iid); if(asg.length)await sb.from('programa_asignados').insert(asg.map(pid=>({item_id:iid,persona_id:pid}))); const loc={id:iid,...obj,dur,asignados:asg}; if(eid){Object.assign(svc.prog.find(i=>i.id===eid),loc);}else{svc.prog.push(loc);} cm('modItem');renderProg();toast('Guardado','ok'); }catch(e){} }
-async function delItem(iid, sid) { if(!confirm('¿Borrar?'))return; try{await sb.from('programa_items').delete().eq('id',iid);const svc=(D.servicios||[]).find(x=>x.id===sid);if(svc)svc.prog=svc.prog.filter(i=>i.id!==iid);renderProg();toast('Borrado','info');}catch(e){} }
 
-/* ═══════════════════════════════════════
-   GRUPOS Y JUEGOS
-═══════════════════════════════════════ */
+function openModSvc() { 
+  ['svNom'].forEach(id=>document.getElementById(id).value=''); 
+  document.getElementById('svHor').value='10:00'; 
+  document.getElementById('svFec').value=new Date().toISOString().split('T')[0]; 
+  om('modSvc'); 
+}
+
+async function saveSvc() { 
+  const n=document.getElementById('svNom').value.trim(); if(!n)return; 
+  try{
+    const{data,error}=await sb.from('servicios').insert({nombre:n,fecha:document.getElementById('svFec').value,hora:document.getElementById('svHor').value}).select().single();
+    if(error)throw error;
+    D.servicios.push({...data,prog:[]});
+    cm('modSvc');
+    document.getElementById('svcSelector').value=data.id;
+    renderProg();
+    toast('Culto creado','ok');
+  }catch(e){ console.error(e); }
+}
+
+function onItTipo() { 
+  const t=document.getElementById('itTipo').value; 
+  document.getElementById('itTitLbl').textContent=t==='cancion'?'Canción':t==='predicacion'?'Tema':t==='devocional'?'Tema Devocional':'Título'; 
+  document.getElementById('itAsgLbl').textContent=t==='cancion'?'Cantantes':t==='predicacion'?'Predicador':'Asignados'; 
+  document.getElementById('itAsgGrp').style.display=t==='pausa'?'none':'block'; 
+  if(!editingItem) document.getElementById('itDur').value={cancion:4,devocional:10,predicacion:30,oracion:5,comunion:15,bienvenida:5,ofrendas:5,anuncio:3,pausa:10}[t]||5; 
+  const ref=document.getElementById('itRefGrp'); 
+  if(t==='cancion'){
+    ref.style.display='block';
+    document.getElementById('itRef').innerHTML='<option value="">— Manual —</option>'+D.canciones.map(c=>`<option value="${c.id}">${c.titulo}</option>`).join('');
+  }else{
+    ref.style.display='none';
+  } 
+  buildPicker('itPick',[]); 
+}
+
+function openModItem() { 
+  editingItem=null; 
+  document.getElementById('itId').value=''; 
+  document.getElementById('itTit').value=''; 
+  document.getElementById('itNot').value=''; 
+  document.getElementById('itTipo').value='cancion'; 
+  document.getElementById('itEst').value='confirmado'; 
+  onItTipo(); 
+  om('modItem'); 
+}
+
+function openModItemEdit(iid, sid) { 
+  const s=(D.servicios||[]).find(x=>x.id===sid), i=(s.prog||[]).find(x=>x.id===iid); 
+  if(!i)return; 
+  editingItem={iid,sid}; 
+  document.getElementById('itId').value=iid; 
+  document.getElementById('itTipo').value=i.tipo; 
+  document.getElementById('itDur').value=i.dur||5; 
+  document.getElementById('itTit').value=i.titulo||''; 
+  document.getElementById('itNot').value=i.notas||''; 
+  document.getElementById('itEst').value=i.estado||'confirmado'; 
+  onItTipo(); 
+  buildPicker('itPick',i.asignados||[]); 
+  om('modItem'); 
+}
+
+async function saveItem() { 
+  const t=document.getElementById('itTipo').value, tit=document.getElementById('itTit').value.trim(), dur=parseInt(document.getElementById('itDur').value)||5, not=document.getElementById('itNot').value.trim(), est=document.getElementById('itEst').value, asg=getSelected('itPick'), sid=document.getElementById('svcSelector').value, svc=(D.servicios||[]).find(x=>x.id===sid); 
+  if(!svc)return; 
+  const eid=document.getElementById('itId').value, pos=eid?(svc.prog.find(i=>i.id===eid)?.posicion||0):svc.prog.length, obj={servicio_id:sid,tipo:t,titulo:tit,duracion:dur,notas:not,estado:est,posicion:pos}; 
+  try { 
+    let iid=eid; 
+    if(eid){
+      await sb.from('programa_items').update(obj).eq('id',eid);
+    }else{
+      const{data,error}=await sb.from('programa_items').insert(obj).select().single();
+      if(error)throw error;
+      iid=data.id;
+    } 
+    await sb.from('programa_asignados').delete().eq('item_id',iid); 
+    if(asg.length)await sb.from('programa_asignados').insert(asg.map(pid=>({item_id:iid,persona_id:pid}))); 
+    const loc={id:iid,...obj,dur,asignados:asg}; 
+    if(eid){
+      Object.assign(svc.prog.find(i=>i.id===eid),loc);
+    }else{
+      svc.prog.push(loc);
+    } 
+    cm('modItem');
+    renderProg();
+    toast('Guardado','ok'); 
+  }catch(e){ console.error(e); } 
+}
+
+async function delItem(iid, sid) { 
+  if(!confirm('¿Borrar?'))return; 
+  try{
+    await sb.from('programa_items').delete().eq('id',iid);
+    const svc=(D.servicios||[]).find(x=>x.id===sid);
+    if(svc)svc.prog=svc.prog.filter(i=>i.id!==iid);
+    renderProg();
+    toast('Borrado','info');
+  }catch(e){ console.error(e); } 
+}
+
+/* GRUPOS */
 function renderGruposStats() {
     const asignados = D.grupos.reduce((acc,g)=>acc+(g.miembros||[]).length, 0), faltan = D.personas.length - asignados;
     document.getElementById('g-stats-overview').innerHTML = `<div><div style="font-size:2rem;font-weight:800;color:var(--primary)">${D.personas.length}</div><div style="font-size:.75rem;color:var(--ink3);text-transform:uppercase;">Asistentes</div></div><div><div style="font-size:2rem;font-weight:800;color:var(--green-v)">${asignados}</div><div style="font-size:.75rem;color:var(--ink3);text-transform:uppercase;">En Equipos</div></div><div><div style="font-size:2rem;font-weight:800;color:var(--red-v)">${faltan}</div><div style="font-size:.75rem;color:var(--ink3);text-transform:uppercase;">Sin equipo</div></div>`;
     renderGruposCards();
 }
+
 function renderGruposCards() {
     document.getElementById('grupos-grid').innerHTML = D.grupos.map(g => {
         const av = (g.miembros||[]).map(id=>`<div class="av av-sm" style="background:${pColor(id)};border:2px solid #fff;" title="${pName(id)}">${ini(pName(id))}</div>`).join('');
@@ -1411,70 +1627,309 @@ function renderGruposCards() {
         return `<div class="grupo-card" style="--grupo-color: ${g.color}"><div style="position:absolute;top:1rem;right:1rem;display:flex;gap:.3rem;"><button class="icon-btn edit" style="border:none;box-shadow:none;" onclick="openModGrupoEdit('${g.id}')"><i class="fas fa-pen"></i></button><button class="icon-btn del" style="border:none;box-shadow:none;" onclick="delGrupo('${g.id}')"><i class="fas fa-trash"></i></button></div><div class="grupo-body"><h3 style="font-size:1.2rem;font-weight:800;color:var(--ink);margin-bottom:.5rem;">${g.nombre}</h3>${port}${desc}<div style="font-size:.8rem;color:var(--ink3);margin-bottom:.5rem;border-top:1px solid var(--border);padding-top:1rem">${g.miembros.length} Miembros</div><div style="display:flex;flex-wrap:wrap;margin-left:8px;">${av||'<span style="font-size:.8rem;color:#999">Vacío</span>'}</div></div></div>`;
     }).join('');
 }
-function openModGrupo() { document.getElementById('gId').value=''; document.getElementById('gNom').value=''; document.getElementById('gColor').value='#ea580c'; document.getElementById('gDesc').value=''; document.getElementById('gPort').innerHTML='<option value="">-- Ninguno --</option>'+D.personas.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join(''); buildPicker('gMiembrosPick',[]); om('modGrupo'); }
-function openModGrupoEdit(id) { const g=D.grupos.find(x=>x.id===id); if(!g)return; document.getElementById('gId').value=g.id; document.getElementById('gNom').value=g.nombre; document.getElementById('gColor').value=g.color; document.getElementById('gDesc').value=g.descripcion||''; document.getElementById('gPort').innerHTML='<option value="">-- Ninguno --</option>'+D.personas.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join(''); document.getElementById('gPort').value=g.portavoz_id||''; buildPicker('gMiembrosPick',g.miembros||[]); om('modGrupo'); }
-async function saveGrupo() {
-  const n=document.getElementById('gNom').value.trim(); if(!n) return; const m=getSelected('gMiembrosPick'), port=document.getElementById('gPort').value||null, desc=document.getElementById('gDesc').value||null, obj={nombre:n,color:document.getElementById('gColor').value,portavoz_id:port,descripcion:desc}, eid=document.getElementById('gId').value;
-  try { let gid=eid; if(eid){await sb.from('grupos').update(obj).eq('id',eid);}else{const{data,error}=await sb.from('grupos').insert(obj).select().single();if(error)throw error;gid=data.id;} await sb.from('grupo_miembros').delete().eq('grupo_id',gid); if(m.length)await sb.from('grupo_miembros').insert(m.map(pid=>({grupo_id:gid,persona_id:pid}))); if(eid){Object.assign(D.grupos.find(g=>g.id===eid),{...obj,miembros:m});}else{D.grupos.push({id:gid,...obj,miembros:m});} cm('modGrupo'); renderGruposStats(); toast('Guardado','ok'); }catch(e){}
-}
-async function delGrupo(id) { if(!confirm('¿Borrar?'))return; try{await sb.from('grupos').delete().eq('id',id);D.grupos=D.grupos.filter(g=>g.id!==id);renderGruposStats();toast('Borrado','info');}catch(e){} }
-function grupoTab(t,b) { currentGrupoTab=t; document.querySelectorAll('#tab-grupos,#tab-juegos,#tab-ranking').forEach(x=>{x.classList.remove('active');}); b.classList.add('active'); document.getElementById('gt-grupos').style.display=t==='grupos'?'block':'none'; document.getElementById('gt-juegos').style.display=t==='juegos'?'block':'none'; document.getElementById('gt-ranking').style.display=t==='ranking'?'block':'none'; if(t==='juegos')renderJuegos(); if(t==='ranking')renderRankingGeneral(); }
 
-// Juegos
+function openModGrupo() { 
+  document.getElementById('gId').value=''; 
+  document.getElementById('gNom').value=''; 
+  document.getElementById('gColor').value='#ea580c'; 
+  document.getElementById('gDesc').value=''; 
+  document.getElementById('gPort').innerHTML='<option value="">-- Ninguno --</option>'+D.personas.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join(''); 
+  buildPicker('gMiembrosPick',[]); 
+  om('modGrupo'); 
+}
+
+function openModGrupoEdit(id) { 
+  const g=D.grupos.find(x=>x.id===id); if(!g)return; 
+  document.getElementById('gId').value=g.id; 
+  document.getElementById('gNom').value=g.nombre; 
+  document.getElementById('gColor').value=g.color; 
+  document.getElementById('gDesc').value=g.descripcion||''; 
+  document.getElementById('gPort').innerHTML='<option value="">-- Ninguno --</option>'+D.personas.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join(''); 
+  document.getElementById('gPort').value=g.portavoz_id||''; 
+  buildPicker('gMiembrosPick',g.miembros||[]); 
+  om('modGrupo'); 
+}
+
+async function saveGrupo() {
+  const n=document.getElementById('gNom').value.trim(); if(!n) return; 
+  const m=getSelected('gMiembrosPick'), port=document.getElementById('gPort').value||null, desc=document.getElementById('gDesc').value||null, obj={nombre:n,color:document.getElementById('gColor').value,portavoz_id:port,descripcion:desc}, eid=document.getElementById('gId').value;
+  try { 
+    let gid=eid; 
+    if(eid){
+      await sb.from('grupos').update(obj).eq('id',eid);
+    }else{
+      const{data,error}=await sb.from('grupos').insert(obj).select().single();
+      if(error)throw error;
+      gid=data.id;
+    } 
+    await sb.from('grupo_miembros').delete().eq('grupo_id',gid); 
+    if(m.length)await sb.from('grupo_miembros').insert(m.map(pid=>({grupo_id:gid,persona_id:pid}))); 
+    if(eid){
+      Object.assign(D.grupos.find(g=>g.id===eid),{...obj,miembros:m});
+    }else{
+      D.grupos.push({id:gid,...obj,miembros:m});
+    } 
+    cm('modGrupo'); 
+    renderGruposStats(); 
+    toast('Guardado','ok'); 
+  }catch(e){ console.error(e); }
+}
+
+async function delGrupo(id) { 
+  if(!confirm('¿Borrar?'))return; 
+  try{
+    await sb.from('grupos').delete().eq('id',id);
+    D.grupos=D.grupos.filter(g=>g.id!==id);
+    renderGruposStats();
+    toast('Borrado','info');
+  }catch(e){ console.error(e); } 
+}
+
+function grupoTab(t,b) { 
+  currentGrupoTab=t; 
+  document.querySelectorAll('#tab-grupos,#tab-juegos,#tab-ranking').forEach(x=>{x.classList.remove('active');}); 
+  b.classList.add('active'); 
+  document.getElementById('gt-grupos').style.display=t==='grupos'?'block':'none'; 
+  document.getElementById('gt-juegos').style.display=t==='juegos'?'block':'none'; 
+  document.getElementById('gt-ranking').style.display=t==='ranking'?'block':'none'; 
+  if(t==='juegos')renderJuegos(); 
+  if(t==='ranking')renderRankingGeneral(); 
+}
+
 function renderJuegos() {
-  const l=document.getElementById('juegos-list'); if(!D.juegos.length){ l.innerHTML='<div class="empty"><p>Crea un juego primero</p></div>'; renderRankingSide(); return; }
+  const l=document.getElementById('juegos-list'); 
+  if(!D.juegos.length){ l.innerHTML='<div class="empty"><p>Crea un juego primero</p></div>'; renderRankingSide(); return; }
   l.innerHTML=D.juegos.map(j=>{
     const sc=D.grupos.map(g=>{ const p=(j.puntuaciones||[]).find(x=>x.grupo_id===g.id), val=p?parseInt(p.puntuacion)||0:0, pct=j.puntuacion_max>0?Math.round(val/j.puntuacion_max*100):0; return `<div style="display:flex;align-items:center;gap:1rem;margin-bottom:.75rem;"><div style="width:12px;height:12px;border-radius:50%;background:${g.color}"></div><div style="width:100px;font-weight:600">${g.nombre}</div><input class="fctl" type="number" style="width:80px;padding:.3rem;text-align:center" value="${val}" onchange="updatePunt('${j.id}','${g.id}',this.value)"><div style="flex:1;height:8px;background:var(--surf3);border-radius:99px;overflow:hidden"><div style="height:100%;width:${pct}%;background:${g.color};border-radius:99px"></div></div></div>`; }).join('');
     const mat = j.materiales?`<div style="font-size:.75rem;color:var(--ink3);margin-top:.5rem"><i class="fas fa-box-open" style="color:var(--amber-v)"></i> Materiales: ${j.materiales}</div>`:'';
     const des = j.descripcion?`<div style="font-size:.8rem;color:var(--ink2);margin-top:.5rem;font-style:italic">"${j.descripcion}"</div>`:'';
     return `<div class="juego-card"><div class="juego-hd"><div style="flex:1"><div style="font-weight:800;font-size:1.1rem">${j.nombre}</div><div style="font-size:.75rem;color:var(--ink3)">${j.tipo} · Máx: ${j.puntuacion_max} pts</div>${des}${mat}</div><div><button class="icon-btn edit" style="border:none;background:transparent;" onclick="openModJuegoEdit('${j.id}')"><i class="fas fa-pen"></i></button><button class="icon-btn del" style="border:none;background:transparent;" onclick="delJuego('${j.id}')"><i class="fas fa-trash"></i></button></div></div><div class="juego-scores">${sc}</div></div>`;
-  }).join(''); renderRankingSide();
+  }).join(''); 
+  renderRankingSide();
 }
-function totalPts(gid) { return D.juegos.reduce((s,j)=>{ const p=(j.puntuaciones||[]).find(x=>x.grupo_id===gid); return s+(p?parseInt(p.puntuacion)||0:0); },0); }
-async function updatePunt(jid, gid, val) { const v=Math.max(0,parseInt(val)||0); try{ await sb.from('juego_puntuaciones').upsert({juego_id:jid,grupo_id:gid,puntuacion:v},{onConflict:'juego_id,grupo_id'}); const j=D.juegos.find(x=>x.id===jid); if(!j)return; j.puntuaciones=j.puntuaciones||[]; const p=j.puntuaciones.find(x=>x.grupo_id===gid); if(p)p.puntuacion=v;else j.puntuaciones.push({juego_id:jid,grupo_id:gid,puntuacion:v}); renderRankingSide(); if(currentGrupoTab==='ranking')renderRankingGeneral(); }catch(e){} }
-function renderRankingSide() { const sr=[...D.grupos].sort((a,b)=>totalPts(b.id)-totalPts(a.id)), mx=sr.length?totalPts(sr[0].id)||1:1; document.getElementById('juegos-ranking-side').innerHTML=sr.length?sr.map((g,i)=>`<div style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem"><div style="font-size:1.5rem;font-weight:800;color:${i===0?'#d97706':i===1?'#94a3b8':i===2?'#92400e':'#cbd5e1'};width:25px">${i+1}</div><div style="flex:1"><div style="font-weight:700;margin-bottom:.2rem">${g.nombre}</div><div style="height:6px;background:var(--surf3);border-radius:99px"><div style="height:100%;width:${Math.round(totalPts(g.id)/mx*100)}%;background:${g.color};border-radius:99px"></div></div></div><div style="font-size:1.2rem;font-weight:800;color:${g.color}">${totalPts(g.id)}</div></div>`).join(''):'<p>Sin grupos</p>'; }
-function renderRankingGeneral() { const sr=[...D.grupos].sort((a,b)=>totalPts(b.id)-totalPts(a.id)); document.getElementById('ranking-general').innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:1.5rem">${sr.map((g,i)=>`<div style="background:${hexLight(g.color,.05)};border:2px solid ${g.color};border-radius:var(--r);padding:2rem;text-align:center;box-shadow:0 10px 20px ${hexLight(g.color,.15)}"><div style="font-size:3rem;font-weight:900;color:${i===0?'#d97706':i===1?'#94a3b8':i===2?'#92400e':'#cbd5e1'};margin-bottom:1rem;line-height:1">#${i+1}</div><h2 style="color:${g.color};font-size:1.5rem;margin-bottom:1rem">${g.nombre}</h2><div style="font-size:3.5rem;font-family:'Lora',serif;font-weight:800;color:var(--ink);line-height:1;margin-bottom:.5rem">${totalPts(g.id)}</div><div style="font-size:.8rem;color:var(--ink3);text-transform:uppercase;letter-spacing:.05em">Puntos Totales</div></div>`).join('')}</div>`; }
-function openModJuego() { document.getElementById('jId').value=''; ['jNom','jMat','jDesc'].forEach(id=>document.getElementById(id).value=''); document.getElementById('jPunMax').value='10'; document.getElementById('jEst').value='pendiente'; document.getElementById('jTipo').value='Gymkana'; om('modJuego'); }
-function openModJuegoEdit(id) { const j=D.juegos.find(x=>x.id===id); if(!j)return; document.getElementById('jId').value=j.id; document.getElementById('jNom').value=j.nombre; document.getElementById('jTipo').value=j.tipo; document.getElementById('jPunMax').value=j.puntuacion_max||10; document.getElementById('jEst').value=j.estado||'pendiente'; document.getElementById('jMat').value=j.materiales||''; document.getElementById('jDesc').value=j.descripcion||''; om('modJuego'); }
+
+function totalPts(gid) { 
+  return D.juegos.reduce((s,j)=>{ const p=(j.puntuaciones||[]).find(x=>x.grupo_id===gid); return s+(p?parseInt(p.puntuacion)||0:0); },0); 
+}
+
+async function updatePunt(jid, gid, val) { 
+  const v=Math.max(0,parseInt(val)||0); 
+  try{ 
+    await sb.from('juego_puntuaciones').upsert({juego_id:jid,grupo_id:gid,puntuacion:v},{onConflict:'juego_id,grupo_id'}); 
+    const j=D.juegos.find(x=>x.id===jid); 
+    if(!j)return; 
+    j.puntuaciones=j.puntuaciones||[]; 
+    const p=j.puntuaciones.find(x=>x.grupo_id===gid); 
+    if(p)p.puntuacion=v;else j.puntuaciones.push({juego_id:jid,grupo_id:gid,puntuacion:v}); 
+    renderRankingSide(); 
+    if(currentGrupoTab==='ranking')renderRankingGeneral(); 
+  }catch(e){ console.error(e); } 
+}
+
+function renderRankingSide() { 
+  const sr=[...D.grupos].sort((a,b)=>totalPts(b.id)-totalPts(a.id)), mx=sr.length?totalPts(sr[0].id)||1:1; 
+  document.getElementById('juegos-ranking-side').innerHTML=sr.length?sr.map((g,i)=>`<div style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem"><div style="font-size:1.5rem;font-weight:800;color:${i===0?'#d97706':i===1?'#94a3b8':i===2?'#92400e':'#cbd5e1'};width:25px">${i+1}</div><div style="flex:1"><div style="font-weight:700;margin-bottom:.2rem">${g.nombre}</div><div style="height:6px;background:var(--surf3);border-radius:99px"><div style="height:100%;width:${Math.round(totalPts(g.id)/mx*100)}%;background:${g.color};border-radius:99px"></div></div></div><div style="font-size:1.2rem;font-weight:800;color:${g.color}">${totalPts(g.id)}</div></div>`).join(''):'<p>Sin grupos</p>'; 
+}
+
+function renderRankingGeneral() { 
+  const sr=[...D.grupos].sort((a,b)=>totalPts(b.id)-totalPts(a.id)); 
+  document.getElementById('ranking-general').innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:1.5rem">${sr.map((g,i)=>`<div style="background:${hexLight(g.color,.05)};border:2px solid ${g.color};border-radius:var(--r);padding:2rem;text-align:center;box-shadow:0 10px 20px ${hexLight(g.color,.15)}"><div style="font-size:3rem;font-weight:900;color:${i===0?'#d97706':i===1?'#94a3b8':i===2?'#92400e':'#cbd5e1'};margin-bottom:1rem;line-height:1">#${i+1}</div><h2 style="color:${g.color};font-size:1.5rem;margin-bottom:1rem">${g.nombre}</h2><div style="font-size:3.5rem;font-family:'Lora',serif;font-weight:800;color:var(--ink);line-height:1;margin-bottom:.5rem">${totalPts(g.id)}</div><div style="font-size:.8rem;color:var(--ink3);text-transform:uppercase;letter-spacing:.05em">Puntos Totales</div></div>`).join('')}</div>`; 
+}
+
+function openModJuego() { 
+  document.getElementById('jId').value=''; 
+  ['jNom','jMat','jDesc'].forEach(id=>document.getElementById(id).value=''); 
+  document.getElementById('jPunMax').value='10'; 
+  document.getElementById('jEst').value='pendiente'; 
+  document.getElementById('jTipo').value='Gymkana'; 
+  om('modJuego'); 
+}
+
+function openModJuegoEdit(id) { 
+  const j=D.juegos.find(x=>x.id===id); if(!j)return; 
+  document.getElementById('jId').value=j.id; 
+  document.getElementById('jNom').value=j.nombre; 
+  document.getElementById('jTipo').value=j.tipo; 
+  document.getElementById('jPunMax').value=j.puntuacion_max||10; 
+  document.getElementById('jEst').value=j.estado||'pendiente'; 
+  document.getElementById('jMat').value=j.materiales||''; 
+  document.getElementById('jDesc').value=j.descripcion||''; 
+  om('modJuego'); 
+}
+
 async function saveJuego() {
   const n=document.getElementById('jNom').value.trim(); if(!n) return;
   const obj={nombre:n,tipo:document.getElementById('jTipo').value,puntuacion_max:parseInt(document.getElementById('jPunMax').value)||10,estado:document.getElementById('jEst').value,materiales:document.getElementById('jMat').value||null,descripcion:document.getElementById('jDesc').value||null};
   const eid=document.getElementById('jId').value;
-  try { if(eid){await sb.from('juegos').update(obj).eq('id',eid);Object.assign(D.juegos.find(j=>j.id===eid),obj);}else{const{data,error}=await sb.from('juegos').insert(obj).select().single();if(error)throw error;D.juegos.push({...data,puntuaciones:[]});} cm('modJuego');renderJuegos();toast('Guardado','ok'); }catch(e){}
+  try { 
+    if(eid){
+      await sb.from('juegos').update(obj).eq('id',eid);
+      Object.assign(D.juegos.find(j=>j.id===eid),obj);
+    }else{
+      const{data,error}=await sb.from('juegos').insert(obj).select().single();
+      if(error)throw error;
+      D.juegos.push({...data,puntuaciones:[]});
+    } 
+    cm('modJuego');
+    renderJuegos();
+    toast('Guardado','ok'); 
+  }catch(e){ console.error(e); }
 }
-async function delJuego(id) { if(!confirm('¿Borrar?'))return; try{await sb.from('juegos').delete().eq('id',id);D.juegos=D.juegos.filter(j=>j.id!==id);renderJuegos();toast('Borrado','info');}catch(e){} }
 
-/* ═══════════════════════════════════════
-   CABAÑAS Y COCHES
-═══════════════════════════════════════ */
+async function delJuego(id) { 
+  if(!confirm('¿Borrar?'))return; 
+  try{
+    await sb.from('juegos').delete().eq('id',id);
+    D.juegos=D.juegos.filter(j=>j.id!==id);
+    renderJuegos();
+    toast('Borrado','info');
+  }catch(e){ console.error(e); } 
+}
+
+/* CABAÑAS Y COCHES */
 function renderCabanas() {
   const tc=D.cabanas.reduce((s,c)=>s+c.capacidad,0), ta=D.cabanas.reduce((s,c)=>s+(c.asignados||[]).length,0), sin=D.personas.filter(p=>!D.cabanas.some(c=>(c.asignados||[]).includes(p.id)));
   document.getElementById('cab-stats').innerHTML=`<div class="sc c-primary"><div class="sc-icon"><i class="fas fa-house"></i></div><div class="sc-info"><div class="sc-val">${D.cabanas.length}</div><div class="sc-lbl">Cabañas</div></div></div><div class="sc c-sky"><div class="sc-icon"><i class="fas fa-bed"></i></div><div class="sc-info"><div class="sc-val">${tc}</div><div class="sc-lbl">Plazas</div></div></div><div class="sc ${sin.length?'c-red':'c-green'}"><div class="sc-icon"><i class="fas fa-user-check"></i></div><div class="sc-info"><div class="sc-val">${ta}</div><div class="sc-lbl">${sin.length?sin.length+' sin asignar':'Todos asignados'}</div></div></div>`;
-  document.getElementById('cabBadge').style.display=sin.length?'inline-block':'none'; document.getElementById('cabBadge').textContent=sin.length;
-  const cg=document.getElementById('cabanas-grid'); if(!D.cabanas.length){ cg.innerHTML='<div class="empty"><p>Añade cabañas</p></div>'; renderCoches(); return; }
-  cg.innerHTML=D.cabanas.map(c=>{ const as=c.asignados||[], l=c.capacidad-as.length; return `<div class="cabana-card"><div style="padding:1.25rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;background:var(--surf2)"><div style="font-weight:800;font-size:1.1rem;color:var(--primary)"><i class="fas fa-house"></i> ${c.nombre}</div><div style="display:flex;gap:.5rem"><button class="icon-btn edit" style="border:none;background:transparent;" onclick="openModCabanaEdit('${c.id}')"><i class="fas fa-pen"></i></button><button class="icon-btn del" style="border:none;background:transparent;" onclick="delCabana('${c.id}')"><i class="fas fa-trash"></i></button></div></div><div style="padding:1.25rem"><div style="margin-bottom:1rem;font-size:.85rem;font-weight:600;color:${l===0?'var(--red-v)':'var(--green-v)'}">${l===0?'Lleno':l+' plazas libres'} (${as.length}/${c.capacidad})</div><div class="cabana-slots">${as.map(id=>`<div class="slot occupied"><div class="av av-sm" style="background:${pColor(id)}">${ini(pName(id))}</div><span style="overflow:hidden;text-overflow:ellipsis">${pName(id).split(' ')[0]}</span></div>`).join('')}${Array(Math.max(0,l)).fill('<div class="slot empty"><i class="fas fa-bed" style="opacity:.5;margin-right:4px"></i> Libre</div>').join('')}</div></div></div>`; }).join('');
+  document.getElementById('cabBadge').style.display=sin.length?'inline-block':'none'; 
+  document.getElementById('cabBadge').textContent=sin.length;
+  const cg=document.getElementById('cabanas-grid'); 
+  if(!D.cabanas.length){ cg.innerHTML='<div class="empty"><p>Añade cabañas</p></div>'; renderCoches(); return; }
+  cg.innerHTML=D.cabanas.map(c=>{ 
+    const as=c.asignados||[], l=c.capacidad-as.length; 
+    return `<div class="cabana-card"><div style="padding:1.25rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;background:var(--surf2)"><div style="font-weight:800;font-size:1.1rem;color:var(--primary)"><i class="fas fa-house"></i> ${c.nombre}</div><div style="display:flex;gap:.5rem"><button class="icon-btn edit" style="border:none;background:transparent;" onclick="openModCabanaEdit('${c.id}')"><i class="fas fa-pen"></i></button><button class="icon-btn del" style="border:none;background:transparent;" onclick="delCabana('${c.id}')"><i class="fas fa-trash"></i></button></div></div><div style="padding:1.25rem"><div style="margin-bottom:1rem;font-size:.85rem;font-weight:600;color:${l===0?'var(--red-v)':'var(--green-v)'}">${l===0?'Lleno':l+' plazas libres'} (${as.length}/${c.capacidad})</div><div class="cabana-slots">${as.map(id=>`<div class="slot occupied"><div class="av av-sm" style="background:${pColor(id)}">${ini(pName(id))}</div><span style="overflow:hidden;text-overflow:ellipsis">${pName(id).split(' ')[0]}</span></div>`).join('')}${Array(Math.max(0,l)).fill('<div class="slot empty"><i class="fas fa-bed" style="opacity:.5;margin-right:4px"></i> Libre</div>').join('')}</div></div></div>`; 
+  }).join('');
   renderCoches();
 }
-function openModCabana() { document.getElementById('cabId').value=''; document.getElementById('cabNom').value=''; document.getElementById('cabCap').value='8'; buildPicker('cabPick',[]); om('modCabana'); }
-function openModCabanaEdit(id) { const c=D.cabanas.find(x=>x.id===id); if(!c)return; document.getElementById('cabId').value=c.id; document.getElementById('cabNom').value=c.nombre; document.getElementById('cabCap').value=c.capacidad; buildPicker('cabPick',c.asignados||[]); om('modCabana'); }
-async function saveCabana() { const n=document.getElementById('cabNom').value.trim(); if(!n)return; const a=getSelected('cabPick'), cp=parseInt(document.getElementById('cabCap').value)||8; if(a.length>cp){toast('Excede cap','err');return;} const obj={nombre:n,capacidad:cp}, eid=document.getElementById('cabId').value; try{let cid=eid;if(eid){await sb.from('cabanas').update(obj).eq('id',eid);}else{const{data,err}=await sb.from('cabanas').insert(obj).select().single();if(err)throw err;cid=data.id;}await sb.from('cabana_asignaciones').delete().eq('cabana_id',cid);if(a.length)await sb.from('cabana_asignaciones').insert(a.map(pid=>({cabana_id:cid,persona_id:pid})));if(eid){Object.assign(D.cabanas.find(c=>c.id===eid),{...obj,asignados:a});}else{D.cabanas.push({id:cid,...obj,asignados:a});}cm('modCabana');renderCabanas();toast('Guardado','ok');}catch(e){} }
-async function delCabana(id) { if(!confirm('¿Borrar?'))return; try{await sb.from('cabanas').delete().eq('id',id);D.cabanas=D.cabanas.filter(c=>c.id!==id);renderCabanas();toast('Borrado','info');}catch(e){} }
+
+function openModCabana() { 
+  document.getElementById('cabId').value=''; 
+  document.getElementById('cabNom').value=''; 
+  document.getElementById('cabCap').value='8'; 
+  buildPicker('cabPick',[]); 
+  om('modCabana'); 
+}
+
+function openModCabanaEdit(id) { 
+  const c=D.cabanas.find(x=>x.id===id); if(!c)return; 
+  document.getElementById('cabId').value=c.id; 
+  document.getElementById('cabNom').value=c.nombre; 
+  document.getElementById('cabCap').value=c.capacidad; 
+  buildPicker('cabPick',c.asignados||[]); 
+  om('modCabana'); 
+}
+
+async function saveCabana() { 
+  const n=document.getElementById('cabNom').value.trim(); if(!n)return; 
+  const a=getSelected('cabPick'), cp=parseInt(document.getElementById('cabCap').value)||8; 
+  if(a.length>cp){toast('Excede cap','err');return;} 
+  const obj={nombre:n,capacidad:cp}, eid=document.getElementById('cabId').value; 
+  try{
+    let cid=eid;
+    if(eid){
+      await sb.from('cabanas').update(obj).eq('id',eid);
+    }else{
+      const{data,err}=await sb.from('cabanas').insert(obj).select().single();
+      if(err)throw err;
+      cid=data.id;
+    }
+    await sb.from('cabana_asignaciones').delete().eq('cabana_id',cid);
+    if(a.length)await sb.from('cabana_asignaciones').insert(a.map(pid=>({cabana_id:cid,persona_id:pid})));
+    if(eid){
+      Object.assign(D.cabanas.find(c=>c.id===eid),{...obj,asignados:a});
+    }else{
+      D.cabanas.push({id:cid,...obj,asignados:a});
+    }
+    cm('modCabana');
+    renderCabanas();
+    toast('Guardado','ok');
+  }catch(e){ console.error(e); }
+}
+
+async function delCabana(id) { 
+  if(!confirm('¿Borrar?'))return; 
+  try{
+    await sb.from('cabanas').delete().eq('id',id);
+    D.cabanas=D.cabanas.filter(c=>c.id!==id);
+    renderCabanas();
+    toast('Borrado','info');
+  }catch(e){ console.error(e); } 
+}
 
 function renderCoches() {
-  const cg=document.getElementById('coches-grid'); if(!D.coches.length){ cg.innerHTML='<div class="empty"><p>Añade el primer coche</p></div>'; return; }
-  cg.innerHTML=D.coches.map(c=>{ const p=c.pasajeros||[], cond=c.conductor, l=c.plazas-(p.length+(cond?1:0)); return `<div class="coche-card"><div style="padding:1.25rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;background:var(--surf2)"><div style="font-weight:800;font-size:1.1rem;color:var(--sky)"><i class="fas fa-car"></i> ${c.nombre}</div><div style="display:flex;gap:.5rem"><button class="icon-btn edit" style="border:none;background:transparent;" onclick="openModCocheEdit('${c.id}')"><i class="fas fa-pen"></i></button><button class="icon-btn del" style="border:none;background:transparent;" onclick="delCoche('${c.id}')"><i class="fas fa-trash"></i></button></div></div><div style="padding:1.25rem">${c.ruta?`<div style="font-size:.8rem;color:var(--ink3);margin-bottom:1rem"><i class="fas fa-route"></i> ${c.ruta}</div>`:''}<div style="margin-bottom:1rem;font-size:.85rem;font-weight:600;color:${l===0?'var(--red-v)':'var(--green-v)'}">${l===0?'Lleno':l+' libres'}</div><div class="asiento-grid">${cond?`<div class="asiento ocup" style="border:1px solid var(--sky);background:var(--sky-l)"><div class="av av-sm" style="background:var(--sky)"><i class="fas fa-steering-wheel"></i></div><span style="font-weight:700;color:var(--sky-d)">${pName(cond).split(' ')[0]}</span></div>`:'<div class="asiento lib"><i class="fas fa-steering-wheel"></i> Cond.</div>'}${p.map(id=>`<div class="asiento ocup"><div class="av av-sm" style="background:${pColor(id)}">${ini(pName(id))}</div><span>${pName(id).split(' ')[0]}</span></div>`).join('')}${Array(Math.max(0,l)).fill('<div class="asiento lib"><i class="fas fa-plus"></i> Libre</div>').join('')}</div></div></div>`; }).join('');
+  const cg=document.getElementById('coches-grid'); 
+  if(!D.coches.length){ cg.innerHTML='<div class="empty"><p>Añade el primer coche</p></div>'; return; }
+  cg.innerHTML=D.coches.map(c=>{ 
+    const p=c.pasajeros||[], cond=c.conductor, l=c.plazas-(p.length+(cond?1:0)); 
+    return `<div class="coche-card"><div style="padding:1.25rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;background:var(--surf2)"><div style="font-weight:800;font-size:1.1rem;color:var(--sky)"><i class="fas fa-car"></i> ${c.nombre}</div><div style="display:flex;gap:.5rem"><button class="icon-btn edit" style="border:none;background:transparent;" onclick="openModCocheEdit('${c.id}')"><i class="fas fa-pen"></i></button><button class="icon-btn del" style="border:none;background:transparent;" onclick="delCoche('${c.id}')"><i class="fas fa-trash"></i></button></div></div><div style="padding:1.25rem">${c.ruta?`<div style="font-size:.8rem;color:var(--ink3);margin-bottom:1rem"><i class="fas fa-route"></i> ${c.ruta}</div>`:''}<div style="margin-bottom:1rem;font-size:.85rem;font-weight:600;color:${l===0?'var(--red-v)':'var(--green-v)'}">${l===0?'Lleno':l+' libres'}</div><div class="asiento-grid">${cond?`<div class="asiento ocup" style="border:1px solid var(--sky);background:var(--sky-l)"><div class="av av-sm" style="background:var(--sky)"><i class="fas fa-steering-wheel"></i></div><span style="font-weight:700;color:var(--sky-d)">${pName(cond).split(' ')[0]}</span></div>`:'<div class="asiento lib"><i class="fas fa-steering-wheel"></i> Cond.</div>'}${p.map(id=>`<div class="asiento ocup"><div class="av av-sm" style="background:${pColor(id)}">${ini(pName(id))}</div><span>${pName(id).split(' ')[0]}</span></div>`).join('')}${Array(Math.max(0,l)).fill('<div class="asiento lib"><i class="fas fa-plus"></i> Libre</div>').join('')}</div></div></div>`; 
+  }).join('');
 }
-function openModCoche() { document.getElementById('cocheId').value=''; ['cocheNom','cocheRuta'].forEach(id=>document.getElementById(id).value=''); document.getElementById('cochePlazas').value='5'; document.getElementById('cocheConductor').innerHTML='<option value="">-- Ninguno --</option>'+D.personas.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join(''); buildPicker('cochePick',[]); om('modCoche'); }
-function openModCocheEdit(id) { const c=D.coches.find(x=>x.id===id); if(!c)return; document.getElementById('cocheId').value=c.id; document.getElementById('cocheNom').value=c.nombre; document.getElementById('cochePlazas').value=c.plazas; document.getElementById('cocheRuta').value=c.ruta||''; document.getElementById('cocheConductor').innerHTML='<option value="">-- Ninguno --</option>'+D.personas.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join(''); document.getElementById('cocheConductor').value=c.conductor||''; buildPicker('cochePick',c.pasajeros||[]); om('modCoche'); }
-async function saveCoche() {
-  const n=document.getElementById('cocheNom').value.trim(); if(!n)return; const p=getSelected('cochePick'), cond=document.getElementById('cocheConductor').value||null, plz=parseInt(document.getElementById('cochePlazas').value)||5, pasList=p.filter(id=>id!==cond); if(pasList.length+(cond?1:0)>plz){toast('Excede plazas','err');return;} const obj={nombre:n,plazas:plz,conductor:cond,ruta:document.getElementById('cocheRuta').value}, eid=document.getElementById('cocheId').value; try{let cid=eid;if(eid){await sb.from('coches').update(obj).eq('id',eid);}else{const{data,err}=await sb.from('coches').insert(obj).select().single();if(err)throw err;cid=data.id;}await sb.from('coche_pasajeros').delete().eq('coche_id',cid);if(pasList.length)await sb.from('coche_pasajeros').insert(pasList.map(pid=>({coche_id:cid,persona_id:pid})));if(eid){Object.assign(D.coches.find(c=>c.id===eid),{...obj,pasajeros:pasList});}else{D.coches.push({id:cid,...obj,pasajeros:pasList});}cm('modCoche');renderCoches();toast('Guardado','ok');}catch(e){}
-}
-async function delCoche(id) { if(!confirm('¿Borrar?'))return; try{await sb.from('coches').delete().eq('id',id);D.coches=D.coches.filter(c=>c.id!==id);renderCoches();toast('Borrado','info');}catch(e){} }
 
-/* ═══════════════════════════════════════
-   IMPORTAR CSV Y LOCK OVERLAY
-═══════════════════════════════════════ */
-function openModCSV() { document.getElementById('csvStep1').style.display='block'; document.getElementById('csvStep2').style.display='none'; document.getElementById('csvStep3').style.display='none'; om('modCSV'); }
+function openModCoche() { 
+  document.getElementById('cocheId').value=''; 
+  ['cocheNom','cocheRuta'].forEach(id=>document.getElementById(id).value=''); 
+  document.getElementById('cochePlazas').value='5'; 
+  document.getElementById('cocheConductor').innerHTML='<option value="">-- Ninguno --</option>'+D.personas.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join(''); 
+  buildPicker('cochePick',[]); 
+  om('modCoche'); 
+}
+
+function openModCocheEdit(id) { 
+  const c=D.coches.find(x=>x.id===id); if(!c)return; 
+  document.getElementById('cocheId').value=c.id; 
+  document.getElementById('cocheNom').value=c.nombre; 
+  document.getElementById('cochePlazas').value=c.plazas; 
+  document.getElementById('cocheRuta').value=c.ruta||''; 
+  document.getElementById('cocheConductor').innerHTML='<option value="">-- Ninguno --</option>'+D.personas.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join(''); 
+  document.getElementById('cocheConductor').value=c.conductor||''; 
+  buildPicker('cochePick',c.pasajeros||[]); 
+  om('modCoche'); 
+}
+
+async function saveCoche() {
+  const n=document.getElementById('cocheNom').value.trim(); if(!n)return; 
+  const p=getSelected('cochePick'), cond=document.getElementById('cocheConductor').value||null, plz=parseInt(document.getElementById('cochePlazas').value)||5, pasList=p.filter(id=>id!==cond); 
+  if(pasList.length+(cond?1:0)>plz){toast('Excede plazas','err');return;} 
+  const obj={nombre:n,plazas:plz,conductor:cond,ruta:document.getElementById('cocheRuta').value}, eid=document.getElementById('cocheId').value; 
+  try{
+    let cid=eid;
+    if(eid){
+      await sb.from('coches').update(obj).eq('id',eid);
+    }else{
+      const{data,err}=await sb.from('coches').insert(obj).select().single();
+      if(err)throw err;
+      cid=data.id;
+    }
+    await sb.from('coche_pasajeros').delete().eq('coche_id',cid);
+    if(pasList.length)await sb.from('coche_pasajeros').insert(pasList.map(pid=>({coche_id:cid,persona_id:pid})));
+    if(eid){
+      Object.assign(D.coches.find(c=>c.id===eid),{...obj,pasajeros:pasList});
+    }else{
+      D.coches.push({id:cid,...obj,pasajeros:pasList});
+    }
+    cm('modCoche');
+    renderCoches();
+    toast('Guardado','ok');
+  }catch(e){ console.error(e); }
+}
+
+async function delCoche(id) { 
+  if(!confirm('¿Borrar?'))return; 
+  try{
+    await sb.from('coches').delete().eq('id',id);
+    D.coches=D.coches.filter(c=>c.id!==id);
+    renderCoches();
+    toast('Borrado','info');
+  }catch(e){ console.error(e); } 
+}
+
+/* CSV & LOCK */
+function openModCSV() { 
+  document.getElementById('csvStep1').style.display='block'; 
+  document.getElementById('csvStep2').style.display='none'; 
+  document.getElementById('csvStep3').style.display='none'; 
+  om('modCSV'); 
+}
+
 function setupCSVDrop() {
   const z=document.getElementById('csvDropZone'); if(!z||z._ok)return; z._ok=true;
   z.addEventListener('dragover',e=>{e.preventDefault();z.style.borderColor='var(--primary)';});
@@ -1483,43 +1938,81 @@ function setupCSVDrop() {
   z.addEventListener('click',()=>document.getElementById('csvFileInput').click());
   document.getElementById('csvFileInput').addEventListener('change',e=>{if(e.target.files[0]) parseCSV(e.target.files[0]);});
 }
+
 let cHeaders=[], cData=[];
+
 function parseCSV(f) {
   const r=new FileReader();
   r.onload=e=>{
-    const l=e.target.result.split(/\r?\n/).filter(x=>x.trim()); if(l.length<2) return;
-    const sep=l[0].includes(';')?';':','; cHeaders=l[0].split(sep).map(x=>x.trim().replace(/['"]/g,''));
+    const l=e.target.result.split(/\r?\n/).filter(x=>x.trim()); 
+    if(l.length<2) return;
+    const sep=l[0].includes(';')?';':','; 
+    cHeaders=l[0].split(sep).map(x=>x.trim().replace(/['"]/g,''));
     cData=l.slice(1).map(x=>{ const v=x.split(sep).map(y=>y.trim().replace(/['"]/g,'')); const o={}; cHeaders.forEach((h,i)=>o[h]=v[i]||''); return o; });
-    document.getElementById('csvStep1').style.display='none'; document.getElementById('csvStep2').style.display='block';
-    const am={}; cHeaders.forEach(h=>{ const hl=h.toLowerCase(); if(hl.includes('nom'))am.nombre=h; else if(hl.includes('rol'))am.rol=h; });
+    document.getElementById('csvStep1').style.display='none'; 
+    document.getElementById('csvStep2').style.display='block';
+    const am={}; 
+    cHeaders.forEach(h=>{ const hl=h.toLowerCase(); if(hl.includes('nom'))am.nombre=h; else if(hl.includes('rol'))am.rol=h; });
     const opts='<option value="">- Ignorar -</option>'+cHeaders.map(h=>`<option value="${h}">${h}</option>`).join('');
     document.getElementById('csvMapFields').innerHTML=`<div style="margin-bottom:1rem"><label style="font-weight:700">Nombre*</label><select class="fctl" id="mapN">${opts.replace(`value="${am.nombre||''}"`,`value="${am.nombre||''}" selected`)}</select></div><div style="margin-bottom:1rem"><label style="font-weight:700">Rol</label><select class="fctl" id="mapR">${opts.replace(`value="${am.rol||''}"`,`value="${am.rol||''}" selected`)}</select></div>`;
-    document.getElementById('csvPreview').innerHTML=`<div class="csv-table-wrap"><table class="csv-table"><thead><tr>${cHeaders.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${cData.slice(0,3).map(r=>`<tr>${cHeaders.map(h=>`<td>${r[h]}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
-  }; r.readAsText(f);
+    document.getElementById('csvPreview').innerHTML=`<div style="border:1px solid var(--border);border-radius:var(--r-sm);overflow-x:auto;margin-top:1rem"><table style="width:100%;border-collapse:collapse"><thead><tr>${cHeaders.map(h=>`<th style="padding:.5rem;border-bottom:1px solid var(--border);background:var(--surf2);font-weight:700;text-align:left">${h}</th>`).join('')}</tr></thead><tbody>${cData.slice(0,3).map(r=>`<tr>${cHeaders.map(h=>`<td style="padding:.5rem;border-bottom:1px solid var(--border)">${r[h]}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+  }; 
+  r.readAsText(f);
 }
+
 async function runCSVImport() {
   const mn=document.getElementById('mapN').value, mr=document.getElementById('mapR').value;
   if(!mn){toast('Mapea el nombre','err');return;}
-  document.getElementById('csvStep2').style.display='none'; document.getElementById('csvStep3').style.display='block';
+  document.getElementById('csvStep2').style.display='none'; 
+  document.getElementById('csvStep3').style.display='block';
   const toIns=cData.map(r=>{if(!r[mn])return null; return {nombre:r[mn],rol:mr?r[mr]:'Voluntario/a',color:'#0f766e',otra_iglesia:false};}).filter(Boolean);
-  try{ const {data}=await sb.from('personas').insert(toIns).select(); D.personas.push(...data); cm('modCSV'); renderPersonas(); toast(toIns.length+' importados','ok'); }catch(e){}
+  try{ 
+    const {data}=await sb.from('personas').insert(toIns).select(); 
+    D.personas.push(...data); 
+    cm('modCSV'); 
+    renderPersonas(); 
+    toast(toIns.length+' importados','ok'); 
+  }catch(e){ console.error(e); }
 }
 
-const UNLOCKED = new Set(); let lp=null, lpe=null;
+const UNLOCKED = new Set(); 
+let lp=null, lpe=null;
+
 function tryUnlock(el, pg) {
   if(UNLOCKED.has(pg)){ go(el,pg); return; }
-  lp=pg; lpe=el.closest('.ni');
-  document.getElementById('lockPwInput').value=''; document.getElementById('lockErr').style.display='none';
-  document.getElementById('lockOverlay').classList.add('open'); setTimeout(()=>document.getElementById('lockPwInput').focus(),100);
+  lp=pg; 
+  lpe=el.closest('.ni');
+  document.getElementById('lockPwInput').value=''; 
+  document.getElementById('lockErr').style.display='none';
+  document.getElementById('lockOverlay').classList.add('open'); 
+  setTimeout(()=>document.getElementById('lockPwInput').focus(),100);
 }
+
 function submitLock() {
   if(document.getElementById('lockPwInput').value === 'admin') {
-    UNLOCKED.add(lp); document.getElementById('lockOverlay').classList.remove('open');
-    document.querySelectorAll(`.ni[data-p="${lp}"] .lock-ico`).forEach(i=>{i.className='fas fa-lock-open lock-ico';i.style.color='var(--green-v)';}); go(lpe, lp);
-  } else { document.getElementById('lockErr').style.display='block'; }
+    UNLOCKED.add(lp); 
+    document.getElementById('lockOverlay').classList.remove('open');
+    document.querySelectorAll(`.ni[data-p="${lp}"] .lock-ico`).forEach(i=>{i.className='fas fa-lock-open lock-ico';i.style.color='var(--green-v)';}); 
+    go(lpe, lp);
+  } else { 
+    document.getElementById('lockErr').style.display='block'; 
+  }
 }
-function closeLock() { document.getElementById('lockOverlay').classList.remove('open'); }
-document.addEventListener('DOMContentLoaded',()=>{ const lpi=document.getElementById('lockPwInput'); if(lpi) lpi.addEventListener('keypress',e=>{if(e.key==='Enter')submitLock();}); });
+
+function closeLock() { 
+  document.getElementById('lockOverlay').classList.remove('open'); 
+}
+
+document.addEventListener('DOMContentLoaded',()=>{ 
+  const lpi=document.getElementById('lockPwInput'); 
+  if(lpi) lpi.addEventListener('keypress',e=>{if(e.key==='Enter')submitLock();}); 
+});
+
+/* PDF EXPORT */
+function generarPDFLimpio() {
+  let html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Informe - Reîntâlnire cu Tatăl</title><style>body{font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:#0f172a;padding:20px;line-height:1.5;background:#fff}h1{color:#0f766e;border-bottom:3px solid #0f766e;padding-bottom:10px;font-size:26px;margin-top:0}h2{color:#b45309;margin-top:35px;border-bottom:2px solid #e2e8f0;padding-bottom:5px;font-size:20px;page-break-after:avoid}h3{color:#4338ca;margin-top:20px;font-size:16px;background:#eef2ff;padding:6px 12px;border-radius:6px;page-break-after:avoid}table{width:100%;border-collapse:collapse;margin-top:10px;font-size:12px;page-break-inside:auto}tr{page-break-inside:avoid;page-break-after:auto}th,td{border:1px solid #cbd5e1;padding:8px 12px;text-align:left;vertical-align:top}th{background-color:#f8fafc;font-weight:bold;color:#334155}.page-break{page-break-before:always}.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:15px}.box{border:1px solid #cbd5e1;padding:15px;border-radius:8px;break-inside:avoid;margin-bottom:15px;background:#f8fafc}.box-title{font-weight:bold;font-size:15px;margin-bottom:10px;color:#0f172a;border-bottom:1px solid #e2e8f0;padding-bottom:5px}ul{margin:0;padding-left:20px;font-size:13px}li{margin-bottom:4px}.tag{display:inline-block;background:#ccfbf1;color:#0f766e;padding:2px 6px;border-radius:4px;font-size:10px;margin-right:4px;margin-bottom:4px}@media print{body{padding:0}.box{border:1px solid #000;background:#fff}th{background-color:#eee!important;-webkit-print-color-adjust:exact}.tag{border:1px solid #ccc;background:transparent!important;color:#000}}</style></head><body><h1>🏕️ Reîntâlnire cu Tatăl - Organización</h1><p style="font-size:14px;color:#64748b;margin-top:-10px;">Generado el ${new Date().toLocaleDateString()}</p><div class="grid" style="margin-top:30px;"><div class="box"><div class="box-title">Estadísticas Principales</div><ul><li><strong>Personas:</strong> ${D.personas.length}</li><li><strong>Departamentos:</strong> ${D.departamentos.length}</li><li><strong>Canciones conf.:</strong> ${D.canciones.filter(c=>c.estado==='confirmado').length} de ${D.canciones.length}</li><li><strong>Servicios:</strong> ${D.servicios.length}</li></ul></div><div class="box"><div class="box-title">Logística</div><ul><li><strong>Cabañas:</strong> ${D.cabanas.length} (${D.cabanas.reduce((a,c)=>a+c.capacidad,0)} plazas)</li><li><strong>Grupos:</strong> ${D.grupos.length}</li><li><strong>Juegos:</strong> ${D.juegos.length}</li><li><strong>Coches:</strong> ${D.coches.length}</li></ul></div></div>`;
+  if(D.personas.length) html += `<div class="page-break"></div><h2>Directorio</h2><table><thead><tr><th>Nombre</th><th>Rol</th></tr></thead><tbody>${[...D.personas].sort((a,b)=>a.nombre.localeCompare(b.nombre)).map(p=>`<tr><td>${p.nombre}${p.otra_iglesia?' ⛪':''}</td><td>${p.rol}</td></tr>`).join('')}</tbody></table>`;
+  const printWin = window.open('', '_blank'); printWin.document.open(); printWin.document.write(html); printWin.document.close(); setTimeout(() => printWin.print(), 500);
+}
+
 </script>
-</body>
-</html>
