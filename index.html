@@ -1322,17 +1322,60 @@ function renderMateriales(dId) {
 }
 
 async function addMaterial() { 
-  const t=document.getElementById('matNewItem').value.trim(); 
-  if(!t||!currentDept)return; 
-  const l=D.materiales[currentDept]||[]; 
-  try{ 
-    const{data,error}=await sb.from('departamento_materiales').insert({departamento_id:currentDept,texto:t,estado:'pendiente',posicion:l.length}).select().single(); 
-    if(error)throw error; 
-    if(!D.materiales[currentDept])D.materiales[currentDept]=[]; 
-    D.materiales[currentDept].push(data); 
-    document.getElementById('matNewItem').value=''; 
-    renderMateriales(currentDept); 
-  }catch(e){ console.error(e); } 
+  const input = document.getElementById('matNewItem');
+  const t = input.value.trim(); 
+  if(!t || !currentDept) return; 
+  
+  const l = D.materiales[currentDept] || [];
+  const tempId = 'temp_' + Date.now(); 
+  const newMat = { id: tempId, departamento_id: currentDept, texto: t, estado: 'pendiente', posicion: l.length };
+  
+  if(!D.materiales[currentDept]) D.materiales[currentDept] = []; 
+  D.materiales[currentDept].push(newMat); 
+  input.value = ''; 
+  renderMateriales(currentDept); 
+  
+  try { 
+    const { data, error } = await sb.from('departamento_materiales')
+      .insert({ departamento_id: currentDept, texto: t, estado: 'pendiente', posicion: l.length })
+      .select().single(); 
+      
+    if(error) throw error; 
+    if (data && data.id) {
+       const idx = D.materiales[currentDept].findIndex(m => m.id === tempId);
+       if(idx > -1) D.materiales[currentDept][idx] = data;
+    }
+  } catch(e) { console.error("Error en BD:", e); } 
+}
+
+async function cycleMaterial(id, did, curr) { 
+  const next = curr === 'pendiente' ? 'comprar' : curr === 'comprar' ? 'tengo' : 'pendiente'; 
+  
+  const it = D.materiales[did].find(m => String(m.id) === String(id)); 
+  if(it) { 
+      it.estado = next; 
+      renderMateriales(did); 
+  }
+  
+  try { 
+    // Si el ID no es temporal, lo actualizamos en la base de datos
+    if(!String(id).startsWith('temp_')) {
+        await sb.from('departamento_materiales').update({estado: next}).eq('id', id); 
+    }
+  } catch(e) { console.error(e); } 
+}
+
+async function delMaterial(id, did) { 
+  if(!confirm('¿Eliminar este material?')) return;
+  
+  D.materiales[did] = (D.materiales[did] || []).filter(m => String(m.id) !== String(id)); 
+  renderMateriales(did); 
+  
+  try { 
+    if(!String(id).startsWith('temp_')) {
+        await sb.from('departamento_materiales').delete().eq('id', id); 
+    }
+  } catch(e) { console.error(e); } 
 }
 
 async function cycleMaterial(id,did,curr) { 
