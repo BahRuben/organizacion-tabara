@@ -418,13 +418,10 @@ nav{flex:1;overflow-y:auto;padding:1rem .875rem;}
         <div class="ph">
             <div class="ph-title"><h1>Horario General</h1><p>Cronograma completo del campamento</p></div>
             <div class="ph-actions">
-                <input type="date" class="fctl" id="hFilterFecha" style="width:auto" onchange="renderHorario()">
                 <button class="btn btn-primary" onclick="openModHorario()"><i class="fas fa-plus"></i> Añadir Evento</button>
             </div>
         </div>
-        <div class="card" style="max-width: 800px; margin: 0 auto;">
-            <div class="card-body"><div class="timeline-modern" id="horario-timeline"></div></div>
-        </div>
+        <div id="horario-timeline" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(340px, 1fr)); gap:1.5rem; align-items:start;"></div>
     </div>
 
     <div class="page" id="page-personas">
@@ -600,7 +597,16 @@ nav{flex:1;overflow-y:auto;padding:1rem .875rem;}
     <div class="frow">
         <div class="fgroup"><label class="flbl">Fecha*</label><input class="fctl" type="date" id="hFec"></div>
         <div class="fgroup"><label class="flbl">Tipo</label>
-            <select class="fctl" id="hTipo"><option value="Comida">🍽️ Comida</option><option value="Culto">⛪ Culto / Plenaria</option><option value="Juego">🎮 Juego / Gymkana</option><option value="Tiempo Libre">⚽ Tiempo Libre</option><option value="Descanso">💤 Descanso / Dormir</option><option value="Otro">📌 Otro</option></select>
+            <select class="fctl" id="hTipo">
+                <option value="Despertarse">🌅 Despertarse</option>
+                <option value="Prepararse">🚿 Prepararse</option>
+                <option value="Comida">🍽️ Comida</option>
+                <option value="Culto">⛪ Culto / Plenaria</option>
+                <option value="Juego">🎮 Juego / Gymkana</option>
+                <option value="Tiempo Libre">⚽ Tiempo Libre</option>
+                <option value="Descanso">💤 Descanso / Dormir</option>
+                <option value="Otro">📌 Otro</option>
+            </select>
         </div>
     </div>
     <div class="frow">
@@ -846,6 +852,8 @@ const TC = {
 };
 
 const HORARIO_CFG = {
+    'Despertarse': {c:'#eab308', i:'fa-sun'},
+    'Prepararse': {c:'#0ea5e9', i:'fa-shower'},
     'Comida': {c:'#f59e0b', i:'fa-utensils'},
     'Culto': {c:'#4338ca', i:'fa-church'},
     'Juego': {c:'#ef4444', i:'fa-futbol'},
@@ -1054,26 +1062,67 @@ function renderDash() {
 
 /* HORARIO */
 function renderHorario() {
-  const tl = document.getElementById('horario-timeline'), ff = document.getElementById('hFilterFecha').value;
-  let evs = D.horario; if(ff) evs = evs.filter(h => h.fecha === ff);
-  if(!evs.length) { tl.innerHTML = '<div class="empty"><i class="fas fa-calendar-times"></i><p>No hay eventos para esta fecha.</p></div>'; return; }
-  const g = {}; evs.forEach(h => { if(!g[h.fecha]) g[h.fecha]=[]; g[h.fecha].push(h); });
+  const tl = document.getElementById('horario-timeline');
+  let evs = D.horario; 
+  
+  if(!evs.length) { 
+    tl.innerHTML = '<div class="empty" style="grid-column:1/-1"><i class="fas fa-calendar-times"></i><p>No hay eventos programados en el campamento.</p></div>'; 
+    return; 
+  }
+  
+  const g = {}; 
+  evs.forEach(h => { 
+    if(!g[h.fecha]) g[h.fecha]=[]; 
+    g[h.fecha].push(h); 
+  });
+  
   let html = '';
   Object.keys(g).sort().forEach(f => {
-      html += `<h3 style="font-family:'Lora',serif; color:var(--primary); margin: 2rem 0 1rem -1rem; border-bottom:2px solid var(--border); padding-bottom:.5rem"><i class="fas fa-calendar-day"></i> ${f.split('-').reverse().join('/')}</h3>`;
+      html += `
+      <div class="card" style="box-shadow:var(--sh-sm);">
+          <div class="card-hd" style="background:var(--surf2); border-bottom:2px solid var(--primary);">
+              <div class="card-title" style="color:var(--primary); font-family:'Lora',serif; font-size:1.2rem;">
+                  <i class="fas fa-calendar-day"></i> Día: ${f.split('-').reverse().join('/')}
+              </div>
+          </div>
+          <div class="card-body">
+              <div class="timeline-modern">`;
+      
       g[f].forEach(h => {
           const c = HORARIO_CFG[h.tipo] || HORARIO_CFG['Otro'];
-          const resp = h.responsable_id ? `<div style="font-size:.75rem;margin-top:.5rem;display:flex;align-items:center;gap:.4rem"><div class="av" style="width:20px;height:20px;font-size:.55rem;background:${pColor(h.responsable_id)}">${ini(pName(h.responsable_id))}</div> Responsable: ${pName(h.responsable_id)}</div>` : '';
-          html += `<div class="tl-item"><div class="tl-dot" style="border-color:${c.c}"></div><div class="tl-content" style="border-left: 4px solid ${c.c}"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div class="tl-time">${h.hora_inicio.substring(0,5)} ${h.hora_fin?'- '+h.hora_fin.substring(0,5):''}</div><div style="display:flex;gap:.5rem"><button class="icon-btn edit" onclick="openModHorarioEdit('${h.id}')" style="border:none;box-shadow:none;background:transparent"><i class="fas fa-pen"></i></button><button class="icon-btn del" onclick="delHorario('${h.id}')" style="border:none;box-shadow:none;background:transparent"><i class="fas fa-trash"></i></button></div></div><div class="tl-title"><i class="fas ${c.i}" style="color:${c.c}"></i> ${h.titulo} <span class="pill pill-gray" style="font-weight:500;font-size:.65rem;margin-left:.5rem">${h.tipo}</span></div>${h.ubicacion?`<div style="font-size:.8rem;color:var(--ink3);margin-bottom:.5rem;"><i class="fas fa-location-dot"></i> ${h.ubicacion}</div>`:''}${h.descripcion?`<div style="font-size:.85rem;color:var(--ink2);background:var(--surf2);padding:.75rem;border-radius:8px;border:1px solid var(--border)">${h.descripcion}</div>`:''}${resp}</div></div>`;
+          const resp = h.responsable_id ? `<div style="font-size:.75rem;margin-top:.5rem;display:flex;align-items:center;gap:.4rem"><div class="av" style="width:20px;height:20px;font-size:.55rem;background:${pColor(h.responsable_id)}">${ini(pName(h.responsable_id))}</div> Responsable: ${pName(h.responsable_id).split(' ')[0]}</div>` : '';
+          
+          html += `<div class="tl-item">
+            <div class="tl-dot" style="border-color:${c.c}"></div>
+            <div class="tl-content" style="border-left: 4px solid ${c.c}">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start">
+                <div class="tl-time">${h.hora_inicio.substring(0,5)} ${h.hora_fin?'- '+h.hora_fin.substring(0,5):''}</div>
+                <div style="display:flex;gap:.5rem; margin-top:-5px; margin-right:-5px;">
+                  <button class="icon-btn edit" onclick="openModHorarioEdit('${h.id}')" style="border:none;box-shadow:none;background:transparent;width:26px;height:26px;font-size:.8rem"><i class="fas fa-pen"></i></button>
+                  <button class="icon-btn del" onclick="delHorario('${h.id}')" style="border:none;box-shadow:none;background:transparent;width:26px;height:26px;font-size:.8rem"><i class="fas fa-trash"></i></button>
+                </div>
+              </div>
+              <div class="tl-title"><i class="fas ${c.i}" style="color:${c.c}"></i> ${h.titulo} <span class="pill pill-gray" style="font-weight:600;font-size:.65rem;margin-left:.4rem;padding:.15rem .4rem">${h.tipo}</span></div>
+              ${h.ubicacion?`<div style="font-size:.8rem;color:var(--ink3);margin-bottom:.5rem;"><i class="fas fa-location-dot"></i> ${h.ubicacion}</div>`:''}
+              ${h.descripcion?`<div style="font-size:.85rem;color:var(--ink2);background:var(--surf2);padding:.6rem;border-radius:6px;border:1px solid var(--border)">${h.descripcion}</div>`:''}
+              ${resp}
+            </div>
+          </div>`;
       });
-  }); tl.innerHTML = html;
+      
+      html += `       </div>
+          </div>
+      </div>`;
+  });
+  
+  tl.innerHTML = html;
 }
 
 function openModHorario() { 
   document.getElementById('mHorarioT').textContent='Añadir Evento'; 
   document.getElementById('hId').value=''; 
   ['hTit','hUbi','hIni','hFin','hDesc'].forEach(id=>document.getElementById(id).value=''); 
-  document.getElementById('hFec').value=document.getElementById('hFilterFecha').value||new Date().toISOString().split('T')[0]; 
+  document.getElementById('hFec').value=new Date().toISOString().split('T')[0]; 
   document.getElementById('hResp').innerHTML='<option value="">-- Ninguno --</option>'+D.personas.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join(''); 
   om('modHorario'); 
 }
@@ -1110,7 +1159,6 @@ async function delHorario(id) {
   if(!confirm('¿Borrar este evento?')) return; 
   try { await sb.from('horario_general').delete().eq('id',id); D.horario=D.horario.filter(h=>h.id!==id); renderHorario(); renderDash(); toast('Borrado','info'); } catch(e){} 
 }
-
 /* PERSONAS */
 function renderPersonas() {
   const sel=document.getElementById('pFilter'); const cur=sel.value;
