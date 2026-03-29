@@ -828,7 +828,7 @@ nav{flex:1;overflow-y:auto;padding:1rem .875rem;}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* ═══════════════════════════════════════
-   ⚙️  CREDENCIALES
+   ⚙️  CREDENCIALES Y CONFIGURACIÓN
 ═══════════════════════════════════════ */
 const SUPABASE_URL  = 'https://cvignxrpesgxpxiikkpx.supabase.co';
 const SUPABASE_KEY  = 'sb_publishable_J0_5eGWdyTn0g3IbIlVlhg_yLz7162n';
@@ -868,7 +868,9 @@ let editingSong = null, editingItem = null;
 let songFilterVal = '';
 let currentGrupoTab = 'grupos';
 
-/* INIT & AUTH */
+/* ═══════════════════════════════════════
+   INIT & AUTH
+═══════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', () => {
   const pwEl = document.getElementById('pwIn');
   if(pwEl) pwEl.addEventListener('keypress', e => { if(e.key==='Enter') login(); });
@@ -931,7 +933,9 @@ function renderAll() {
   if(tabInicio) go(tabInicio, 'dashboard');
 }
 
-/* CARGA DESDE SUPABASE */
+/* ═══════════════════════════════════════
+   CARGA DESDE SUPABASE
+═══════════════════════════════════════ */
 async function loadAll() {
   if(!sb) return;
   try {
@@ -966,7 +970,9 @@ async function loadAll() {
   } catch(e) { console.error(e); }
 }
 
-/* NAV Y UTILS */
+/* ═══════════════════════════════════════
+   NAV Y UTILS
+═══════════════════════════════════════ */
 function go(el, pg) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-'+pg).classList.add('active');
@@ -1009,11 +1015,13 @@ function workload(id) {
 function wlPill(l) { const m={low:['wl-low','🟢 Baja'],med:['wl-med','🟡 Media'],high:['wl-high','🔴 Alta']}; return `<span class="${m[l][0]}">${m[l][1]}</span>`; }
 function getAlabanzaDeptId() { const d = D.departamentos.find(x => x.nombre.toLowerCase().includes('alabanza') || x.nombre.toLowerCase().includes('música') || x.icono === 'fa-music'); return d ? d.id : ''; }
 
-/* DASHBOARD RENDERIZADO */
+/* ═══════════════════════════════════════
+   DASHBOARD RENDERIZADO
+═══════════════════════════════════════ */
 function renderDash() {
   const un = D.personas.filter(p => !D.departamentos.some(d => d.miembros.includes(p.id) || d.responsable===p.id));
   
-  document.getElementById('d-stats').innerHTML = `<div class="sc c-primary"><div class="sc-icon"><i class="fas fa-users"></i></div><div class="sc-info"><div class="sc-val">${D.personas.length}</div><div class="sc-lbl">Personas</div></div></div><div class="sc c-amber"><div class="sc-icon"><i class="fas fa-flag"></i></div><div class="sc-info"><div class="sc-val">${D.grupos.length}</div><div class="sc-lbl">Grupos</div></div></div><div class="sc c-sky"><div class="sc-icon"><i class="fas fa-bed"></i></div><div class="sc-info"><div class="sc-val">${D.cabanas.reduce((s,c)=>s+c.capacidad,0)}</div><div class="sc-lbl">Plazas Cama</div></div></div>`;
+  document.getElementById('d-stats').innerHTML = `<div class="sc c-primary"><div class="sc-icon"><i class="fas fa-users"></i></div><div class="sc-info"><div class="sc-val">${D.personas.length}</div><div class="sc-lbl">Personas</div></div></div><div class="sc c-amber"><div class="sc-icon"><i class="fas fa-flag"></i></div><div class="sc-info"><div class="sc-val">${D.grupos.length}</div><div class="sc-lbl">Grupos</div></div></div><div class="sc c-sky"><div class="sc-icon"><i class="fas fa-bed"></i></div><div class="sc-info"><div class="sc-val">${D.cabanas.reduce((s,c)=>s+(c.capacidad||0),0)}</div><div class="sc-lbl">Plazas Cama</div></div></div>`;
   
   const sinDeptoCard = document.getElementById('d-sin-depto');
   if(sinDeptoCard && sinDeptoCard.previousElementSibling) {
@@ -1032,13 +1040,13 @@ function renderDash() {
     return `<div onclick="go(document.querySelector('[data-p=departamentos]'),'departamentos'); openDeptDetail('${d.id}')" style="display:flex;align-items:center;gap:.75rem;padding:.75rem;border-radius:10px;cursor:pointer;transition:background .2s;border:1px solid transparent;" onmouseover="this.style.background='var(--surf2)';this.style.borderColor='var(--border)'" onmouseout="this.style.background='transparent';this.style.borderColor='transparent'">
       <div style="width:42px;height:42px;border-radius:12px;background:${hexLight(d.color,.15)};color:${d.color};display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0"><i class="fas ${d.icono}"></i></div>
       <div style="flex:1"><div style="font-weight:800;font-size:.95rem">${d.nombre}</div>${respHtml}</div>
-      <span class="pill pill-gray">${d.miembros.length + (d.responsable?1:0)} <i class="fas fa-user" style="font-size:.6rem;margin-left:2px"></i></span>
+      <span class="pill pill-gray">${(d.miembros||[]).length + (d.responsable?1:0)} <i class="fas fa-user" style="font-size:.6rem;margin-left:2px"></i></span>
     </div>`;
   }).join('') : '<div class="empty"><p>Sin departamentos</p></div>';
 
   const aId = getAlabanzaDeptId(); const aDept = D.departamentos.find(x => x.id === aId); let alabStats = '';
   if (aDept) {
-    const total = aDept.miembros.length + (aDept.responsable ? 1 : 0);
+    const total = (aDept.miembros||[]).length + (aDept.responsable ? 1 : 0);
     const setC = new Set(), setI = new Set();
     D.canciones.forEach(c => { (c.cantantes || []).forEach(id => setC.add(id)); (c.instrumentistas || []).forEach(id => setI.add(id)); });
     alabStats = `<div style="display:flex;justify-content:space-between;background:var(--surf2);padding:.6rem 1rem;border-bottom:1px solid var(--border);font-size:.75rem;margin:-1.25rem -1.25rem 1rem -1.25rem;"><span style="color:var(--ink2)"><i class="fas fa-users"></i> Dpto: <strong>${total}</strong></span><span style="color:var(--rose-v)"><i class="fas fa-microphone"></i> Voces: <strong>${setC.size}</strong></span><span style="color:var(--sky-d)"><i class="fas fa-guitar"></i> Músicos: <strong>${setI.size}</strong></span></div>`;
@@ -1060,7 +1068,9 @@ function renderDash() {
   if(sw.length) document.getElementById('d-workload').innerHTML = `<table style="width:100%;border-collapse:collapse;text-align:left;"><thead><tr style="border-bottom:2px solid var(--border);background:var(--surf2)"><th style="padding:1rem;font-size:.75rem;text-transform:uppercase;color:var(--ink3)">Persona</th><th style="padding:1rem;font-size:.75rem;text-transform:uppercase;color:var(--ink3)">Tareas</th><th style="padding:1rem;font-size:.75rem;text-transform:uppercase;color:var(--ink3);text-align:right">Nivel</th></tr></thead><tbody>${sw.map(p=>{ const w=workload(p.id); let t=[]; if(w.depts) t.push(`<span class="chip"><i class="fas fa-sitemap"></i> ${w.depts}</span>`); if(w.canciones) t.push(`<span class="chip"><i class="fas fa-music"></i> ${w.canciones}</span>`); if(w.devoc) t.push(`<span class="chip"><i class="fas fa-book-open"></i> ${w.devoc}</span>`); if(w.pred) t.push(`<span class="chip"><i class="fas fa-microphone"></i> ${w.pred}</span>`); if(w.horarioResp) t.push(`<span class="chip"><i class="fas fa-calendar"></i> ${w.horarioResp}</span>`); return `<tr style="border-bottom:1px solid var(--border)"><td style="padding:1rem;display:flex;align-items:center;gap:.75rem"><div class="av av-sm" style="background:${p.color}">${ini(p.nombre)}</div><strong>${p.nombre.split(' ')[0]}</strong></td><td style="padding:1rem">${t.join(' ')||'<span style="color:var(--ink4)">Nada asignado</span>'}</td><td style="padding:1rem;text-align:right">${wlPill(w.level)}</td></tr>`; }).join('')}</tbody></table>`;
 }
 
-/* HORARIO */
+/* ═══════════════════════════════════════
+   HORARIO
+═══════════════════════════════════════ */
 function renderHorario() {
   const tl = document.getElementById('horario-timeline');
   let evs = D.horario; 
@@ -1159,16 +1169,19 @@ async function delHorario(id) {
   if(!confirm('¿Borrar este evento?')) return; 
   try { await sb.from('horario_general').delete().eq('id',id); D.horario=D.horario.filter(h=>h.id!==id); renderHorario(); renderDash(); toast('Borrado','info'); } catch(e){} 
 }
-/* PERSONAS */
+
+/* ═══════════════════════════════════════
+   PERSONAS
+═══════════════════════════════════════ */
 function renderPersonas() {
   const sel=document.getElementById('pFilter'); const cur=sel.value;
   sel.innerHTML='<option value="">Todos los departamentos</option>'+D.departamentos.map(d=>`<option value="${d.id}">${d.nombre}</option>`).join(''); if(cur) sel.value=cur;
   const search=(document.getElementById('pSearch').value||'').toLowerCase(), fD=document.getElementById('pFilter').value;
-  let p=D.personas.filter(x=>{ if(search&&!x.nombre.toLowerCase().includes(search))return false; if(fD){ const d=D.departamentos.find(y=>y.id===fD); if(!d)return false; if(!d.miembros.includes(x.id)&&d.responsable!==x.id)return false; } return true; });
+  let p=D.personas.filter(x=>{ if(search&&!x.nombre.toLowerCase().includes(search))return false; if(fD){ const d=D.departamentos.find(y=>y.id===fD); if(!d)return false; if(!(d.miembros||[]).includes(x.id)&&d.responsable!==x.id)return false; } return true; });
   const g=document.getElementById('p-grid'), e=document.getElementById('p-empty');
   if(!p.length){g.innerHTML='';e.style.display='block';return;} e.style.display='none';
   g.innerHTML=p.map(x=>{
-    const dp=D.departamentos.filter(d=>d.miembros.includes(x.id)||d.responsable===x.id).map(d=>`<span class="pill" style="background:${hexLight(d.color,.1)};color:${d.color};border:1px solid ${hexLight(d.color,.2)}"><i class="fas ${d.icono}" style="font-size:.65rem"></i>${d.nombre}</span>`).join('');
+    const dp=D.departamentos.filter(d=>(d.miembros||[]).includes(x.id)||d.responsable===x.id).map(d=>`<span class="pill" style="background:${hexLight(d.color,.1)};color:${d.color};border:1px solid ${hexLight(d.color,.2)}"><i class="fas ${d.icono}" style="font-size:.65rem"></i>${d.nombre}</span>`).join('');
     return `<div class="pcard ${x.otra_iglesia?'is-guest':''}">${x.otra_iglesia?'<div class="guest-badge"><i class="fas fa-church"></i> Invitado/a</div>':''}<div class="pcard-acts"><button class="icon-btn edit" onclick="openModPersonaEdit('${x.id}')"><i class="fas fa-pen"></i></button><button class="icon-btn del" onclick="delPersona('${x.id}')"><i class="fas fa-trash"></i></button></div><div class="pcard-top"><div class="av av-lg" style="background:${x.color}">${ini(x.nombre)}</div><div class="pcard-info"><h3>${x.nombre}</h3><p>${x.rol}</p></div></div><div class="pcard-depts">${dp||'<span style="font-size:.72rem;color:var(--ink4);font-style:italic">Sin departamento</span>'}</div></div>`;
   }).join('');
 }
@@ -1210,15 +1223,17 @@ async function delPersona(id) {
   try{ 
     await sb.from('personas').delete().eq('id',id); 
     D.personas=D.personas.filter(p=>p.id!==id); 
-    D.departamentos.forEach(d=>{d.miembros=d.miembros.filter(m=>m!==id);if(d.responsable===id)d.responsable=null;}); 
+    D.departamentos.forEach(d=>{d.miembros=(d.miembros||[]).filter(m=>m!==id);if(d.responsable===id)d.responsable=null;}); 
     D.canciones.forEach(c=>{c.cantantes=(c.cantantes||[]).filter(x=>x!==id);}); 
     renderPersonas(); renderDash(); toast('Eliminada','info'); 
   }catch(e){ console.error(e); } 
 }
 
-/* DEPARTAMENTOS */
+/* ═══════════════════════════════════════
+   DEPARTAMENTOS
+═══════════════════════════════════════ */
 function renderDepts() {
-  document.getElementById('dept-grid').innerHTML=D.departamentos.map(d=>`<div class="dcard" onclick="openDeptDetail('${d.id}')"><div class="dcard-stripe" style="background:${d.color}"></div><div class="dcard-body"><div class="dcard-hd"><div class="dcard-ico" style="background:${hexLight(d.color,.15)};color:${d.color}"><i class="fas ${d.icono}"></i></div><div><div class="dcard-nm">${d.nombre}</div><div class="dcard-resp"><i class="fas fa-user" style="font-size:.6rem"></i> ${d.responsable?pName(d.responsable):'Sin responsable'}</div></div></div>${d.desc?`<div style="font-size:.8rem;color:var(--ink3);margin-bottom:.75rem">${d.desc}</div>`:''}<div class="dcard-ft"><div style="display:flex;align-items:center;gap:.5rem"><div class="av-stack">${(d.responsable?[d.responsable]:[]).concat(d.miembros).slice(0,4).map(id=>`<div class="av av-sm" style="background:${pColor(id)};border:2px solid #fff">${ini(pName(id))}</div>`).join('')}</div><span style="font-size:.75rem;color:var(--ink3);font-weight:600">${d.miembros.length+(d.responsable?1:0)} pers.</span></div><div style="display:flex;gap:.3rem"><button class="icon-btn edit" onclick="event.stopPropagation();openModDeptEdit('${d.id}')"><i class="fas fa-pen"></i></button><button class="icon-btn del" onclick="event.stopPropagation();delDepto('${d.id}')"><i class="fas fa-trash"></i></button></div></div></div></div>`).join('');
+  document.getElementById('dept-grid').innerHTML=D.departamentos.map(d=>`<div class="dcard" onclick="openDeptDetail('${d.id}')"><div class="dcard-stripe" style="background:${d.color}"></div><div class="dcard-body"><div class="dcard-hd"><div class="dcard-ico" style="background:${hexLight(d.color,.15)};color:${d.color}"><i class="fas ${d.icono}"></i></div><div><div class="dcard-nm">${d.nombre}</div><div class="dcard-resp"><i class="fas fa-user" style="font-size:.6rem"></i> ${d.responsable?pName(d.responsable):'Sin responsable'}</div></div></div>${d.desc?`<div style="font-size:.8rem;color:var(--ink3);margin-bottom:.75rem">${d.desc}</div>`:''}<div class="dcard-ft"><div style="display:flex;align-items:center;gap:.5rem"><div class="av-stack">${(d.responsable?[d.responsable]:[]).concat(d.miembros||[]).slice(0,4).map(id=>`<div class="av av-sm" style="background:${pColor(id)};border:2px solid #fff">${ini(pName(id))}</div>`).join('')}</div><span style="font-size:.75rem;color:var(--ink3);font-weight:600">${(d.miembros||[]).length+(d.responsable?1:0)} pers.</span></div><div style="display:flex;gap:.3rem"><button class="icon-btn edit" onclick="event.stopPropagation();openModDeptEdit('${d.id}')"><i class="fas fa-pen"></i></button><button class="icon-btn del" onclick="event.stopPropagation();delDepto('${d.id}')"><i class="fas fa-trash"></i></button></div></div></div></div>`).join('');
 }
 
 function openDeptDetail(id) {
@@ -1231,10 +1246,10 @@ function openDeptDetail(id) {
   document.getElementById('dd-sub').textContent=d.desc||'';
   let mHTML = ''; 
   if(d.responsable) mHTML+=`<div style="padding:.75rem;background:var(--surf2);border-radius:8px;border:1px solid var(--border);margin-bottom:1rem;"><div style="font-size:.7rem;color:var(--primary);font-weight:700;text-transform:uppercase;margin-bottom:.5rem">⭐ Responsable</div><div style="display:flex;align-items:center;gap:1rem;"><div class="av av-lg" style="background:${pColor(d.responsable)}">${ini(pName(d.responsable))}</div><div><div style="font-weight:700;font-size:1.1rem">${pName(d.responsable)}</div></div></div></div>`;
-  mHTML+=`<div class="people-grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr))">${d.miembros.map(mid=>`<div class="pcard" style="padding:1rem;"><div class="pcard-top" style="margin-bottom:0"><div class="av" style="background:${pColor(mid)}">${ini(pName(mid))}</div><div class="pcard-info"><h3>${pName(mid)}</h3><p>${pRol(mid)}</p></div></div></div>`).join('')}</div>`;
+  mHTML+=`<div class="people-grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr))">${(d.miembros||[]).map(mid=>`<div class="pcard" style="padding:1rem;"><div class="pcard-top" style="margin-bottom:0"><div class="av" style="background:${pColor(mid)}">${ini(pName(mid))}</div><div class="pcard-info"><h3>${pName(mid)}</h3><p>${pRol(mid)}</p></div></div></div>`).join('')}</div>`;
   document.getElementById('dd-resp-members').innerHTML=mHTML; 
   renderMateriales(id);
-  const aI=[...(d.responsable?[d.responsable]:[]),...d.miembros]; 
+  const aI=[...(d.responsable?[d.responsable]:[]),...(d.miembros||[])]; 
   document.getElementById('dd-stats').innerHTML=`<div style="display:flex;justify-content:space-between;margin-bottom:.5rem"><span style="color:var(--ink3)">Equipo</span><strong>${aI.length}</strong></div><div style="display:flex;justify-content:space-between;margin-bottom:1rem"><span style="color:var(--ink3)">Materiales</span><strong>${(D.materiales[id]||[]).length}</strong></div><div style="font-size:.75rem;font-weight:700;color:var(--ink4);text-transform:uppercase;margin-bottom:.5rem;border-top:1px solid var(--border);padding-top:1rem;">Miembros</div>${aI.map(mid=>`<div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.4rem"><div class="av av-sm" style="background:${pColor(mid)}">${ini(pName(mid))}</div><span style="font-size:.8rem">${pName(mid).split(' ')[0]}</span></div>`).join('')}`;
 }
 
@@ -1263,7 +1278,7 @@ function openModDeptEdit(id) {
   document.getElementById('dDesc').value=d.desc||''; 
   document.getElementById('dResp').innerHTML='<option value="">— Sin asignar —</option>'+D.personas.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join(''); 
   document.getElementById('dResp').value=d.responsable||''; 
-  buildPicker('dMiembrosPick',d.miembros); 
+  buildPicker('dMiembrosPick',d.miembros||[]); 
   om('modDepto'); 
 }
 
@@ -1307,6 +1322,9 @@ async function delDepto(id) {
   }catch(e){ console.error(e); } 
 }
 
+/* ═══════════════════════════════════════
+   MATERIALES (ACTUALIZACIÓN OPTIMISTA)
+═══════════════════════════════════════ */
 function renderMateriales(dId) {
   const l=D.materiales[dId]||[], c=document.getElementById('dd-materiales'), p=document.getElementById('dd-mat-progress');
   if(p){ const d=l.filter(m=>m.estado==='tengo').length; p.innerHTML=l.length?`<span style="font-weight:700;color:var(--primary)">${d}/${l.length}</span> listos`: ''; }
@@ -1323,6 +1341,7 @@ function renderMateriales(dId) {
 
 async function addMaterial() { 
   const input = document.getElementById('matNewItem');
+  if(!input) return;
   const t = input.value.trim(); 
   if(!t || !currentDept) return; 
   
@@ -1345,7 +1364,10 @@ async function addMaterial() {
        const idx = D.materiales[currentDept].findIndex(m => m.id === tempId);
        if(idx > -1) D.materiales[currentDept][idx] = data;
     }
-  } catch(e) { console.error("Error en BD:", e); } 
+  } catch(e) { 
+    console.error("Error en BD:", e); 
+    toast('Error BD: ' + (e.message || 'Fallo guardando'), 'err');
+  } 
 }
 
 async function cycleMaterial(id, did, curr) { 
@@ -1358,7 +1380,6 @@ async function cycleMaterial(id, did, curr) {
   }
   
   try { 
-    // Si el ID no es temporal, lo actualizamos en la base de datos
     if(!String(id).startsWith('temp_')) {
         await sb.from('departamento_materiales').update({estado: next}).eq('id', id); 
     }
@@ -1378,25 +1399,9 @@ async function delMaterial(id, did) {
   } catch(e) { console.error(e); } 
 }
 
-async function cycleMaterial(id,did,curr) { 
-  const next=curr==='pendiente'?'comprar':curr==='comprar'?'tengo':'pendiente'; 
-  try{ 
-    await sb.from('departamento_materiales').update({estado:next}).eq('id',id); 
-    const it=D.materiales[did].find(m=>m.id===id); 
-    if(it)it.estado=next; 
-    renderMateriales(did); 
-  }catch(e){ console.error(e); } 
-}
-
-async function delMaterial(id,did) { 
-  try{ 
-    await sb.from('departamento_materiales').delete().eq('id',id); 
-    D.materiales[did]=D.materiales[did].filter(m=>m.id!==id); 
-    renderMateriales(did); 
-  }catch(e){ console.error(e); } 
-}
-
-/* ALABANZA */
+/* ═══════════════════════════════════════
+   ALABANZA
+═══════════════════════════════════════ */
 function songFilter(val,btn) { 
   songFilterVal=val; 
   document.querySelectorAll('#page-alabanza .tab').forEach(t=>t.classList.remove('active')); 
@@ -1499,7 +1504,9 @@ async function delSong(id) {
   }catch(e){ console.error(e); } 
 }
 
-/* PROGRAMA */
+/* ═══════════════════════════════════════
+   PROGRAMA DEL CULTO
+═══════════════════════════════════════ */
 function renderProg() {
   const sel=document.getElementById('svcSelector'), cV=sel.value; 
   sel.innerHTML='<option value="">Seleccionar culto…</option>'+(D.servicios||[]).map(s=>`<option value="${s.id}">${s.nombre} (${s.fecha.split('-').reverse().join('/')})</option>`).join(''); 
@@ -1663,7 +1670,9 @@ async function delItem(iid, sid) {
   }catch(e){ console.error(e); } 
 }
 
-/* GRUPOS */
+/* ═══════════════════════════════════════
+   GRUPOS Y JUEGOS
+═══════════════════════════════════════ */
 function renderGruposStats() {
     const asignados = D.grupos.reduce((acc,g)=>acc+(g.miembros||[]).length, 0), faltan = D.personas.length - asignados;
     document.getElementById('g-stats-overview').innerHTML = `<div><div style="font-size:2rem;font-weight:800;color:var(--primary)">${D.personas.length}</div><div style="font-size:.75rem;color:var(--ink3);text-transform:uppercase;">Asistentes</div></div><div><div style="font-size:2rem;font-weight:800;color:var(--green-v)">${asignados}</div><div style="font-size:.75rem;color:var(--ink3);text-transform:uppercase;">En Equipos</div></div><div><div style="font-size:2rem;font-weight:800;color:var(--red-v)">${faltan}</div><div style="font-size:.75rem;color:var(--ink3);text-transform:uppercase;">Sin equipo</div></div>`;
@@ -1675,7 +1684,7 @@ function renderGruposCards() {
         const av = (g.miembros||[]).map(id=>`<div class="av av-sm" style="background:${pColor(id)};border:2px solid #fff;" title="${pName(id)}">${ini(pName(id))}</div>`).join('');
         const port = g.portavoz_id ? `<div style="font-size:.75rem;color:var(--ink3);margin-bottom:.5rem"><i class="fas fa-bullhorn" style="color:var(--primary)"></i> Portavoz: <strong>${pName(g.portavoz_id)}</strong></div>` : '';
         const desc = g.descripcion ? `<div style="font-size:.8rem;color:var(--ink2);margin-bottom:1rem;font-style:italic">"${g.descripcion}"</div>` : '';
-        return `<div class="grupo-card" style="--grupo-color: ${g.color}"><div style="position:absolute;top:1rem;right:1rem;display:flex;gap:.3rem;"><button class="icon-btn edit" style="border:none;box-shadow:none;" onclick="openModGrupoEdit('${g.id}')"><i class="fas fa-pen"></i></button><button class="icon-btn del" style="border:none;box-shadow:none;" onclick="delGrupo('${g.id}')"><i class="fas fa-trash"></i></button></div><div class="grupo-body"><h3 style="font-size:1.2rem;font-weight:800;color:var(--ink);margin-bottom:.5rem;">${g.nombre}</h3>${port}${desc}<div style="font-size:.8rem;color:var(--ink3);margin-bottom:.5rem;border-top:1px solid var(--border);padding-top:1rem">${g.miembros.length} Miembros</div><div style="display:flex;flex-wrap:wrap;margin-left:8px;">${av||'<span style="font-size:.8rem;color:#999">Vacío</span>'}</div></div></div>`;
+        return `<div class="grupo-card" style="--grupo-color: ${g.color}"><div style="position:absolute;top:1rem;right:1rem;display:flex;gap:.3rem;"><button class="icon-btn edit" style="border:none;box-shadow:none;" onclick="openModGrupoEdit('${g.id}')"><i class="fas fa-pen"></i></button><button class="icon-btn del" style="border:none;box-shadow:none;" onclick="delGrupo('${g.id}')"><i class="fas fa-trash"></i></button></div><div class="grupo-body"><h3 style="font-size:1.2rem;font-weight:800;color:var(--ink);margin-bottom:.5rem;">${g.nombre}</h3>${port}${desc}<div style="font-size:.8rem;color:var(--ink3);margin-bottom:.5rem;border-top:1px solid var(--border);padding-top:1rem">${(g.miembros||[]).length} Miembros</div><div style="display:flex;flex-wrap:wrap;margin-left:8px;">${av||'<span style="font-size:.8rem;color:#999">Vacío</span>'}</div></div></div>`;
     }).join('');
 }
 
@@ -1837,17 +1846,19 @@ async function delJuego(id) {
   }catch(e){ console.error(e); } 
 }
 
-/* CABAÑAS Y COCHES */
+/* ═══════════════════════════════════════
+   CABAÑAS Y COCHES
+═══════════════════════════════════════ */
 function renderCabanas() {
-  const tc=D.cabanas.reduce((s,c)=>s+c.capacidad,0), ta=D.cabanas.reduce((s,c)=>s+(c.asignados||[]).length,0), sin=D.personas.filter(p=>!D.cabanas.some(c=>(c.asignados||[]).includes(p.id)));
+  const tc=D.cabanas.reduce((s,c)=>s+(c.capacidad||0),0), ta=D.cabanas.reduce((s,c)=>s+(c.asignados||[]).length,0), sin=D.personas.filter(p=>!D.cabanas.some(c=>(c.asignados||[]).includes(p.id)));
   document.getElementById('cab-stats').innerHTML=`<div class="sc c-primary"><div class="sc-icon"><i class="fas fa-house"></i></div><div class="sc-info"><div class="sc-val">${D.cabanas.length}</div><div class="sc-lbl">Cabañas</div></div></div><div class="sc c-sky"><div class="sc-icon"><i class="fas fa-bed"></i></div><div class="sc-info"><div class="sc-val">${tc}</div><div class="sc-lbl">Plazas</div></div></div><div class="sc ${sin.length?'c-red':'c-green'}"><div class="sc-icon"><i class="fas fa-user-check"></i></div><div class="sc-info"><div class="sc-val">${ta}</div><div class="sc-lbl">${sin.length?sin.length+' sin asignar':'Todos asignados'}</div></div></div>`;
   document.getElementById('cabBadge').style.display=sin.length?'inline-block':'none'; 
   document.getElementById('cabBadge').textContent=sin.length;
   const cg=document.getElementById('cabanas-grid'); 
   if(!D.cabanas.length){ cg.innerHTML='<div class="empty"><p>Añade cabañas</p></div>'; renderCoches(); return; }
   cg.innerHTML=D.cabanas.map(c=>{ 
-    const as=c.asignados||[], l=c.capacidad-as.length; 
-    return `<div class="cabana-card"><div style="padding:1.25rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;background:var(--surf2)"><div style="font-weight:800;font-size:1.1rem;color:var(--primary)"><i class="fas fa-house"></i> ${c.nombre}</div><div style="display:flex;gap:.5rem"><button class="icon-btn edit" style="border:none;background:transparent;" onclick="openModCabanaEdit('${c.id}')"><i class="fas fa-pen"></i></button><button class="icon-btn del" style="border:none;background:transparent;" onclick="delCabana('${c.id}')"><i class="fas fa-trash"></i></button></div></div><div style="padding:1.25rem"><div style="margin-bottom:1rem;font-size:.85rem;font-weight:600;color:${l===0?'var(--red-v)':'var(--green-v)'}">${l===0?'Lleno':l+' plazas libres'} (${as.length}/${c.capacidad})</div><div class="cabana-slots">${as.map(id=>`<div class="slot occupied"><div class="av av-sm" style="background:${pColor(id)}">${ini(pName(id))}</div><span style="overflow:hidden;text-overflow:ellipsis">${pName(id).split(' ')[0]}</span></div>`).join('')}${Array(Math.max(0,l)).fill('<div class="slot empty"><i class="fas fa-bed" style="opacity:.5;margin-right:4px"></i> Libre</div>').join('')}</div></div></div>`; 
+    const as=c.asignados||[], l=(c.capacidad||0)-as.length; 
+    return `<div class="cabana-card"><div style="padding:1.25rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;background:var(--surf2)"><div style="font-weight:800;font-size:1.1rem;color:var(--primary)"><i class="fas fa-house"></i> ${c.nombre}</div><div style="display:flex;gap:.5rem"><button class="icon-btn edit" style="border:none;background:transparent;" onclick="openModCabanaEdit('${c.id}')"><i class="fas fa-pen"></i></button><button class="icon-btn del" style="border:none;background:transparent;" onclick="delCabana('${c.id}')"><i class="fas fa-trash"></i></button></div></div><div style="padding:1.25rem"><div style="margin-bottom:1rem;font-size:.85rem;font-weight:600;color:${l<=0?'var(--red-v)':'var(--green-v)'}">${l<=0?'Lleno':l+' plazas libres'} (${as.length}/${c.capacidad||0})</div><div class="cabana-slots">${as.map(id=>`<div class="slot occupied"><div class="av av-sm" style="background:${pColor(id)}">${ini(pName(id))}</div><span style="overflow:hidden;text-overflow:ellipsis">${pName(id).split(' ')[0]}</span></div>`).join('')}${Array(Math.max(0,l)).fill('<div class="slot empty"><i class="fas fa-bed" style="opacity:.5;margin-right:4px"></i> Libre</div>').join('')}</div></div></div>`; 
   }).join('');
   renderCoches();
 }
@@ -1864,7 +1875,7 @@ function openModCabanaEdit(id) {
   const c=D.cabanas.find(x=>x.id===id); if(!c)return; 
   document.getElementById('cabId').value=c.id; 
   document.getElementById('cabNom').value=c.nombre; 
-  document.getElementById('cabCap').value=c.capacidad; 
+  document.getElementById('cabCap').value=c.capacidad||8; 
   buildPicker('cabPick',c.asignados||[]); 
   om('modCabana'); 
 }
@@ -1872,7 +1883,7 @@ function openModCabanaEdit(id) {
 async function saveCabana() { 
   const n=document.getElementById('cabNom').value.trim(); if(!n)return; 
   const a=getSelected('cabPick'), cp=parseInt(document.getElementById('cabCap').value)||8; 
-  if(a.length>cp){toast('Excede cap','err');return;} 
+  if(a.length>cp){toast('Excede capacidad','err');return;} 
   const obj={nombre:n,capacidad:cp}, eid=document.getElementById('cabId').value; 
   try{
     let cid=eid;
@@ -1910,8 +1921,8 @@ function renderCoches() {
   const cg=document.getElementById('coches-grid'); 
   if(!D.coches.length){ cg.innerHTML='<div class="empty"><p>Añade el primer coche</p></div>'; return; }
   cg.innerHTML=D.coches.map(c=>{ 
-    const p=c.pasajeros||[], cond=c.conductor, l=c.plazas-(p.length+(cond?1:0)); 
-    return `<div class="coche-card"><div style="padding:1.25rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;background:var(--surf2)"><div style="font-weight:800;font-size:1.1rem;color:var(--sky)"><i class="fas fa-car"></i> ${c.nombre}</div><div style="display:flex;gap:.5rem"><button class="icon-btn edit" style="border:none;background:transparent;" onclick="openModCocheEdit('${c.id}')"><i class="fas fa-pen"></i></button><button class="icon-btn del" style="border:none;background:transparent;" onclick="delCoche('${c.id}')"><i class="fas fa-trash"></i></button></div></div><div style="padding:1.25rem">${c.ruta?`<div style="font-size:.8rem;color:var(--ink3);margin-bottom:1rem"><i class="fas fa-route"></i> ${c.ruta}</div>`:''}<div style="margin-bottom:1rem;font-size:.85rem;font-weight:600;color:${l===0?'var(--red-v)':'var(--green-v)'}">${l===0?'Lleno':l+' libres'}</div><div class="asiento-grid">${cond?`<div class="asiento ocup" style="border:1px solid var(--sky);background:var(--sky-l)"><div class="av av-sm" style="background:var(--sky)"><i class="fas fa-steering-wheel"></i></div><span style="font-weight:700;color:var(--sky-d)">${pName(cond).split(' ')[0]}</span></div>`:'<div class="asiento lib"><i class="fas fa-steering-wheel"></i> Cond.</div>'}${p.map(id=>`<div class="asiento ocup"><div class="av av-sm" style="background:${pColor(id)}">${ini(pName(id))}</div><span>${pName(id).split(' ')[0]}</span></div>`).join('')}${Array(Math.max(0,l)).fill('<div class="asiento lib"><i class="fas fa-plus"></i> Libre</div>').join('')}</div></div></div>`; 
+    const p=c.pasajeros||[], cond=c.conductor, l=(c.plazas||5)-(p.length+(cond?1:0)); 
+    return `<div class="coche-card"><div style="padding:1.25rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;background:var(--surf2)"><div style="font-weight:800;font-size:1.1rem;color:var(--sky)"><i class="fas fa-car"></i> ${c.nombre}</div><div style="display:flex;gap:.5rem"><button class="icon-btn edit" style="border:none;background:transparent;" onclick="openModCocheEdit('${c.id}')"><i class="fas fa-pen"></i></button><button class="icon-btn del" style="border:none;background:transparent;" onclick="delCoche('${c.id}')"><i class="fas fa-trash"></i></button></div></div><div style="padding:1.25rem">${c.ruta?`<div style="font-size:.8rem;color:var(--ink3);margin-bottom:1rem"><i class="fas fa-route"></i> ${c.ruta}</div>`:''}<div style="margin-bottom:1rem;font-size:.85rem;font-weight:600;color:${l<=0?'var(--red-v)':'var(--green-v)'}">${l<=0?'Lleno':l+' libres'}</div><div class="asiento-grid">${cond?`<div class="asiento ocup" style="border:1px solid var(--sky);background:var(--sky-l)"><div class="av av-sm" style="background:var(--sky)"><i class="fas fa-steering-wheel"></i></div><span style="font-weight:700;color:var(--sky-d)">${pName(cond).split(' ')[0]}</span></div>`:'<div class="asiento lib"><i class="fas fa-steering-wheel"></i> Cond.</div>'}${p.map(id=>`<div class="asiento ocup"><div class="av av-sm" style="background:${pColor(id)}">${ini(pName(id))}</div><span>${pName(id).split(' ')[0]}</span></div>`).join('')}${Array(Math.max(0,l)).fill('<div class="asiento lib"><i class="fas fa-plus"></i> Libre</div>').join('')}</div></div></div>`; 
   }).join('');
 }
 
@@ -1928,7 +1939,7 @@ function openModCocheEdit(id) {
   const c=D.coches.find(x=>x.id===id); if(!c)return; 
   document.getElementById('cocheId').value=c.id; 
   document.getElementById('cocheNom').value=c.nombre; 
-  document.getElementById('cochePlazas').value=c.plazas; 
+  document.getElementById('cochePlazas').value=c.plazas||5; 
   document.getElementById('cocheRuta').value=c.ruta||''; 
   document.getElementById('cocheConductor').innerHTML='<option value="">-- Ninguno --</option>'+D.personas.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join(''); 
   document.getElementById('cocheConductor').value=c.conductor||''; 
@@ -1973,7 +1984,9 @@ async function delCoche(id) {
   }catch(e){ console.error(e); } 
 }
 
-/* CSV & LOCK */
+/* ═══════════════════════════════════════
+   CSV IMPORT & LOCK
+═══════════════════════════════════════ */
 function openModCSV() { 
   document.getElementById('csvStep1').style.display='block'; 
   document.getElementById('csvStep2').style.display='none'; 
@@ -2194,22 +2207,18 @@ function generarPDFLimpio() {
     html += `</div>`;
   }
 
-  // 4. REPERTORIO DE ALABANZA (¡NUEVO!)
+  // 4. REPERTORIO DE ALABANZA
   if(D.canciones && D.canciones.length > 0) {
     html += `<div class="page-break"></div><h2>🎵 Repertorio de Alabanza</h2>
       <table>
         <thead><tr><th width="25%">Canción</th><th width="15%">Tonalidad</th><th width="10%">Dur.</th><th width="25%">Voces</th><th width="25%">Músicos</th></tr></thead>
         <tbody>`;
     
-    // Ordenamos alfabéticamente por título
     const cancionesOrdenadas = [...D.canciones].sort((a,b) => a.titulo.localeCompare(b.titulo));
 
     cancionesOrdenadas.forEach(c => {
-      // Extraemos solo el primer nombre de cada persona para que no ocupe tanto espacio
       const voces = (c.cantantes||[]).map(id => pName(id).split(' ')[0]).join(', ') || '-';
       const musicos = (c.instrumentistas||[]).map(id => pName(id).split(' ')[0]).join(', ') || '-';
-      
-      // Iconito rápido para el estado
       const estadoMark = c.estado === 'confirmado' ? '✅' : (c.estado === 'pendiente' ? '⏳' : '❓');
       
       html += `<tr>
