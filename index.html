@@ -229,7 +229,8 @@ nav{flex:1;overflow-y:auto;padding:1rem .875rem;}
 .coche-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.5rem;}
 .coche-card{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh-sm);}
 .asiento-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:.5rem;margin-bottom:1rem;}
-.asiento{display:flex;align-items:center;gap:.4rem;padding:.5rem;border-radius:8px;font-size:.78rem;border:1px solid var(--border);}
+.asiento{display:flex;align-items:center;gap:.4rem;padding:.5rem;border-radius:8px;font-size:.78rem;border:1px solid var(--border); width:100%; overflow:hidden;}
+.asiento span{flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0;}
 .asiento.ocup{background:var(--surf2);}
 .asiento.lib{background:transparent;border-style:dashed;color:var(--ink4);}
 
@@ -1994,12 +1995,35 @@ async function delCabana(id) {
   }catch(e){ console.error(e); } 
 }
 
+/* ═══════════════════════════════════════
+   COCHES Y VEHÍCULOS
+═══════════════════════════════════════ */
 function renderCoches() {
+  // 1. Calculamos los asignados y cuántos "locales" (no invitados) faltan por coche
+  const asigIds = new Set();
+  D.coches.forEach(c => { 
+    if(c.conductor) asigIds.add(String(c.conductor)); 
+    (c.pasajeros||[]).forEach(pid => asigIds.add(String(pid))); 
+  });
+  const localesSinCoche = D.personas.filter(p => !p.otra_iglesia && !asigIds.has(String(p.id))).length;
+  const tcCoches = D.coches.reduce((s,c)=>s+(c.plazas||5),0);
+  
+  // 2. Pintamos las estadísticas arriba de los coches
+  const statsCocheEl = document.getElementById('coche-stats');
+  if (statsCocheEl) {
+      statsCocheEl.innerHTML = `
+        <div class="sc c-sky"><div class="sc-icon"><i class="fas fa-car"></i></div><div class="sc-info"><div class="sc-val">${D.coches.length}</div><div class="sc-lbl">Vehículos</div></div></div>
+        <div class="sc c-primary"><div class="sc-icon"><i class="fas fa-users"></i></div><div class="sc-info"><div class="sc-val">${tcCoches}</div><div class="sc-lbl">Plazas Totales</div></div></div>
+        <div class="sc ${localesSinCoche > 0 ? 'c-red' : 'c-green'}"><div class="sc-icon"><i class="fas fa-user-clock"></i></div><div class="sc-info"><div class="sc-val">${localesSinCoche}</div><div class="sc-lbl">Locales sin asignar</div></div></div>
+      `;
+  }
+
+  // 3. Dibujamos las tarjetas de los coches
   const cg=document.getElementById('coches-grid'); 
   if(!D.coches.length){ cg.innerHTML='<div class="empty"><p>Añade el primer coche</p></div>'; return; }
   cg.innerHTML=D.coches.map(c=>{ 
     const p=c.pasajeros||[], cond=c.conductor, l=(c.plazas||5)-(p.length+(cond?1:0)); 
-    return `<div class="coche-card"><div style="padding:1.25rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;background:var(--surf2)"><div style="font-weight:800;font-size:1.1rem;color:var(--sky)"><i class="fas fa-car"></i> ${c.nombre}</div><div style="display:flex;gap:.5rem"><button class="icon-btn edit" style="border:none;background:transparent;" onclick="openModCocheEdit('${c.id}')"><i class="fas fa-pen"></i></button><button class="icon-btn del" style="border:none;background:transparent;" onclick="delCoche('${c.id}')"><i class="fas fa-trash"></i></button></div></div><div style="padding:1.25rem">${c.ruta?`<div style="font-size:.8rem;color:var(--ink3);margin-bottom:1rem"><i class="fas fa-route"></i> ${c.ruta}</div>`:''}<div style="margin-bottom:1rem;font-size:.85rem;font-weight:600;color:${l<=0?'var(--red-v)':'var(--green-v)'}">${l<=0?'Lleno':l+' libres'}</div><div class="asiento-grid">${cond?`<div class="asiento ocup" style="border:1px solid var(--sky);background:var(--sky-l)"><div class="av av-sm" style="background:var(--sky)"><i class="fas fa-steering-wheel"></i></div><span style="font-weight:700;color:var(--sky-d)">${pName(cond).split(' ')[0]}</span></div>`:'<div class="asiento lib"><i class="fas fa-steering-wheel"></i> Cond.</div>'}${p.map(id=>`<div class="asiento ocup"><div class="av av-sm" style="background:${pColor(id)}">${ini(pName(id))}</div><span>${pName(id).split(' ')[0]}</span></div>`).join('')}${Array(Math.max(0,l)).fill('<div class="asiento lib"><i class="fas fa-plus"></i> Libre</div>').join('')}</div></div></div>`; 
+    return `<div class="coche-card"><div style="padding:1.25rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;background:var(--surf2)"><div style="font-weight:800;font-size:1.1rem;color:var(--sky)"><i class="fas fa-car"></i> ${c.nombre}</div><div style="display:flex;gap:.5rem"><button class="icon-btn edit" style="border:none;background:transparent;" onclick="openModCocheEdit('${c.id}')"><i class="fas fa-pen"></i></button><button class="icon-btn del" style="border:none;background:transparent;" onclick="delCoche('${c.id}')"><i class="fas fa-trash"></i></button></div></div><div style="padding:1.25rem">${c.ruta?`<div style="font-size:.8rem;color:var(--ink3);margin-bottom:1rem"><i class="fas fa-route"></i> ${c.ruta}</div>`:''}<div style="margin-bottom:1rem;font-size:.85rem;font-weight:600;color:${l<=0?'var(--red-v)':'var(--green-v)'}">${l<=0?'Lleno':l+' libres'}</div><div class="asiento-grid">${cond?`<div class="asiento ocup" style="border:1px solid var(--sky);background:var(--sky-l)"><div class="av av-sm" style="background:var(--sky)"><i class="fas fa-steering-wheel"></i></div><span style="font-weight:700;color:var(--sky-d)" title="${pName(cond)}">${pName(cond)}</span></div>`:'<div class="asiento lib"><i class="fas fa-steering-wheel"></i> Cond.</div>'}${p.map(id=>`<div class="asiento ocup"><div class="av av-sm" style="background:${pColor(id)}">${ini(pName(id))}</div><span title="${pName(id)}">${pName(id)}</span></div>`).join('')}${Array(Math.max(0,l)).fill('<div class="asiento lib"><i class="fas fa-plus"></i> Libre</div>').join('')}</div></div></div>`; 
   }).join('');
 }
 
