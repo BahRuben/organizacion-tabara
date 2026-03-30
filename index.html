@@ -390,27 +390,31 @@ nav{flex:1;overflow-y:auto;padding:1rem .875rem;}
       </div>
       <div id="d-alert"></div>
       <div class="stats-row" id="d-stats"></div>
-      <div style="display:grid;grid-template-columns:minmax(0, 1fr) 350px;gap:1.5rem;margin-bottom:2rem;">
-          <div class="card">
-              <div class="card-hd"><div class="card-title"><i class="fas fa-calendar-days"></i> Próximos Eventos (Horario)</div><button class="btn btn-ghost btn-sm" onclick="go(document.querySelector('[data-p=horario]'),'horario')">Ver todo</button></div>
-              <div class="card-body" id="d-horario-preview"></div>
-          </div>
-          <div class="card">
-              <div class="card-hd"><div class="card-title"><i class="fas fa-user-xmark" style="color:var(--red-v)"></i> Sin Departamento</div></div>
-              <div class="card-body" id="d-sin-depto" style="max-height:380px; overflow-y:auto; padding:1.25rem;"></div>
-          </div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:2rem">
-        <div class="card"><div class="card-hd"><div class="card-title"><i class="fas fa-sitemap"></i> Equipos</div></div><div class="card-body" id="d-depts"></div></div>
-        <div class="card"><div class="card-hd"><div class="card-title"><i class="fas fa-music"></i> Repertorio</div><button class="btn btn-ghost btn-sm" onclick="go(document.querySelector('[data-p=alabanza]'),'alabanza')">Todas</button></div><div class="card-body" id="d-songs"></div></div>
-      </div>
+      
       <div class="card" style="margin-bottom:2rem">
-        <div class="card-hd"><div class="card-title"><i class="fas fa-box-open"></i> Materiales Pendientes</div></div>
-        <div class="card-body" id="d-mats"></div>
+          <div class="card-hd"><div class="card-title"><i class="fas fa-calendar-days"></i> Horario del Campamento</div><button class="btn btn-ghost btn-sm" onclick="go(document.querySelector('[data-p=horario]'),'horario')">Ir a Editar Horario</button></div>
+          <div class="card-body" id="d-horario-preview" style="max-height:400px; overflow-y:auto; padding:1.25rem;"></div>
       </div>
-      <div class="card">
-        <div class="card-hd"><div class="card-title"><i class="fas fa-weight-scale"></i> Carga de Trabajo del Equipo</div></div>
-        <div class="card-body" id="d-workload" style="max-height:450px; overflow-y:auto; padding:0;"></div>
+
+      <div class="card" style="margin-bottom:2rem">
+        <div class="card-hd"><div class="card-title"><i class="fas fa-box-open"></i> Control de Materiales a Comprar/Preparar</div></div>
+        <div class="card-body" id="d-mats" style="overflow-x:auto; padding:0;"></div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));gap:1.5rem;margin-bottom:2rem">
+        <div class="card"><div class="card-hd"><div class="card-title"><i class="fas fa-music"></i> Repertorio</div><button class="btn btn-ghost btn-sm" onclick="go(document.querySelector('[data-p=alabanza]'),'alabanza')">Ver todo</button></div><div class="card-body" id="d-songs"></div></div>
+        <div class="card"><div class="card-hd"><div class="card-title"><i class="fas fa-sitemap"></i> Equipos</div></div><div class="card-body" id="d-depts"></div></div>
+      </div>
+      
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));gap:1.5rem;margin-bottom:2rem;">
+        <div class="card">
+          <div class="card-hd"><div class="card-title"><i class="fas fa-weight-scale"></i> Carga de Trabajo del Equipo</div></div>
+          <div class="card-body" id="d-workload" style="max-height:450px; overflow-y:auto; padding:0;"></div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><div class="card-title"><i class="fas fa-user-xmark" style="color:var(--red-v)"></i> Sin Departamento</div></div>
+          <div class="card-body" id="d-sin-depto" style="max-height:450px; overflow-y:auto; padding:1.25rem;"></div>
+        </div>
       </div>
     </div>
 
@@ -1019,22 +1023,84 @@ function getAlabanzaDeptId() { const d = D.departamentos.find(x => x.nombre.toLo
    DASHBOARD RENDERIZADO
 ═══════════════════════════════════════ */
 function renderDash() {
-  const un = D.personas.filter(p => !D.departamentos.some(d => d.miembros.includes(p.id) || d.responsable===p.id));
+  const un = D.personas.filter(p => !D.departamentos.some(d => (d.miembros||[]).includes(p.id) || d.responsable===p.id));
   
   document.getElementById('d-stats').innerHTML = `<div class="sc c-primary"><div class="sc-icon"><i class="fas fa-users"></i></div><div class="sc-info"><div class="sc-val">${D.personas.length}</div><div class="sc-lbl">Personas</div></div></div><div class="sc c-amber"><div class="sc-icon"><i class="fas fa-flag"></i></div><div class="sc-info"><div class="sc-val">${D.grupos.length}</div><div class="sc-lbl">Grupos</div></div></div><div class="sc c-sky"><div class="sc-icon"><i class="fas fa-bed"></i></div><div class="sc-info"><div class="sc-val">${D.cabanas.reduce((s,c)=>s+(c.capacidad||0),0)}</div><div class="sc-lbl">Plazas Cama</div></div></div>`;
-  
-  const sinDeptoCard = document.getElementById('d-sin-depto');
-  if(sinDeptoCard && sinDeptoCard.previousElementSibling) {
-      sinDeptoCard.previousElementSibling.innerHTML = `<div class="card-title"><i class="fas fa-user-xmark" style="color:var(--red-v)"></i> Sin Departamento <span class="pill pill-red" style="margin-left:.5rem">${un.length}</span></div>`;
-  }
   
   document.getElementById('d-sin-depto').innerHTML = un.length ? un.map(p=>`<div style="display:flex;align-items:center;gap:.75rem;padding:.6rem 0;border-bottom:1px solid var(--border)"><div class="av av-sm" style="background:${p.color}">${ini(p.nombre)}</div><div style="font-size:.85rem;font-weight:600">${p.nombre}</div></div>`).join('') : '<div style="text-align:center;color:var(--ink3);padding:2rem;"><i class="fas fa-check-circle" style="font-size:2.5rem;margin-bottom:.5rem;color:var(--green-v)"></i><br>Todos asignados</div>';
   document.getElementById('niBadge').style.display = un.length ? 'inline-block':'none'; 
   document.getElementById('niBadge').textContent = un.length;
   
-  const ev = D.horario.slice(0,4);
-  document.getElementById('d-horario-preview').innerHTML = ev.length ? ev.map(h=>`<div style="display:flex;gap:1rem;margin-bottom:1rem;"><div style="font-weight:800;color:var(--primary);width:45px;text-align:right;font-family:'Lora',serif;font-size:1.1rem">${h.hora_inicio.substring(0,5)}</div><div style="border-left:2px solid var(--border2);padding-left:1rem;padding-bottom:.5rem;"><div style="font-weight:700;font-size:.95rem;"><i class="fas ${HORARIO_CFG[h.tipo]?.i||'fa-clock'}" style="color:${HORARIO_CFG[h.tipo]?.c||'#000'}"></i> ${h.titulo}</div><div style="font-size:.75rem;color:var(--ink3)">${h.ubicacion||''}</div></div></div>`).join('') : '<div class="empty" style="padding:1rem"><i class="fas fa-calendar"></i><p>Sin eventos en horario</p></div>';
+  // 1. HORARIO COMPLETO
+  const evs = D.horario;
+  if(!evs.length) {
+     document.getElementById('d-horario-preview').innerHTML = '<div class="empty" style="padding:1rem"><i class="fas fa-calendar"></i><p>Sin eventos en horario</p></div>';
+  } else {
+     const g = {}; evs.forEach(h => { if(!g[h.fecha]) g[h.fecha]=[]; g[h.fecha].push(h); });
+     let hHtml = '';
+     Object.keys(g).sort().forEach(f => {
+        hHtml += `<div style="font-weight:800; color:var(--primary); margin:1rem 0 .75rem 0; border-bottom:1px solid var(--border); padding-bottom:.3rem; text-transform:uppercase; letter-spacing:1px; font-size:.85rem;"><i class="fas fa-calendar-day"></i> Día: ${f.split('-').reverse().join('/')}</div>`;
+        g[f].forEach(h => {
+            const c = HORARIO_CFG[h.tipo] || HORARIO_CFG['Otro'];
+            hHtml += `<div style="display:flex;gap:1rem;margin-bottom:.8rem;align-items:center;">
+                <div style="font-weight:800;color:var(--primary);width:45px;text-align:right;font-family:'Lora',serif;font-size:1rem">${h.hora_inicio.substring(0,5)}</div>
+                <div style="border-left:3px solid ${c.c};padding-left:1rem;flex:1;">
+                    <div style="font-weight:700;font-size:.9rem;color:var(--ink);"><i class="fas ${c.i}" style="color:${c.c}; width:16px;"></i> ${h.titulo} <span style="font-size:.7rem;color:var(--ink3);font-weight:500;margin-left:6px">${h.tipo}</span></div>
+                    ${h.ubicacion?`<div style="font-size:.75rem;color:var(--ink3); margin-top:2px;">${h.ubicacion}</div>`:''}
+                </div>
+            </div>`;
+        });
+     });
+     document.getElementById('d-horario-preview').innerHTML = hHtml;
+  }
 
+  // 2. MATERIALES - DISEÑO HÍBRIDO (Cajas + Orden Inteligente + Progreso)
+  const mC = document.getElementById('d-mats');
+  mC.style.padding = "1.25rem"; // Le damos margen a la tarjeta contenedora
+  const mD = Object.keys(D.materiales).filter(id => D.materiales[id] && D.materiales[id].length);
+  
+  if (!mD.length) {
+      mC.innerHTML = '<div class="empty" style="padding:1.5rem"><i class="fas fa-box-open"></i><p>No hay listas de materiales</p></div>';
+  } else {
+      mC.innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.25rem;">' + mD.map(id => { 
+          const d = D.departamentos.find(x => x.id === id);
+          const items = D.materiales[id];
+          const doneC = items.filter(i => i.estado === 'tengo').length; 
+          const pct = Math.round((doneC / items.length) * 100);
+          
+          // Magia: Ordenamos los items dentro de la caja por urgencia
+          const orderMap = { 'comprar': 1, 'pendiente': 2, 'tengo': 3 };
+          const sortedItems = [...items].sort((a,b) => (orderMap[a.estado]||2) - (orderMap[b.estado]||2));
+
+          const itemsHtml = sortedItems.map(m => { 
+              let isT = m.estado === 'tengo';
+              let isC = m.estado === 'comprar';
+              let col = isT ? 'var(--green-v)' : isC ? 'var(--amber-v)' : 'var(--ink3)';
+              let bg  = isT ? 'var(--green-l)' : isC ? 'var(--amber-l)' : 'var(--surf3)';
+              let ic  = isT ? 'fa-check' : isC ? 'fa-cart-shopping' : 'fa-clock';
+              
+              // Diseño de "mini-etiqueta" para cada material
+              return `<div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.5rem;padding:.4rem .6rem;border-radius:8px;background:${isT?'transparent':'var(--surf)'};border:1px solid ${isT?'transparent':'var(--border)'};opacity:${isT?'0.6':'1'};transition:all .2s;">
+                  <div style="width:24px;height:24px;border-radius:6px;background:${bg};color:${col};display:flex;align-items:center;justify-content:center;font-size:.7rem;flex-shrink:0;"><i class="fas ${ic}"></i></div>
+                  <div style="font-size:.85rem;color:var(--ink);font-weight:${isT?'500':'700'};text-decoration:${isT?'line-through':'none'};flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${m.texto}</div>
+              </div>`; 
+          }).join('');
+
+          // Caja general del departamento con barra de progreso
+          return `<div style="background:var(--surf2);border:1px solid var(--border);border-radius:var(--r);padding:1.25rem;box-shadow:var(--sh-sm);transition:transform .2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem;">
+                  <div style="font-size:.95rem;font-weight:800;color:${d ? d.color : '#000'};display:flex;align-items:center;gap:.5rem;"><i class="fas ${d ? d.icono : 'fa-box'}"></i> ${d ? d.nombre : '?'}</div>
+                  <span style="font-size:.75rem;font-weight:700;color:var(--ink3);background:var(--surf3);padding:.15rem .6rem;border-radius:99px;">${doneC}/${items.length}</span>
+              </div>
+              <div style="width:100%;height:6px;background:var(--border);border-radius:99px;margin-bottom:1.25rem;overflow:hidden;">
+                  <div style="width:${pct}%;height:100%;background:${pct===100?'var(--green-v)':(d?d.color:'var(--primary)')};border-radius:99px;transition:width .3s;"></div>
+              </div>
+              <div>${itemsHtml}</div>
+          </div>`; 
+      }).join('') + '</div>';
+  }
+
+  // 3. DEPARTAMENTOS
   document.getElementById('d-depts').innerHTML = D.departamentos.length ? D.departamentos.map(d=>{
     const respHtml = d.responsable ? `<div style="display:flex;align-items:center;gap:.4rem;margin-top:.3rem;"><div class="av" style="width:20px;height:20px;font-size:.55rem;background:${pColor(d.responsable)}">${ini(pName(d.responsable))}</div><span style="font-size:.75rem;color:var(--primary);font-weight:700;">${pName(d.responsable).split(' ')[0]}</span></div>` : `<div style="font-size:.75rem;color:var(--ink4);margin-top:.3rem;"><i class="fas fa-user-slash"></i> Sin responsable</div>`;
     return `<div onclick="go(document.querySelector('[data-p=departamentos]'),'departamentos'); openDeptDetail('${d.id}')" style="display:flex;align-items:center;gap:.75rem;padding:.75rem;border-radius:10px;cursor:pointer;transition:background .2s;border:1px solid transparent;" onmouseover="this.style.background='var(--surf2)';this.style.borderColor='var(--border)'" onmouseout="this.style.background='transparent';this.style.borderColor='transparent'">
@@ -1044,6 +1110,7 @@ function renderDash() {
     </div>`;
   }).join('') : '<div class="empty"><p>Sin departamentos</p></div>';
 
+  // 4. ALABANZA
   const aId = getAlabanzaDeptId(); const aDept = D.departamentos.find(x => x.id === aId); let alabStats = '';
   if (aDept) {
     const total = (aDept.miembros||[]).length + (aDept.responsable ? 1 : 0);
@@ -1059,13 +1126,12 @@ function renderDash() {
     return `<div style="display:flex;align-items:center;gap:1rem;padding:.75rem 0;border-bottom:1px solid var(--border)"><div style="width:38px;height:38px;background:var(--amber-l);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--amber-v);font-size:1rem;flex-shrink:0;"><i class="fas fa-music"></i></div><div style="flex:1;min-width:0"><div style="font-weight:700;font-size:.95rem;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${c.titulo}</div><div style="font-size:.75rem;color:var(--ink3)">${c.artista||'—'}</div></div><div style="display:flex;gap:.5rem;flex-wrap:wrap;justify-content:flex-end;">${cantGrp}${instGrp}</div></div>`;
   }).join('') : '<div class="empty"><p>Sin canciones</p></div>';
   document.getElementById('d-songs').innerHTML = alabStats + songsHtml;
-
-  const mC = document.getElementById('d-mats'), mD = Object.keys(D.materiales).filter(id => D.materiales[id] && D.materiales[id].length);
-  if (!mD.length) mC.innerHTML = '<div class="empty" style="padding:1.5rem"><i class="fas fa-box-open"></i><p>No hay listas de materiales</p></div>';
-  else mC.innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:1rem;">' + mD.map(id => { const d=D.departamentos.find(x=>x.id===id), items=D.materiales[id], doneC=items.filter(i=>i.estado==='tengo').length; return `<div style="background:var(--surf2);border:1px solid var(--border);border-radius:var(--r-sm);padding:1rem;"><div style="font-size:.85rem;font-weight:700;color:${d?d.color:'#000'};margin-bottom:.75rem;display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding-bottom:.4rem;"><span><i class="fas ${d?d.icono:'fa-box'}"></i> ${d?d.nombre:'?'}</span><span style="color:var(--ink2)">${doneC}/${items.length}</span></div><div>${items.map(m=>{ let isT=m.estado==='tengo', isC=m.estado==='comprar', col=isT?'var(--green-v)':isC?'var(--amber-v)':'var(--border2)', ic=isT?'fa-check-circle':isC?'fa-cart-shopping':'fa-circle'; return `<div style="font-size:.8rem;color:${isT?'var(--ink4)':'var(--ink)'};text-decoration:${isT?'line-through':'none'};margin-bottom:.3rem;"><i class="fas ${ic}" style="color:${col};margin-right:4px"></i>${m.texto}</div>`; }).join('')}</div></div>`; }).join('') + '</div>';
   
+  // 6. CARGA DE TRABAJO
   const sw = [...D.personas].sort((a,b)=>workload(b.id).score-workload(a.id).score);
-  if(sw.length) document.getElementById('d-workload').innerHTML = `<table style="width:100%;border-collapse:collapse;text-align:left;"><thead><tr style="border-bottom:2px solid var(--border);background:var(--surf2)"><th style="padding:1rem;font-size:.75rem;text-transform:uppercase;color:var(--ink3)">Persona</th><th style="padding:1rem;font-size:.75rem;text-transform:uppercase;color:var(--ink3)">Tareas</th><th style="padding:1rem;font-size:.75rem;text-transform:uppercase;color:var(--ink3);text-align:right">Nivel</th></tr></thead><tbody>${sw.map(p=>{ const w=workload(p.id); let t=[]; if(w.depts) t.push(`<span class="chip"><i class="fas fa-sitemap"></i> ${w.depts}</span>`); if(w.canciones) t.push(`<span class="chip"><i class="fas fa-music"></i> ${w.canciones}</span>`); if(w.devoc) t.push(`<span class="chip"><i class="fas fa-book-open"></i> ${w.devoc}</span>`); if(w.pred) t.push(`<span class="chip"><i class="fas fa-microphone"></i> ${w.pred}</span>`); if(w.horarioResp) t.push(`<span class="chip"><i class="fas fa-calendar"></i> ${w.horarioResp}</span>`); return `<tr style="border-bottom:1px solid var(--border)"><td style="padding:1rem;display:flex;align-items:center;gap:.75rem"><div class="av av-sm" style="background:${p.color}">${ini(p.nombre)}</div><strong>${p.nombre.split(' ')[0]}</strong></td><td style="padding:1rem">${t.join(' ')||'<span style="color:var(--ink4)">Nada asignado</span>'}</td><td style="padding:1rem;text-align:right">${wlPill(w.level)}</td></tr>`; }).join('')}</tbody></table>`;
+  if(sw.length) {
+      document.getElementById('d-workload').innerHTML = `<table style="width:100%;border-collapse:collapse;text-align:left; min-width:380px;"><thead><tr style="border-bottom:2px solid var(--border);background:var(--surf2)"><th style="padding:1rem;font-size:.75rem;text-transform:uppercase;color:var(--ink3)">Persona</th><th style="padding:1rem;font-size:.75rem;text-transform:uppercase;color:var(--ink3)">Tareas</th><th style="padding:1rem;font-size:.75rem;text-transform:uppercase;color:var(--ink3);text-align:right">Nivel</th></tr></thead><tbody>${sw.map(p=>{ const w=workload(p.id); let t=[]; if(w.depts) t.push(`<span class="chip"><i class="fas fa-sitemap"></i> ${w.depts}</span>`); if(w.canciones) t.push(`<span class="chip"><i class="fas fa-music"></i> ${w.canciones}</span>`); if(w.devoc) t.push(`<span class="chip"><i class="fas fa-book-open"></i> ${w.devoc}</span>`); if(w.pred) t.push(`<span class="chip"><i class="fas fa-microphone"></i> ${w.pred}</span>`); if(w.horarioResp) t.push(`<span class="chip"><i class="fas fa-calendar"></i> ${w.horarioResp}</span>`); return `<tr style="border-bottom:1px solid var(--border)"><td style="padding:1rem;display:flex;align-items:center;gap:.75rem"><div class="av av-sm" style="background:${p.color}">${ini(p.nombre)}</div><strong>${p.nombre.split(' ')[0]}</strong></td><td style="padding:1rem">${t.join(' ')||'<span style="color:var(--ink4)">Nada asignado</span>'}</td><td style="padding:1rem;text-align:right">${wlPill(w.level)}</td></tr>`; }).join('')}</tbody></table>`;
+  }
 }
 
 /* ═══════════════════════════════════════
@@ -1495,13 +1561,24 @@ async function saveSong() {
 }
 
 async function delSong(id) { 
-  if(!confirm('¿Borrar?'))return; 
-  try{
-    await sb.from('canciones').delete().eq('id',id);
-    D.canciones=D.canciones.filter(c=>c.id!==id);
+  if(!confirm('¿Seguro que quieres borrar esta canción?')) return; 
+  try {
+    // 1. Primero borramos los cantantes/músicos asociados para que Supabase no bloquee
+    await sb.from('cancion_cantantes').delete().eq('cancion_id', id);
+    
+    // 2. Luego borramos la canción
+    const { error } = await sb.from('canciones').delete().eq('id', id);
+    if(error) throw error;
+    
+    // 3. Actualizamos la pantalla
+    D.canciones = D.canciones.filter(c => c.id !== id);
     renderAlabanza();
-    toast('Borrada','info');
-  }catch(e){ console.error(e); } 
+    renderDash(); // Actualiza también el panel de inicio
+    toast('Canción borrada', 'info');
+  } catch(e) { 
+    console.error(e); 
+    toast('Error al borrar: ' + (e.message || 'Conflicto en la base de datos'), 'err'); 
+  } 
 }
 
 /* ═══════════════════════════════════════
