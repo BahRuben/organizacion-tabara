@@ -1055,21 +1055,36 @@ function renderDash() {
      document.getElementById('d-horario-preview').innerHTML = hHtml;
   }
 
-  // 2. MATERIALES - DISEÑO HÍBRIDO (Cajas + Orden Inteligente + Progreso)
+ // 2. MATERIALES - PANEL INTERACTIVO
   const mC = document.getElementById('d-mats');
-  mC.style.padding = "1.25rem"; // Le damos margen a la tarjeta contenedora
+  mC.style.padding = "1.25rem"; 
+  
+  // Obtenemos todos los departamentos que tienen materiales
   const mD = Object.keys(D.materiales).filter(id => D.materiales[id] && D.materiales[id].length);
   
-  if (!mD.length) {
-      mC.innerHTML = '<div class="empty" style="padding:1.5rem"><i class="fas fa-box-open"></i><p>No hay listas de materiales</p></div>';
+  // Construir el Selector para añadir a un departamento nuevo que no aparece aún
+  const deptOptions = D.departamentos.map(d => `<option value="${d.id}">${d.nombre}</option>`).join('');
+  let selectorGlobal = `
+    <div style="background:var(--primary-l); padding:1rem; border-radius:var(--r-sm); margin-bottom:1.5rem; border:1px dashed var(--primary-m); display:flex; align-items:center; gap:1rem; flex-wrap:wrap;">
+        <div style="font-weight:700; color:var(--primary-d); font-size:.85rem;"><i class="fas fa-plus-circle"></i> Nuevo Material para:</div>
+        <select class="fctl" id="dash-new-dept-sel" style="width:auto; min-width:180px;">
+            <option value="">Selecciona un departamento...</option>
+            ${deptOptions}
+        </select>
+        <input class="fctl" id="dash-new-item-input" style="flex:1; min-width:200px;" placeholder="Ej: Comprar cuerdas para gymkana..." onkeypress="if(event.key==='Enter')addMaterialFromDash()">
+        <button class="btn btn-primary" onclick="addMaterialFromDash()"><i class="fas fa-plus"></i> Añadir</button>
+    </div>
+  `;
+
+  if (!mD.length && D.departamentos.length === 0) {
+      mC.innerHTML = '<div class="empty" style="padding:1.5rem"><i class="fas fa-box-open"></i><p>No hay departamentos creados.</p></div>';
   } else {
-      mC.innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.25rem;">' + mD.map(id => { 
+      let cardsHtml = mD.map(id => { 
           const d = D.departamentos.find(x => x.id === id);
           const items = D.materiales[id];
           const doneC = items.filter(i => i.estado === 'tengo').length; 
           const pct = Math.round((doneC / items.length) * 100);
           
-          // Magia: Ordenamos los items dentro de la caja por urgencia
           const orderMap = { 'comprar': 1, 'pendiente': 2, 'tengo': 3 };
           const sortedItems = [...items].sort((a,b) => (orderMap[a.estado]||2) - (orderMap[b.estado]||2));
 
@@ -1080,15 +1095,21 @@ function renderDash() {
               let bg  = isT ? 'var(--green-l)' : isC ? 'var(--amber-l)' : 'var(--surf3)';
               let ic  = isT ? 'fa-check' : isC ? 'fa-cart-shopping' : 'fa-clock';
               
-              // Diseño de "mini-etiqueta" para cada material
-              return `<div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.5rem;padding:.4rem .6rem;border-radius:8px;background:${isT?'transparent':'var(--surf)'};border:1px solid ${isT?'transparent':'var(--border)'};opacity:${isT?'0.6':'1'};transition:all .2s;">
-                  <div style="width:24px;height:24px;border-radius:6px;background:${bg};color:${col};display:flex;align-items:center;justify-content:center;font-size:.7rem;flex-shrink:0;"><i class="fas ${ic}"></i></div>
-                  <div style="font-size:.85rem;color:var(--ink);font-weight:${isT?'500':'700'};text-decoration:${isT?'line-through':'none'};flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${m.texto}</div>
+              return `
+              <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.5rem;padding:.4rem;border-radius:8px;background:${isT?'transparent':'var(--surf)'};border:1px solid ${isT?'transparent':'var(--border)'};transition:all .2s;">
+                  <button onclick="event.stopPropagation(); cycleMaterial('${m.id}','${id}','${m.estado||'pendiente'}')" style="width:28px;height:28px;border-radius:6px;background:${bg};color:${col};border:none;display:flex;align-items:center;justify-content:center;font-size:.8rem;cursor:pointer;flex-shrink:0;box-shadow:var(--sh-sm)"><i class="fas ${ic}"></i></button>
+                  
+                  <div style="font-size:.85rem;color:var(--ink);font-weight:${isT?'500':'700'};text-decoration:${isT?'line-through':'none'};flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${m.texto}">${m.texto}</div>
+                  
+                  <div style="display:flex; gap:2px; flex-shrink:0;">
+                      <button class="icon-btn edit" onclick="event.stopPropagation(); editMaterialText('${m.id}','${id}')" style="border:none;background:transparent;width:24px;height:24px;min-height:24px;color:var(--ink3)" title="Editar texto"><i class="fas fa-pen" style="font-size:.7rem"></i></button>
+                      <button class="icon-btn del" onclick="event.stopPropagation(); delMaterial('${m.id}','${id}')" style="border:none;background:transparent;width:24px;height:24px;min-height:24px;color:var(--red-v)" title="Eliminar material"><i class="fas fa-times" style="font-size:.7rem"></i></button>
+                  </div>
               </div>`; 
           }).join('');
 
-          // Caja general del departamento con barra de progreso
-          return `<div style="background:var(--surf2);border:1px solid var(--border);border-radius:var(--r);padding:1.25rem;box-shadow:var(--sh-sm);transition:transform .2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+          return `
+          <div style="background:var(--surf2);border:1px solid var(--border);border-radius:var(--r);padding:1.25rem;box-shadow:var(--sh-sm);display:flex;flex-direction:column;">
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem;">
                   <div style="font-size:.95rem;font-weight:800;color:${d ? d.color : '#000'};display:flex;align-items:center;gap:.5rem;"><i class="fas ${d ? d.icono : 'fa-box'}"></i> ${d ? d.nombre : '?'}</div>
                   <span style="font-size:.75rem;font-weight:700;color:var(--ink3);background:var(--surf3);padding:.15rem .6rem;border-radius:99px;">${doneC}/${items.length}</span>
@@ -1096,11 +1117,16 @@ function renderDash() {
               <div style="width:100%;height:6px;background:var(--border);border-radius:99px;margin-bottom:1.25rem;overflow:hidden;">
                   <div style="width:${pct}%;height:100%;background:${pct===100?'var(--green-v)':(d?d.color:'var(--primary)')};border-radius:99px;transition:width .3s;"></div>
               </div>
-              <div>${itemsHtml}</div>
+              <div style="flex:1">${itemsHtml}</div>
+              <div style="margin-top:1rem; display:flex; gap:5px;">
+                  <input class="fctl" id="new-item-${id}" placeholder="Añadir material..." style="font-size:.8rem; padding:.4rem .6rem;" onkeypress="if(event.key==='Enter')addMaterialDashInline('${id}')">
+                  <button class="btn btn-primary" onclick="addMaterialDashInline('${id}')" style="padding:.4rem .8rem;"><i class="fas fa-plus"></i></button>
+              </div>
           </div>`; 
-      }).join('') + '</div>';
+      }).join('');
+      
+      mC.innerHTML = selectorGlobal + '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.25rem;">' + cardsHtml + '</div>';
   }
-
   // 3. DEPARTAMENTOS
   document.getElementById('d-depts').innerHTML = D.departamentos.length ? D.departamentos.map(d=>{
     const respHtml = d.responsable ? `<div style="display:flex;align-items:center;gap:.4rem;margin-top:.3rem;"><div class="av" style="width:20px;height:20px;font-size:.55rem;background:${pColor(d.responsable)}">${ini(pName(d.responsable))}</div><span style="font-size:.75rem;color:var(--primary);font-weight:700;">${pName(d.responsable).split(' ')[0]}</span></div>` : `<div style="font-size:.75rem;color:var(--ink4);margin-top:.3rem;"><i class="fas fa-user-slash"></i> Sin responsable</div>`;
@@ -1443,7 +1469,8 @@ async function cycleMaterial(id, did, curr) {
   const it = D.materiales[did].find(m => String(m.id) === String(id)); 
   if(it) { 
       it.estado = next; 
-      renderMateriales(did); 
+      if(currentDept === did) renderMateriales(did); 
+      renderDash(); // Refresca el inicio automáticamente
   }
   
   try { 
@@ -1457,7 +1484,8 @@ async function delMaterial(id, did) {
   if(!confirm('¿Eliminar este material?')) return;
   
   D.materiales[did] = (D.materiales[did] || []).filter(m => String(m.id) !== String(id)); 
-  renderMateriales(did); 
+  if(currentDept === did) renderMateriales(did); 
+  renderDash(); // Refresca el inicio automáticamente
   
   try { 
     if(!String(id).startsWith('temp_')) {
@@ -2432,6 +2460,91 @@ function generarPDFLimpio() {
   } else {
       alert("Por favor, permite las ventanas emergentes (pop-ups) para generar el PDF.");
   }
+}
+/* ═══════════════════════════════════════
+   MATERIALES DESDE EL DASHBOARD
+═══════════════════════════════════════ */
+async function addMaterialFromDash() {
+    const dId = document.getElementById('dash-new-dept-sel').value;
+    const input = document.getElementById('dash-new-item-input');
+    const text = input.value.trim();
+    
+    if(!dId) { toast('Selecciona un departamento primero', 'warn'); return; }
+    if(!text) { toast('Escribe el material que necesitas', 'warn'); return; }
+    
+    await executeAddMaterial(dId, text);
+    input.value = '';
+    renderDash();
+    toast('Material añadido al departamento', 'ok');
+}
+
+async function addMaterialDashInline(dId) {
+    const input = document.getElementById(`new-item-${dId}`);
+    const text = input.value.trim();
+    if(!text) return;
+    
+    await executeAddMaterial(dId, text);
+    input.value = '';
+    renderDash();
+    toast('Material añadido', 'ok');
+}
+
+async function executeAddMaterial(dId, text) {
+    if(!D.materiales[dId]) D.materiales[dId] = [];
+    const pos = D.materiales[dId].length;
+    
+    // Lo creamos temporalmente para que se vea rápido (optimista)
+    const tempId = 'temp_' + Date.now();
+    const newMat = { id: tempId, departamento_id: dId, texto: text, estado: 'pendiente', posicion: pos };
+    D.materiales[dId].push(newMat);
+    
+    try {
+        const { data, error } = await sb.from('departamento_materiales')
+            .insert({ departamento_id: dId, texto: text, estado: 'pendiente', posicion: pos })
+            .select().single();
+            
+        if(error) throw error;
+        
+        // Sustituimos el temporal por el real de Supabase
+        if (data && data.id) {
+           const idx = D.materiales[dId].findIndex(m => m.id === tempId);
+           if(idx > -1) D.materiales[dId][idx] = data;
+        }
+    } catch(e) {
+        console.error("Error BD:", e);
+        toast('Error al guardar en la nube', 'err');
+    }
+}
+// Función para editar el texto de un material existente
+async function editMaterialText(mId, dId) {
+    // Buscamos el material actual
+    const matList = D.materiales[dId];
+    if (!matList) return;
+    const mat = matList.find(m => String(m.id) === String(mId));
+    if (!mat) return;
+    
+    // Le preguntamos al usuario el nuevo texto (mostrando el actual)
+    const nuevoTexto = prompt("Edita el texto del material:", mat.texto);
+    
+    // Si escribió algo nuevo y no le dio a cancelar
+    if (nuevoTexto !== null && nuevoTexto.trim() !== "" && nuevoTexto !== mat.texto) {
+        mat.texto = nuevoTexto.trim();
+        
+        // Actualizamos la pantalla rápidamente
+        renderDash(); 
+        if (currentDept === dId) renderMateriales(dId);
+        
+        // Guardamos en la base de datos
+        try {
+            if (!String(mId).startsWith('temp_')) {
+                await sb.from('departamento_materiales').update({ texto: mat.texto }).eq('id', mId);
+            }
+            toast('Material actualizado', 'ok');
+        } catch(e) {
+            console.error(e);
+            toast('Error al editar en la nube', 'err');
+        }
+    }
 }
 </script>
 </body>
