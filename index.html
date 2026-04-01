@@ -813,6 +813,28 @@ nav{flex:1;overflow-y:auto;padding:1rem .875rem;}
     <button onclick="closeLock()" style="background:none;border:none;margin-top:1.5rem;color:var(--ink3);cursor:pointer;font-size:.9rem;font-weight:600">Cancelar</button>
   </div>
 </div>
+<div class="mov" id="modEditMaterial">
+  <div class="mbox">
+    <div class="mhd">
+      <h3 style="font-family:'Lora',serif; color:var(--primary)">Editar Material</h3>
+      <button class="mcls" onclick="cm('modEditMaterial')">&times;</button>
+    </div>
+    <input type="hidden" id="editMatId">
+    <input type="hidden" id="editMatDeptId">
+    
+    <div class="fgroup">
+      <label class="flbl">Descripción del material</label>
+      <input class="fctl" id="editMatInput" placeholder="Escribe el material..." onkeypress="if(event.key==='Enter')saveEditedMaterial()">
+    </div>
+    
+    <div class="mft">
+      <button class="btn btn-ghost" onclick="cm('modEditMaterial')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveEditedMaterial()">
+        <i class="fas fa-save"></i> Guardar Cambios
+      </button>
+    </div>
+  </div>
+</div>
 
 <div class="mov" id="modCSV">
   <div class="mbox wide">
@@ -1102,7 +1124,7 @@ function renderDash() {
                   <div style="font-size:.85rem;color:var(--ink);font-weight:${isT?'500':'700'};text-decoration:${isT?'line-through':'none'};flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${m.texto}">${m.texto}</div>
                   
                   <div style="display:flex; gap:2px; flex-shrink:0;">
-                      <button class="icon-btn edit" onclick="event.stopPropagation(); editMaterialText('${m.id}','${id}')" style="border:none;background:transparent;width:24px;height:24px;min-height:24px;color:var(--ink3)" title="Editar texto"><i class="fas fa-pen" style="font-size:.7rem"></i></button>
+                      <button class="icon-btn edit" onclick="event.stopPropagation(); editMaterialText('${m.id}','${id}')" title="Editar texto"><i class="fas fa-pen" style="font-size:.7rem"></i></button>
                       <button class="icon-btn del" onclick="event.stopPropagation(); delMaterial('${m.id}','${id}')" style="border:none;background:transparent;width:24px;height:24px;min-height:24px;color:var(--red-v)" title="Eliminar material"><i class="fas fa-times" style="font-size:.7rem"></i></button>
                   </div>
               </div>`; 
@@ -1509,31 +1531,42 @@ async function delMaterial(id, did) {
 }
 
 // Función para editar el texto de un material existente
-async function editMaterialText(mId, dId) {
-    const matList = D.materiales[dId];
-    if (!matList) return;
-    const mat = matList.find(m => String(m.id) === String(mId));
+// Abre la modal con los datos actuales
+function editMaterialText(mId, dId) {
+    const mat = D.materiales[dId].find(m => String(m.id) === String(mId));
     if (!mat) return;
+
+    document.getElementById('editMatId').value = mId;
+    document.getElementById('editMatDeptId').value = dId;
+    document.getElementById('editMatInput').value = mat.texto;
     
-    const nuevoTexto = prompt("Edita el texto del material:", mat.texto);
+    om('modEditMaterial'); // Abre la modal
+}
+
+// Guarda el cambio al pulsar el botón de la modal
+async function saveEditedMaterial() {
+    const mId = document.getElementById('editMatId').value;
+    const dId = document.getElementById('editMatDeptId').value;
+    const nuevoTexto = document.getElementById('editMatInput').value.trim();
     
-    if (nuevoTexto !== null && nuevoTexto.trim() !== "" && nuevoTexto !== mat.texto) {
-        // 1. Actualizamos la pantalla
-        mat.texto = nuevoTexto.trim();
-        renderDash(); 
+    if (!nuevoTexto) return;
+
+    const mat = D.materiales[dId].find(m => String(m.id) === String(mId));
+    if (mat) {
+        mat.texto = nuevoTexto;
+        renderDash();
         if (currentDept === dId) renderMateriales(dId);
-        
-        // 2. Actualizamos en Supabase
+        cm('modEditMaterial'); // Cierra la modal
+
         try {
             if (!String(mId).startsWith('temp_')) {
-                const dbId = isNaN(mId) ? mId : Number(mId); // Convierte el texto en número
-                const { error } = await sb.from('departamento_materiales').update({ texto: mat.texto }).eq('id', dbId);
-                if (error) throw error;
+                const dbId = isNaN(mId) ? mId : Number(mId);
+                await sb.from('departamento_materiales').update({ texto: nuevoTexto }).eq('id', dbId);
             }
             toast('Material actualizado', 'ok');
         } catch(e) {
-            console.error("Error DB al editar:", e);
-            toast('Error al guardar edición en la nube', 'err');
+            console.error(e);
+            toast('Error al sincronizar', 'err');
         }
     }
 }
@@ -2559,34 +2592,47 @@ async function executeAddMaterial(dId, text) {
         toast('Error al guardar en la nube', 'err');
     }
 }
-// Función para editar el texto de un material existente
-async function editMaterialText(mId, dId) {
-    // Buscamos el material actual
+// 1. Esta función se activa al dar al lápiz: rellena la modal y la abre
+function editMaterialText(mId, dId) {
     const matList = D.materiales[dId];
     if (!matList) return;
     const mat = matList.find(m => String(m.id) === String(mId));
     if (!mat) return;
+
+    // Ponemos los datos en la modal
+    document.getElementById('editMatId').value = mId;
+    document.getElementById('editMatDeptId').value = dId;
+    document.getElementById('editMatInput').value = mat.texto;
     
-    // Le preguntamos al usuario el nuevo texto (mostrando el actual)
-    const nuevoTexto = prompt("Edita el texto del material:", mat.texto);
+    om('modEditMaterial'); // Abrimos la modal
+    setTimeout(() => document.getElementById('editMatInput').focus(), 200);
+}
+
+// 2. Esta función se activa al dar a "Guardar Cambios" en la modal
+async function saveEditedMaterial() {
+    const mId = document.getElementById('editMatId').value;
+    const dId = document.getElementById('editMatDeptId').value;
+    const nuevoTexto = document.getElementById('editMatInput').value.trim();
     
-    // Si escribió algo nuevo y no le dio a cancelar
-    if (nuevoTexto !== null && nuevoTexto.trim() !== "" && nuevoTexto !== mat.texto) {
-        mat.texto = nuevoTexto.trim();
-        
-        // Actualizamos la pantalla rápidamente
-        renderDash(); 
+    if (!nuevoTexto) { toast('El texto no puede estar vacío', 'err'); return; }
+
+    const mat = D.materiales[dId].find(m => String(m.id) === String(mId));
+    if (mat) {
+        mat.texto = nuevoTexto; // Cambio visual rápido
+        renderDash();
         if (currentDept === dId) renderMateriales(dId);
-        
-        // Guardamos en la base de datos
+        cm('modEditMaterial'); // Cerramos la ventana
+
         try {
             if (!String(mId).startsWith('temp_')) {
-                await sb.from('departamento_materiales').update({ texto: mat.texto }).eq('id', mId);
+                const dbId = isNaN(mId) ? mId : Number(mId); // Convertimos a número para Supabase
+                const { error } = await sb.from('departamento_materiales').update({ texto: nuevoTexto }).eq('id', dbId);
+                if (error) throw error;
             }
             toast('Material actualizado', 'ok');
         } catch(e) {
             console.error(e);
-            toast('Error al editar en la nube', 'err');
+            toast('Error al guardar en la base de datos', 'err');
         }
     }
 }
