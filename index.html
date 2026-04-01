@@ -1466,32 +1466,76 @@ async function addMaterial() {
 async function cycleMaterial(id, did, curr) { 
   const next = curr === 'pendiente' ? 'comprar' : curr === 'comprar' ? 'tengo' : 'pendiente'; 
   
+  // 1. Actualizamos la pantalla de inmediato (Optimista)
   const it = D.materiales[did].find(m => String(m.id) === String(id)); 
   if(it) { 
       it.estado = next; 
       if(currentDept === did) renderMateriales(did); 
-      renderDash(); // Refresca el inicio automáticamente
+      renderDash(); // Refresca el inicio
   }
   
+  // 2. Guardamos en Supabase comprobando errores y convirtiendo el ID a Número
   try { 
     if(!String(id).startsWith('temp_')) {
-        await sb.from('departamento_materiales').update({estado: next}).eq('id', id); 
+        const dbId = isNaN(id) ? id : Number(id); // Convierte el texto en número
+        const { error } = await sb.from('departamento_materiales').update({estado: next}).eq('id', dbId); 
+        if (error) throw error; // Si Supabase da error, lo lanzamos
     }
-  } catch(e) { console.error(e); } 
+  } catch(e) { 
+      console.error("Error DB al cambiar estado:", e); 
+      toast('Error al guardar estado en la nube', 'err');
+  } 
 }
 
 async function delMaterial(id, did) { 
   if(!confirm('¿Eliminar este material?')) return;
   
+  // 1. Borramos de la pantalla
   D.materiales[did] = (D.materiales[did] || []).filter(m => String(m.id) !== String(id)); 
   if(currentDept === did) renderMateriales(did); 
-  renderDash(); // Refresca el inicio automáticamente
+  renderDash(); 
   
+  // 2. Borramos de Supabase
   try { 
     if(!String(id).startsWith('temp_')) {
-        await sb.from('departamento_materiales').delete().eq('id', id); 
+        const dbId = isNaN(id) ? id : Number(id); // Convierte el texto en número
+        const { error } = await sb.from('departamento_materiales').delete().eq('id', dbId); 
+        if (error) throw error;
     }
-  } catch(e) { console.error(e); } 
+  } catch(e) { 
+      console.error("Error DB al borrar:", e); 
+      toast('Error al borrar de la base de datos', 'err');
+  } 
+}
+
+// Función para editar el texto de un material existente
+async function editMaterialText(mId, dId) {
+    const matList = D.materiales[dId];
+    if (!matList) return;
+    const mat = matList.find(m => String(m.id) === String(mId));
+    if (!mat) return;
+    
+    const nuevoTexto = prompt("Edita el texto del material:", mat.texto);
+    
+    if (nuevoTexto !== null && nuevoTexto.trim() !== "" && nuevoTexto !== mat.texto) {
+        // 1. Actualizamos la pantalla
+        mat.texto = nuevoTexto.trim();
+        renderDash(); 
+        if (currentDept === dId) renderMateriales(dId);
+        
+        // 2. Actualizamos en Supabase
+        try {
+            if (!String(mId).startsWith('temp_')) {
+                const dbId = isNaN(mId) ? mId : Number(mId); // Convierte el texto en número
+                const { error } = await sb.from('departamento_materiales').update({ texto: mat.texto }).eq('id', dbId);
+                if (error) throw error;
+            }
+            toast('Material actualizado', 'ok');
+        } catch(e) {
+            console.error("Error DB al editar:", e);
+            toast('Error al guardar edición en la nube', 'err');
+        }
+    }
 }
 
 /* ═══════════════════════════════════════
