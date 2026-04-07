@@ -1638,32 +1638,64 @@ function openModSongEdit(id) {
 }
 
 async function saveSong() { 
-  const t=document.getElementById('sTit').value.trim(); if(!t)return; 
-  const ca=getSelected('sCantPick'), inst=getSelected('sInstPick'), obj={titulo:t,artista:document.getElementById('sArt').value.trim(),tono:document.getElementById('sTono').value,duracion:parseInt(document.getElementById('sDur').value)||4,estado:document.getElementById('sEst').value,notas:document.getElementById('sNot').value}, eid=document.getElementById('sId').value; 
-  try{ 
-    let cid=eid; 
-    if(eid){
-      await sb.from('canciones').update(obj).eq('id',eid);
-    }else{
-      const{data,error}=await sb.from('canciones').insert(obj).select().single();
-      if(error)throw error;
-      cid=data.id;
+  const t = document.getElementById('sTit').value.trim(); 
+  if(!t) { toast('El título es obligatorio', 'err'); return; } 
+
+  // --- SOLUCIÓN A LA DUPLICACIÓN: Bloqueamos el botón ---
+  const btn = document.querySelector('#modSong .btn-primary');
+  if(btn.disabled) return; // Si ya está guardando, ignorar el clic
+  btn.disabled = true;
+  const originalHtml = btn.innerHTML;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+
+  const ca = getSelected('sCantPick'), inst = getSelected('sInstPick');
+  const obj = {
+    titulo: t,
+    artista: document.getElementById('sArt').value.trim(),
+    tono: document.getElementById('sTono').value,
+    duracion: parseInt(document.getElementById('sDur').value) || 4,
+    estado: document.getElementById('sEst').value,
+    notas: document.getElementById('sNot').value
+  };
+  const eid = document.getElementById('sId').value; 
+
+  try { 
+    let cid = eid; 
+    if(eid) {
+      await sb.from('canciones').update(obj).eq('id', eid);
+    } else {
+      const {data, error} = await sb.from('canciones').insert(obj).select().single();
+      if(error) throw error;
+      cid = data.id;
     } 
-    await sb.from('cancion_cantantes').delete().eq('cancion_id',cid); 
-    const inserts=[]; 
-    ca.forEach(pid=>inserts.push({cancion_id:cid,persona_id:pid,rol:'cantante'})); 
-    inst.forEach(pid=>inserts.push({cancion_id:cid,persona_id:pid,rol:'instrumentista'})); 
-    if(inserts.length)await sb.from('cancion_cantantes').insert(inserts); 
-    const loc={id:cid,...obj,dur:obj.duracion,cantantes:ca,instrumentistas:inst}; 
-    if(eid){
-      Object.assign(D.canciones.find(c=>c.id===eid),loc);
-    }else{
+
+    await sb.from('cancion_cantantes').delete().eq('cancion_id', cid); 
+    const inserts = []; 
+    ca.forEach(pid => inserts.push({cancion_id: cid, persona_id: pid, rol: 'cantante'})); 
+    inst.forEach(pid => inserts.push({cancion_id: cid, persona_id: pid, rol: 'instrumentista'})); 
+    if(inserts.length) await sb.from('cancion_cantantes').insert(inserts); 
+
+    const loc = {id: cid, ...obj, dur: obj.duracion, cantantes: ca, instrumentistas: inst}; 
+    
+    if(eid) {
+      // Comparación segura convirtiendo a texto (String)
+      const song = D.canciones.find(c => String(c.id) === String(eid));
+      if(song) Object.assign(song, loc);
+    } else {
       D.canciones.push(loc);
     } 
+
     cm('modSong');
     renderAlabanza();
-    toast('Guardada','ok'); 
-  }catch(e){ console.error(e); alert("Error: " + (e.message || JSON.stringify(e))); } 
+    toast(eid ? 'Canción actualizada' : 'Canción guardada', 'ok'); 
+  } catch(e) { 
+    console.error(e); 
+    toast('Error: ' + (e.message || 'Fallo al guardar'), 'err'); 
+  } finally {
+    // --- Restauramos el botón a la normalidad ---
+    btn.disabled = false;
+    btn.innerHTML = originalHtml;
+  }
 }
 
 async function delSong(id) { 
