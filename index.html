@@ -319,6 +319,211 @@ nav{flex:1;overflow-y:auto;padding:1rem .875rem;}
   #page-programa, #page-horario, #page-cabanas, #page-grupos { display: block !important; }
   .ph-title h1 { font-size: 24pt !important; border-bottom: 2px solid #000; padding-bottom: 5px; }
 }
+/* ==============================================================
+   DISEÑO "THE GRAND TIMELINE" - RESPONSIVE 2-COL MOBILE
+============================================================== */
+#d-horario-preview {
+    background: transparent;
+    padding: 10px 0;
+}
+
+.timeline-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    align-items: start;
+}
+
+.timeline-day-column {
+    position: relative;
+}
+
+.timeline-day-header {
+    position: relative;
+    margin-bottom: 2rem;
+    padding-left: 0.8rem;
+    border-left: 3px solid var(--primary);
+}
+
+.day-big-number {
+    position: absolute;
+    right: 0;
+    top: -15px;
+    font-size: 4rem;
+    font-weight: 900;
+    color: var(--ink);
+    opacity: 0.04;
+    line-height: 1;
+    pointer-events: none;
+}
+
+.day-name {
+    font-family: 'Lora', serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--ink);
+    display: block;
+}
+
+.day-full-date {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    color: var(--primary);
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.timeline-events {
+    position: relative;
+    border-left: 1.5px dashed var(--border2);
+    padding-left: 1.2rem;
+    margin-left: 0.3rem;
+}
+
+.event-card-pro {
+    background: var(--surf);
+    border-radius: 16px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+/* Punto de conexión más pequeño para móvil */
+.event-card-pro::after {
+    content: '';
+    position: absolute;
+    left: -1.62rem;
+    top: 20px;
+    width: 8px;
+    height: 8px;
+    background: var(--surf);
+    border: 2px solid var(--ev-color);
+    border-radius: 50%;
+    z-index: 2;
+    box-shadow: 0 0 0 3px var(--bg);
+}
+
+.event-time-badge {
+    display: inline-flex;
+    background: var(--ev-bg);
+    color: var(--ev-color);
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 0.65rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+}
+
+.event-title-pro {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.2;
+}
+
+.event-location-pro {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.7rem;
+    color: var(--ink3);
+    margin-top: 0.4rem;
+}
+
+.event-icon-box {
+    position: absolute;
+    top: 0.8rem;
+    right: 0.8rem;
+    font-size: 1rem;
+    color: var(--ev-color);
+    opacity: 0.15;
+}
+
+@media (max-width: 768px) {
+    .timeline-grid, .music-grid-dash, .ghost-list {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 0.75rem !important;
+    }
+    
+    .day-name { font-size: 1.1rem; }
+    .day-big-number { font-size: 2.5rem; top: -5px; }
+    
+    /* Hacemos que las barras de carga ocupen menos espacio lateral */
+    .workload-item-pro {
+        padding: 0.75rem;
+        gap: 0.6rem;
+    }
+    
+    .music-card-pro { padding: 1rem 0.75rem; }
+}
+
+/* Para móviles muy estrechos, mantenemos las 2 columnas pero reducimos aún más */
+@media (max-width: 480px) {
+    .timeline-grid { gap: 0.6rem; }
+    .event-title-pro { font-size: 0.85rem; }
+    .event-location-pro span {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 60px;
+    }
+}
+/* ==============================================================
+   DASHBOARD REVOLUTION: MÚSICA, CARGA Y EQUIPO
+============================================================== */
+
+/* REEMPLAZO PARA MÚSICA EN EL DASHBOARD (DISEÑO LIMPIO) */
+.music-grid-dash {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 1rem;
+}
+
+.music-card-pro {
+    background: var(--surf);
+    border-radius: 16px;
+    padding: 1rem;
+    border: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+    min-height: 140px; /* Un poco más alto para que quepa todo bien */
+    transition: transform 0.3s ease;
+}
+
+.music-card-pro:hover {
+    transform: translateY(-4px);
+    border-color: var(--amber-m);
+}
+
+/* El tono ahora es una etiqueta que baja de línea automáticamente */
+.music-tone-badge {
+    position: relative !important; /* Forzamos que NO flote */
+    top: auto !important;
+    right: auto !important;
+    display: inline-flex;
+    align-items: center;
+    background: var(--amber-l);
+    color: var(--amber-v);
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 0.65rem;
+    font-weight: 800;
+    border: 1px solid var(--amber-m);
+    width: fit-content;
+    margin-top: 6px;
+}
+
+/* Icono de fondo decorativo corregido */
+.music-card-pro::before {
+    content: '\f001'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+    position: absolute; right: -5px; bottom: -5px; font-size: 3rem;
+    opacity: 0.03; color: var(--amber-v); pointer-events: none;
+}
 </style>
 </head>
 <body>
@@ -1046,143 +1251,202 @@ function getAlabanzaDeptId() { const d = D.departamentos.find(x => x.nombre.toLo
    DASHBOARD RENDERIZADO
 ═══════════════════════════════════════ */
 function renderDash() {
-  const un = D.personas.filter(p => !D.departamentos.some(d => (d.miembros||[]).includes(p.id) || d.responsable===p.id));
-  
-  document.getElementById('d-stats').innerHTML = `<div class="sc c-primary"><div class="sc-icon"><i class="fas fa-users"></i></div><div class="sc-info"><div class="sc-val">${D.personas.length}</div><div class="sc-lbl">Personas</div></div></div><div class="sc c-amber"><div class="sc-icon"><i class="fas fa-flag"></i></div><div class="sc-info"><div class="sc-val">${D.grupos.length}</div><div class="sc-lbl">Grupos</div></div></div><div class="sc c-sky"><div class="sc-icon"><i class="fas fa-bed"></i></div><div class="sc-info"><div class="sc-val">${D.cabanas.reduce((s,c)=>s+(c.capacidad||0),0)}</div><div class="sc-lbl">Plazas Cama</div></div></div>`;
-  
-  document.getElementById('d-sin-depto').innerHTML = un.length ? un.map(p=>`<div style="display:flex;align-items:center;gap:.75rem;padding:.6rem 0;border-bottom:1px solid var(--border)"><div class="av av-sm" style="background:${p.color}">${ini(p.nombre)}</div><div style="font-size:.85rem;font-weight:600">${p.nombre}</div></div>`).join('') : '<div style="text-align:center;color:var(--ink3);padding:2rem;"><i class="fas fa-check-circle" style="font-size:2.5rem;margin-bottom:.5rem;color:var(--green-v)"></i><br>Todos asignados</div>';
-  document.getElementById('niBadge').style.display = un.length ? 'inline-block':'none'; 
-  document.getElementById('niBadge').textContent = un.length;
-  
-  // 1. HORARIO COMPLETO
-  const evs = D.horario;
-  if(!evs.length) {
-     document.getElementById('d-horario-preview').innerHTML = '<div class="empty" style="padding:1rem"><i class="fas fa-calendar"></i><p>Sin eventos en horario</p></div>';
-  } else {
-     const g = {}; evs.forEach(h => { if(!g[h.fecha]) g[h.fecha]=[]; g[h.fecha].push(h); });
-     let hHtml = '';
-     Object.keys(g).sort().forEach(f => {
-        hHtml += `<div style="font-weight:800; color:var(--primary); margin:1rem 0 .75rem 0; border-bottom:1px solid var(--border); padding-bottom:.3rem; text-transform:uppercase; letter-spacing:1px; font-size:.85rem;"><i class="fas fa-calendar-day"></i> Día: ${f.split('-').reverse().join('/')}</div>`;
-        g[f].forEach(h => {
-            const c = HORARIO_CFG[h.tipo] || HORARIO_CFG['Otro'];
-            hHtml += `<div style="display:flex;gap:1rem;margin-bottom:.8rem;align-items:center;">
-                <div style="font-weight:800;color:var(--primary);width:45px;text-align:right;font-family:'Lora',serif;font-size:1rem">${h.hora_inicio.substring(0,5)}</div>
-                <div style="border-left:3px solid ${c.c};padding-left:1rem;flex:1;">
-                    <div style="font-weight:700;font-size:.9rem;color:var(--ink);"><i class="fas ${c.i}" style="color:${c.c}; width:16px;"></i> ${h.titulo} <span style="font-size:.7rem;color:var(--ink3);font-weight:500;margin-left:6px">${h.tipo}</span></div>
-                    ${h.ubicacion?`<div style="font-size:.75rem;color:var(--ink3); margin-top:2px;">${h.ubicacion}</div>`:''}
+    const un = D.personas.filter(p => !D.departamentos.some(d => (d.miembros||[]).includes(p.id) || d.responsable===p.id));
+    
+    // 0. ESTADÍSTICAS SUPERIORES
+    document.getElementById('d-stats').innerHTML = `
+        <div class="sc c-primary"><div class="sc-icon"><i class="fas fa-users"></i></div><div class="sc-info"><div class="sc-val">${D.personas.length}</div><div class="sc-lbl">Personas</div></div></div>
+        <div class="sc c-amber"><div class="sc-icon"><i class="fas fa-flag"></i></div><div class="sc-info"><div class="sc-val">${D.grupos.length}</div><div class="sc-lbl">Grupos</div></div></div>
+        <div class="sc c-sky"><div class="sc-icon"><i class="fas fa-bed"></i></div><div class="sc-info"><div class="sc-val">${D.cabanas.reduce((s,c)=>s+(c.capacidad||0),0)}</div><div class="sc-lbl">Plazas Cama</div></div></div>`;
+    
+    document.getElementById('niBadge').style.display = un.length ? 'inline-block' : 'none';
+    document.getElementById('niBadge').textContent = un.length;
+
+    // 1. HORARIO - THE GRAND TIMELINE
+    const containerHorario = document.getElementById('d-horario-preview');
+    if(!D.horario.length) {
+        containerHorario.innerHTML = `<div class="empty">Organiza el horario en la pestaña correspondiente</div>`;
+    } else {
+        const g = {}; 
+        D.horario.forEach(h => { if(!g[h.fecha]) g[h.fecha]=[]; g[h.fecha].push(h); });
+        const sortedDates = Object.keys(g).sort();
+        let gridHtml = '<div class="timeline-grid">';
+        sortedDates.forEach((f) => {
+            const dateObj = new Date(f + "T00:00:00");
+            const dayName = window.innerWidth < 600 ? dateObj.toLocaleDateString('es-ES', { weekday: 'short' }) : dateObj.toLocaleDateString('es-ES', { weekday: 'long' });
+            const dayShort = dateObj.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+            gridHtml += `
+            <div class="timeline-day-column">
+                <div class="day-big-number">${dateObj.getDate()}</div>
+                <div class="timeline-day-header">
+                    <span class="day-full-date">${dayShort}</span>
+                    <span class="day-name">${dayName.toUpperCase()}</span>
+                </div>
+                <div class="timeline-events">` + 
+                g[f].map(h => {
+                    const cfg = HORARIO_CFG[h.tipo] || HORARIO_CFG['Otro'];
+                    return `
+                    <div class="event-card-pro" style="--ev-color: ${cfg.c}; --ev-bg: ${hexLight(cfg.c, 0.15)}">
+                        <div class="event-icon-box"><i class="fas ${cfg.i}"></i></div>
+                        <div class="event-time-badge">${h.hora_inicio.substring(0,5)}</div>
+                        <div class="event-title-pro">${h.titulo}</div>
+                        <div class="event-location-pro"><i class="fas fa-location-dot"></i> <span>${h.ubicacion || 'Definir'}</span></div>
+                    </div>`;
+                }).join('') + `</div></div>`;
+        });
+        containerHorario.innerHTML = gridHtml + '</div>';
+    }
+
+    // 2. MATERIALES - PANEL INTERACTIVO (Restaurado)
+    const mC = document.getElementById('d-mats');
+    mC.style.padding = "1.25rem"; 
+    
+    const mD = Object.keys(D.materiales).filter(id => D.materiales[id] && D.materiales[id].length);
+    const deptOptions = D.departamentos.map(d => `<option value="${d.id}">${d.nombre}</option>`).join('');
+    
+    let selectorGlobal = `
+      <div style="background:var(--primary-l); padding:1rem; border-radius:var(--r-sm); margin-bottom:1.5rem; border:1px dashed var(--primary-m); display:flex; align-items:center; gap:1rem; flex-wrap:wrap;">
+          <div style="font-weight:700; color:var(--primary-d); font-size:.85rem;"><i class="fas fa-plus-circle"></i> Nuevo Material para:</div>
+          <select class="fctl" id="dash-new-dept-sel" style="width:auto; min-width:180px;">
+              <option value="">Selecciona un departamento...</option>
+              ${deptOptions}
+          </select>
+          <input class="fctl" id="dash-new-item-input" style="flex:1; min-width:200px;" placeholder="Ej: Comprar cuerdas para gymkana..." onkeypress="if(event.key==='Enter')addMaterialFromDash()">
+          <button class="btn btn-primary" onclick="addMaterialFromDash()"><i class="fas fa-plus"></i> Añadir</button>
+      </div>
+    `;
+
+    if (!mD.length && D.departamentos.length === 0) {
+        mC.innerHTML = '<div class="empty" style="padding:1.5rem"><i class="fas fa-box-open"></i><p>No hay departamentos creados.</p></div>';
+    } else {
+        let cardsHtml = mD.map(id => { 
+            const d = D.departamentos.find(x => x.id === id);
+            const items = D.materiales[id];
+            const doneC = items.filter(i => i.estado === 'tengo').length; 
+            const pct = Math.round((doneC / items.length) * 100);
+            
+            const orderMap = { 'comprar': 1, 'pendiente': 2, 'tengo': 3 };
+            const sortedItems = [...items].sort((a,b) => (orderMap[a.estado]||2) - (orderMap[b.estado]||2));
+
+            const itemsHtml = sortedItems.map(m => { 
+                let isT = m.estado === 'tengo';
+                let isC = m.estado === 'comprar';
+                let col = isT ? 'var(--green-v)' : isC ? 'var(--amber-v)' : 'var(--ink3)';
+                let bg  = isT ? 'var(--green-l)' : isC ? 'var(--amber-l)' : 'var(--surf3)';
+                let ic  = isT ? 'fa-check' : isC ? 'fa-cart-shopping' : 'fa-clock';
+                
+                return `
+                <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.5rem;padding:.4rem;border-radius:8px;background:${isT?'transparent':'var(--surf)'};border:1px solid ${isT?'transparent':'var(--border)'};transition:all .2s;">
+                    <button onclick="event.stopPropagation(); cycleMaterial('${m.id}','${id}','${m.estado||'pendiente'}')" style="width:28px;height:28px;border-radius:6px;background:${bg};color:${col};border:none;display:flex;align-items:center;justify-content:center;font-size:.8rem;cursor:pointer;flex-shrink:0;box-shadow:var(--sh-sm)"><i class="fas ${ic}"></i></button>
+                    <div style="font-size:.85rem;color:var(--ink);font-weight:${isT?'500':'700'};text-decoration:${isT?'line-through':'none'};flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${m.texto}">${m.texto}</div>
+                    <div style="display:flex; gap:2px; flex-shrink:0;">
+                        <button class="icon-btn edit" onclick="event.stopPropagation(); editMaterialText('${m.id}','${id}')" title="Editar texto"><i class="fas fa-pen" style="font-size:.7rem"></i></button>
+                        <button class="icon-btn del" onclick="event.stopPropagation(); delMaterial('${m.id}','${id}')" style="border:none;background:transparent;width:24px;height:24px;min-height:24px;color:var(--red-v)" title="Eliminar material"><i class="fas fa-times" style="font-size:.7rem"></i></button>
+                    </div>
+                </div>`; 
+            }).join('');
+
+            return `
+            <div style="background:var(--surf2);border:1px solid var(--border);border-radius:var(--r);padding:1.25rem;box-shadow:var(--sh-sm);display:flex;flex-direction:column;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem;">
+                    <div style="font-size:.95rem;font-weight:800;color:${d ? d.color : '#000'};display:flex;align-items:center;gap:.5rem;"><i class="fas ${d ? d.icono : 'fa-box'}"></i> ${d ? d.nombre : '?'}</div>
+                    <span style="font-size:.75rem;font-weight:700;color:var(--ink3);background:var(--surf3);padding:.15rem .6rem;border-radius:99px;">${doneC}/${items.length}</span>
+                </div>
+                <div style="width:100%;height:6px;background:var(--border);border-radius:99px;margin-bottom:1.25rem;overflow:hidden;">
+                    <div style="width:${pct}%;height:100%;background:${pct===100?'var(--green-v)':(d?d.color:'var(--primary)')};border-radius:99px;transition:width .3s;"></div>
+                </div>
+                <div style="flex:1">${itemsHtml}</div>
+                <div style="margin-top:1rem; display:flex; gap:5px;">
+                    <input class="fctl" id="new-item-${id}" placeholder="Añadir material..." style="font-size:.8rem; padding:.4rem .6rem;" onkeypress="if(event.key==='Enter')addMaterialDashInline('${id}')">
+                    <button class="btn btn-primary" onclick="addMaterialDashInline('${id}')" style="padding:.4rem .8rem;"><i class="fas fa-plus"></i></button>
+                </div>
+            </div>`; 
+        }).join('');
+        
+        mC.innerHTML = selectorGlobal + '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.25rem;">' + cardsHtml + '</div>';
+    }
+
+    // 3. EQUIPOS (DEPARTAMENTOS) - ESTILO LISTA ORIGINAL MEJORADA
+    const deptContainer = document.getElementById('d-depts');
+    if (!D.departamentos.length) {
+        deptContainer.innerHTML = `<div class="empty">Sin departamentos creados</div>`;
+    } else {
+        deptContainer.innerHTML = D.departamentos.map(d => {
+            const count = (d.miembros||[]).length + (d.responsable ? 1 : 0);
+            const respHtml = d.responsable 
+                ? `<div style="display:flex;align-items:center;gap:.4rem;margin-top:.3rem;">
+                     <div class="av" style="width:20px;height:20px;font-size:.55rem;background:${pColor(d.responsable)}">${ini(pName(d.responsable))}</div>
+                     <span style="font-size:.75rem;color:var(--ink2);font-weight:600;">${pName(d.responsable).split(' ')[0]}</span>
+                   </div>` 
+                : `<div style="font-size:.75rem;color:var(--ink4);margin-top:.3rem;"><i class="fas fa-user-slash"></i> Sin responsable</div>`;
+                
+            return `
+            <div onclick="go(document.querySelector('[data-p=departamentos]'),'departamentos'); openDeptDetail('${d.id}')" style="display:flex;align-items:center;gap:1rem;padding:.75rem;border-radius:12px;cursor:pointer;transition:all .2s;border:1px solid transparent; margin-bottom: 0.2rem;" onmouseover="this.style.background='var(--surf2)';this.style.borderColor='var(--border)';" onmouseout="this.style.background='transparent';this.style.borderColor='transparent';">
+                <div style="width:42px;height:42px;border-radius:12px;background:${hexLight(d.color,.15)};color:${d.color};display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0">
+                    <i class="fas ${d.icono}"></i>
+                </div>
+                <div style="flex:1; min-width:0;">
+                    <div style="font-weight:800;font-size:.95rem;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${d.nombre}</div>
+                    ${respHtml}
+                </div>
+                <span class="pill pill-gray" style="font-size:0.7rem;">${count} <i class="fas fa-user" style="font-size:0.6rem;margin-left:2px"></i></span>
+            </div>`;
+        }).join('');
+    }
+
+    // 4. ALABANZA - MUSIC RACK (Sin solapamiento)
+    const musicContainer = document.getElementById('d-songs');
+    if (!D.canciones.length) {
+        musicContainer.innerHTML = `<div class="empty">No hay canciones</div>`;
+    } else {
+        musicContainer.innerHTML = '<div class="music-grid-dash">' + D.canciones.slice(0, 8).map(c => `
+            <div class="music-card-pro">
+                <div class="music-header-row">
+                    <div class="music-title-container">
+                        <div style="font-weight:800; font-size:0.9rem; color:var(--ink); line-height:1.2; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${c.titulo}</div>
+                        <div style="font-size:0.7rem; color:var(--ink3); font-weight:600;">${c.artista || 'Autor desconocido'}</div>
+                    </div>
+                    ${c.tono ? `<div class="music-tone-badge">${c.tono}</div>` : ''}
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.8rem;">
+                    <div style="font-size:0.65rem; background:var(--surf2); padding:2px 6px; border-radius:4px; font-weight:700;"><i class="far fa-clock"></i> ${c.dur || 4}m</div>
+                    <div class="av-stack">${(c.cantantes || []).slice(0, 2).map(id => `<div class="av av-sm" style="background:${pColor(id)}; border:1.5px solid #fff; width:22px; height:22px; font-size:0.6rem;">${ini(pName(id))}</div>`).join('')}</div>
+                </div>
+            </div>`).join('') + '</div>';
+    }
+
+    // 5. SIN DEPARTAMENTO - GHOST CARDS
+    const sinDeptoContainer = document.getElementById('d-sin-depto');
+    sinDeptoContainer.innerHTML = !un.length ? `<div style="text-align:center; padding:1.5rem; color:var(--green-v); font-weight:600;"><i class="fas fa-check-circle"></i> Todo el equipo asignado</div>` 
+        : `<div class="ghost-list">` + un.map(p => `
+            <div class="ghost-card">
+                <div class="av av-sm" style="background:${p.color}; margin: 0 auto 0.4rem auto; width:32px; height:32px; font-size:0.7rem;">${ini(p.nombre)}</div>
+                <div style="font-weight:700; font-size:0.75rem; color:var(--ink);">${p.nombre.split(' ')[0]}</div>
+                <div style="font-size:0.6rem; color:var(--ink4);">${p.rol}</div>
+            </div>`).join('') + `</div>`;
+
+    // 6. CARGA DE TRABAJO - PERFORMANCE METERS
+    const workloadContainer = document.getElementById('d-workload');
+    const allSorted = [...D.personas].sort((a,b) => workload(b.id).score - workload(a.id).score).slice(0, 10);
+    if (allSorted.length) {
+        workloadContainer.innerHTML = `<div class="workload-stack" style="padding:1rem;">` + allSorted.map(p => {
+            const w = workload(p.id);
+            const pct = Math.min(100, (w.score / 15) * 100);
+            const barCol = w.level === 'high' ? 'var(--red-v)' : w.level === 'med' ? 'var(--amber-v)' : 'var(--green-v)';
+            return `
+            <div class="workload-item-pro">
+                <div class="av av-sm" style="background:${p.color}; width:28px; height:28px; font-size:0.65rem;">${ini(p.nombre)}</div>
+                <div style="flex:1;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:2px;">
+                        <span style="font-weight:700; font-size:0.8rem;">${p.nombre.split(' ')[0]}</span>
+                        <span style="font-weight:800; font-size:0.7rem; color:${barCol}">${w.score} pts</span>
+                    </div>
+                    <div class="workload-bar-container"><div class="workload-bar-fill" style="width:${pct}%; background:${barCol}"></div></div>
                 </div>
             </div>`;
-        });
-     });
-     document.getElementById('d-horario-preview').innerHTML = hHtml;
-  }
-
- // 2. MATERIALES - PANEL INTERACTIVO
-  const mC = document.getElementById('d-mats');
-  mC.style.padding = "1.25rem"; 
-  
-  // Obtenemos todos los departamentos que tienen materiales
-  const mD = Object.keys(D.materiales).filter(id => D.materiales[id] && D.materiales[id].length);
-  
-  // Construir el Selector para añadir a un departamento nuevo que no aparece aún
-  const deptOptions = D.departamentos.map(d => `<option value="${d.id}">${d.nombre}</option>`).join('');
-  let selectorGlobal = `
-    <div style="background:var(--primary-l); padding:1rem; border-radius:var(--r-sm); margin-bottom:1.5rem; border:1px dashed var(--primary-m); display:flex; align-items:center; gap:1rem; flex-wrap:wrap;">
-        <div style="font-weight:700; color:var(--primary-d); font-size:.85rem;"><i class="fas fa-plus-circle"></i> Nuevo Material para:</div>
-        <select class="fctl" id="dash-new-dept-sel" style="width:auto; min-width:180px;">
-            <option value="">Selecciona un departamento...</option>
-            ${deptOptions}
-        </select>
-        <input class="fctl" id="dash-new-item-input" style="flex:1; min-width:200px;" placeholder="Ej: Comprar cuerdas para gymkana..." onkeypress="if(event.key==='Enter')addMaterialFromDash()">
-        <button class="btn btn-primary" onclick="addMaterialFromDash()"><i class="fas fa-plus"></i> Añadir</button>
-    </div>
-  `;
-
-  if (!mD.length && D.departamentos.length === 0) {
-      mC.innerHTML = '<div class="empty" style="padding:1.5rem"><i class="fas fa-box-open"></i><p>No hay departamentos creados.</p></div>';
-  } else {
-      let cardsHtml = mD.map(id => { 
-          const d = D.departamentos.find(x => x.id === id);
-          const items = D.materiales[id];
-          const doneC = items.filter(i => i.estado === 'tengo').length; 
-          const pct = Math.round((doneC / items.length) * 100);
-          
-          const orderMap = { 'comprar': 1, 'pendiente': 2, 'tengo': 3 };
-          const sortedItems = [...items].sort((a,b) => (orderMap[a.estado]||2) - (orderMap[b.estado]||2));
-
-          const itemsHtml = sortedItems.map(m => { 
-              let isT = m.estado === 'tengo';
-              let isC = m.estado === 'comprar';
-              let col = isT ? 'var(--green-v)' : isC ? 'var(--amber-v)' : 'var(--ink3)';
-              let bg  = isT ? 'var(--green-l)' : isC ? 'var(--amber-l)' : 'var(--surf3)';
-              let ic  = isT ? 'fa-check' : isC ? 'fa-cart-shopping' : 'fa-clock';
-              
-              return `
-              <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.5rem;padding:.4rem;border-radius:8px;background:${isT?'transparent':'var(--surf)'};border:1px solid ${isT?'transparent':'var(--border)'};transition:all .2s;">
-                  <button onclick="event.stopPropagation(); cycleMaterial('${m.id}','${id}','${m.estado||'pendiente'}')" style="width:28px;height:28px;border-radius:6px;background:${bg};color:${col};border:none;display:flex;align-items:center;justify-content:center;font-size:.8rem;cursor:pointer;flex-shrink:0;box-shadow:var(--sh-sm)"><i class="fas ${ic}"></i></button>
-                  
-                  <div style="font-size:.85rem;color:var(--ink);font-weight:${isT?'500':'700'};text-decoration:${isT?'line-through':'none'};flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${m.texto}">${m.texto}</div>
-                  
-                  <div style="display:flex; gap:2px; flex-shrink:0;">
-                      <button class="icon-btn edit" onclick="event.stopPropagation(); editMaterialText('${m.id}','${id}')" title="Editar texto"><i class="fas fa-pen" style="font-size:.7rem"></i></button>
-                      <button class="icon-btn del" onclick="event.stopPropagation(); delMaterial('${m.id}','${id}')" style="border:none;background:transparent;width:24px;height:24px;min-height:24px;color:var(--red-v)" title="Eliminar material"><i class="fas fa-times" style="font-size:.7rem"></i></button>
-                  </div>
-              </div>`; 
-          }).join('');
-
-          return `
-          <div style="background:var(--surf2);border:1px solid var(--border);border-radius:var(--r);padding:1.25rem;box-shadow:var(--sh-sm);display:flex;flex-direction:column;">
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem;">
-                  <div style="font-size:.95rem;font-weight:800;color:${d ? d.color : '#000'};display:flex;align-items:center;gap:.5rem;"><i class="fas ${d ? d.icono : 'fa-box'}"></i> ${d ? d.nombre : '?'}</div>
-                  <span style="font-size:.75rem;font-weight:700;color:var(--ink3);background:var(--surf3);padding:.15rem .6rem;border-radius:99px;">${doneC}/${items.length}</span>
-              </div>
-              <div style="width:100%;height:6px;background:var(--border);border-radius:99px;margin-bottom:1.25rem;overflow:hidden;">
-                  <div style="width:${pct}%;height:100%;background:${pct===100?'var(--green-v)':(d?d.color:'var(--primary)')};border-radius:99px;transition:width .3s;"></div>
-              </div>
-              <div style="flex:1">${itemsHtml}</div>
-              <div style="margin-top:1rem; display:flex; gap:5px;">
-                  <input class="fctl" id="new-item-${id}" placeholder="Añadir material..." style="font-size:.8rem; padding:.4rem .6rem;" onkeypress="if(event.key==='Enter')addMaterialDashInline('${id}')">
-                  <button class="btn btn-primary" onclick="addMaterialDashInline('${id}')" style="padding:.4rem .8rem;"><i class="fas fa-plus"></i></button>
-              </div>
-          </div>`; 
-      }).join('');
-      
-      mC.innerHTML = selectorGlobal + '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.25rem;">' + cardsHtml + '</div>';
-  }
-  // 3. DEPARTAMENTOS
-  document.getElementById('d-depts').innerHTML = D.departamentos.length ? D.departamentos.map(d=>{
-    const respHtml = d.responsable ? `<div style="display:flex;align-items:center;gap:.4rem;margin-top:.3rem;"><div class="av" style="width:20px;height:20px;font-size:.55rem;background:${pColor(d.responsable)}">${ini(pName(d.responsable))}</div><span style="font-size:.75rem;color:var(--primary);font-weight:700;">${pName(d.responsable).split(' ')[0]}</span></div>` : `<div style="font-size:.75rem;color:var(--ink4);margin-top:.3rem;"><i class="fas fa-user-slash"></i> Sin responsable</div>`;
-    return `<div onclick="go(document.querySelector('[data-p=departamentos]'),'departamentos'); openDeptDetail('${d.id}')" style="display:flex;align-items:center;gap:.75rem;padding:.75rem;border-radius:10px;cursor:pointer;transition:background .2s;border:1px solid transparent;" onmouseover="this.style.background='var(--surf2)';this.style.borderColor='var(--border)'" onmouseout="this.style.background='transparent';this.style.borderColor='transparent'">
-      <div style="width:42px;height:42px;border-radius:12px;background:${hexLight(d.color,.15)};color:${d.color};display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0"><i class="fas ${d.icono}"></i></div>
-      <div style="flex:1"><div style="font-weight:800;font-size:.95rem">${d.nombre}</div>${respHtml}</div>
-      <span class="pill pill-gray">${(d.miembros||[]).length + (d.responsable?1:0)} <i class="fas fa-user" style="font-size:.6rem;margin-left:2px"></i></span>
-    </div>`;
-  }).join('') : '<div class="empty"><p>Sin departamentos</p></div>';
-
-  // 4. ALABANZA
-  const aId = getAlabanzaDeptId(); const aDept = D.departamentos.find(x => x.id === aId); let alabStats = '';
-  if (aDept) {
-    const total = (aDept.miembros||[]).length + (aDept.responsable ? 1 : 0);
-    const setC = new Set(), setI = new Set();
-    D.canciones.forEach(c => { (c.cantantes || []).forEach(id => setC.add(id)); (c.instrumentistas || []).forEach(id => setI.add(id)); });
-    alabStats = `<div style="display:flex;justify-content:space-between;background:var(--surf2);padding:.6rem 1rem;border-bottom:1px solid var(--border);font-size:.75rem;margin:-1.25rem -1.25rem 1rem -1.25rem;"><span style="color:var(--ink2)"><i class="fas fa-users"></i> Dpto: <strong>${total}</strong></span><span style="color:var(--rose-v)"><i class="fas fa-microphone"></i> Voces: <strong>${setC.size}</strong></span><span style="color:var(--sky-d)"><i class="fas fa-guitar"></i> Músicos: <strong>${setI.size}</strong></span></div>`;
-  }
-  let songsHtml = D.canciones.length ? D.canciones.slice(0,5).map(c=>{
-    const cantHTML = (c.cantantes||[]).slice(0,3).map(id=>`<div class="av av-sm" style="background:${pColor(id)};border:2px solid #fff;width:24px;height:24px;font-size:.65rem;margin-left:-6px;box-shadow:var(--sh-sm)" title="Voz: ${pName(id)}">${ini(pName(id))}</div>`).join('');
-    const cantGrp = cantHTML ? `<div style="display:flex;align-items:center;background:var(--rose-l);padding:3px 8px 3px 8px;border-radius:99px;border:1px solid var(--rose-m);"><i class="fas fa-microphone" style="color:var(--rose-v);font-size:.75rem;margin-right:8px"></i><div style="display:flex;margin-left:6px">${cantHTML}</div></div>` : '';
-    const instHTML = (c.instrumentistas||[]).slice(0,3).map(id=>`<div class="av av-sm" style="background:${pColor(id)};border:2px solid #fff;width:24px;height:24px;font-size:.65rem;margin-left:-6px;box-shadow:var(--sh-sm)" title="Inst: ${pName(id)}">${ini(pName(id))}</div>`).join('');
-    const instGrp = instHTML ? `<div style="display:flex;align-items:center;background:var(--sky-l);padding:3px 8px 3px 8px;border-radius:99px;border:1px solid var(--sky-m);"><i class="fas fa-guitar" style="color:var(--sky-d);font-size:.75rem;margin-right:8px"></i><div style="display:flex;margin-left:6px">${instHTML}</div></div>` : '';
-    return `<div style="display:flex;align-items:center;gap:1rem;padding:.75rem 0;border-bottom:1px solid var(--border)"><div style="width:38px;height:38px;background:var(--amber-l);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--amber-v);font-size:1rem;flex-shrink:0;"><i class="fas fa-music"></i></div><div style="flex:1;min-width:0"><div style="font-weight:700;font-size:.95rem;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${c.titulo}</div><div style="font-size:.75rem;color:var(--ink3)">${c.artista||'—'}</div></div><div style="display:flex;gap:.5rem;flex-wrap:wrap;justify-content:flex-end;">${cantGrp}${instGrp}</div></div>`;
-  }).join('') : '<div class="empty"><p>Sin canciones</p></div>';
-  document.getElementById('d-songs').innerHTML = alabStats + songsHtml;
-  
-  // 6. CARGA DE TRABAJO
-  const sw = [...D.personas].sort((a,b)=>workload(b.id).score-workload(a.id).score);
-  if(sw.length) {
-      document.getElementById('d-workload').innerHTML = `<table style="width:100%;border-collapse:collapse;text-align:left; min-width:380px;"><thead><tr style="border-bottom:2px solid var(--border);background:var(--surf2)"><th style="padding:1rem;font-size:.75rem;text-transform:uppercase;color:var(--ink3)">Persona</th><th style="padding:1rem;font-size:.75rem;text-transform:uppercase;color:var(--ink3)">Tareas</th><th style="padding:1rem;font-size:.75rem;text-transform:uppercase;color:var(--ink3);text-align:right">Nivel</th></tr></thead><tbody>${sw.map(p=>{ const w=workload(p.id); let t=[]; if(w.depts) t.push(`<span class="chip"><i class="fas fa-sitemap"></i> ${w.depts}</span>`); if(w.canciones) t.push(`<span class="chip"><i class="fas fa-music"></i> ${w.canciones}</span>`); if(w.devoc) t.push(`<span class="chip"><i class="fas fa-book-open"></i> ${w.devoc}</span>`); if(w.pred) t.push(`<span class="chip"><i class="fas fa-microphone"></i> ${w.pred}</span>`); if(w.horarioResp) t.push(`<span class="chip"><i class="fas fa-calendar"></i> ${w.horarioResp}</span>`); return `<tr style="border-bottom:1px solid var(--border)"><td style="padding:1rem;display:flex;align-items:center;gap:.75rem"><div class="av av-sm" style="background:${p.color}">${ini(p.nombre)}</div><strong>${p.nombre.split(' ')[0]}</strong></td><td style="padding:1rem">${t.join(' ')||'<span style="color:var(--ink4)">Nada asignado</span>'}</td><td style="padding:1rem;text-align:right">${wlPill(w.level)}</td></tr>`; }).join('')}</tbody></table>`;
-  }
+        }).join('') + `</div>`;
+    }
 }
-
 /* ═══════════════════════════════════════
    HORARIO
 ═══════════════════════════════════════ */
