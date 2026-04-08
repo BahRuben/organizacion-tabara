@@ -664,6 +664,71 @@ nav{flex:1;overflow-y:auto;padding:1rem .875rem;}
     position: absolute; right: -5px; bottom: -5px; font-size: 3rem;
     opacity: 0.03; color: var(--amber-v); pointer-events: none;
 }
+/* ==============================================================
+   NUEVO DISEÑO PARA ESTADÍSTICAS PRINCIPALES (COMPACTO)
+============================================================== */
+.stats-row-pro { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); 
+    gap: 1rem; 
+    margin-bottom: 2rem; 
+}
+.stat-card-pro { 
+    background: var(--surf); 
+    border: 1px solid var(--border); 
+    border-radius: 16px; 
+    padding: 1rem; 
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03); 
+    display: flex; 
+    align-items: center; 
+    justify-content: space-between; 
+    transition: all 0.2s ease; 
+    position: relative; 
+    overflow: hidden; 
+}
+.stat-card-pro:hover { 
+    transform: translateY(-3px); 
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06); 
+    border-color: var(--border2);
+}
+.stat-icon-wrap { 
+    width: 42px; 
+    height: 42px; 
+    border-radius: 12px; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    font-size: 1.3rem; 
+    z-index: 2; 
+}
+.stat-info-pro { 
+    z-index: 2; 
+    text-align: right; 
+}
+.stat-val-pro { 
+    font-size: 1.5rem; 
+    font-weight: 800; 
+    line-height: 1; 
+    color: var(--ink); 
+    margin-bottom: 0.2rem; 
+}
+.stat-lbl-pro { 
+    font-size: 0.65rem; 
+    color: var(--ink3); 
+    font-weight: 700; 
+    text-transform: uppercase; 
+    letter-spacing: 0.02em; 
+}
+.stat-bg-icon { 
+    position: absolute; 
+    left: -10px; 
+    bottom: -15px; 
+    font-size: 4.5rem; 
+    opacity: 0.04; 
+    z-index: 1; 
+    transform: rotate(-15deg); 
+    pointer-events: none;
+}
 </style>
 </head>
 <body>
@@ -977,13 +1042,36 @@ nav{flex:1;overflow-y:auto;padding:1rem .875rem;}
     <div class="frow">
       <div class="fgroup"><label class="flbl">Nombre completo*</label><input class="fctl" id="pNom"></div>
       <div class="fgroup"><label class="flbl">Rol</label>
-        <select class="fctl" id="pRol"><option>Pastor/a</option><option>Predicador/a</option><option>Cantante</option><option>Músico/a</option><option>Monitor/a</option><option>Voluntario/a</option><option>Logística</option><option>Cocina</option></select>
+        <!-- ¡Aquí está la magia del datalist! Permite elegir o escribir uno nuevo -->
+        <input class="fctl" id="pRol" list="rolesList" placeholder="Elige o escribe otro...">
+        <datalist id="rolesList">
+          <option value="Pastor/a"></option>
+          <option value="Predicador/a"></option>
+          <option value="Cantante"></option>
+          <option value="Músico/a"></option>
+          <option value="Monitor/a"></option>
+          <option value="Voluntario/a"></option>
+          <option value="Logística"></option>
+          <option value="Cocina"></option>
+        </datalist>
       </div>
     </div>
-    <div class="fgroup" style="background:var(--surf2);padding:1rem;border-radius:var(--r-sm);border:1px solid var(--border);margin-bottom:1rem;">
+    <div class="fgroup" style="background:var(--surf2);padding:1rem;border-radius:var(--r-sm);border:1px solid var(--border);margin-bottom:1rem;display:flex;flex-wrap:wrap;gap:1rem;">
       <label style="display:flex;align-items:center;gap:0.6rem;cursor:pointer;font-weight:600;color:var(--rose-v)">
         <input type="checkbox" id="pOtraIglesia" style="width:18px;height:18px;accent-color:var(--rose-v)">
-        <i class="fas fa-church"></i> Es invitado/a (Otra iglesia)
+        <i class="fas fa-church"></i> Invitado/a
+      </label>
+      <label style="display:flex;align-items:center;gap:0.6rem;cursor:pointer;font-weight:600;color:var(--sky-d)">
+        <input type="checkbox" id="pMenor" style="width:18px;height:18px;accent-color:var(--sky-d)">
+        <i class="fas fa-child"></i> Menor de edad
+      </label>
+      <label style="display:flex;align-items:center;gap:0.6rem;cursor:pointer;font-weight:600;color:var(--green-v)">
+        <input type="checkbox" id="pPagado" style="width:18px;height:18px;accent-color:var(--green-v)">
+        <i class="fas fa-euro-sign"></i> Ha pagado
+      </label>
+      <label style="display:flex;align-items:center;gap:0.6rem;cursor:pointer;font-weight:600;color:var(--amber-v)">
+        <input type="checkbox" id="pUnDia" style="width:18px;height:18px;accent-color:var(--amber-v)">
+        <i class="fas fa-calendar-day"></i> Solo 1 día
       </label>
     </div>
     <div class="frow">
@@ -1393,15 +1481,70 @@ function getAlabanzaDeptId() { const d = D.departamentos.find(x => x.nombre.toLo
 function renderDash() {
     const un = D.personas.filter(p => !D.departamentos.some(d => (d.miembros||[]).includes(p.id) || d.responsable===p.id));
     
-    // 0. ESTADÍSTICAS SUPERIORES
-    document.getElementById('d-stats').innerHTML = `
-        <div class="sc c-primary"><div class="sc-icon"><i class="fas fa-users"></i></div><div class="sc-info"><div class="sc-val">${D.personas.length}</div><div class="sc-lbl">Personas</div></div></div>
-        <div class="sc c-amber"><div class="sc-icon"><i class="fas fa-flag"></i></div><div class="sc-info"><div class="sc-val">${D.grupos.length}</div><div class="sc-lbl">Grupos</div></div></div>
-        <div class="sc c-sky"><div class="sc-icon"><i class="fas fa-bed"></i></div><div class="sc-info"><div class="sc-val">${D.cabanas.reduce((s,c)=>s+(c.capacidad||0),0)}</div><div class="sc-lbl">Plazas Cama</div></div></div>`;
-    
-    document.getElementById('niBadge').style.display = un.length ? 'inline-block' : 'none';
-    document.getElementById('niBadge').textContent = un.length;
+    // 0. ESTADÍSTICAS SUPERIORES (NUEVO DISEÑO PRO)
+    const menoresCount = D.personas.filter(p => p.es_menor).length;
+    const pagadosCount = D.personas.filter(p => p.ha_pagado).length;
+    const invitadosCount = D.personas.filter(p => p.otra_iglesia).length;
 
+    document.getElementById('d-stats').className = 'stats-row-pro'; // Asignamos la nueva grilla
+    document.getElementById('d-stats').innerHTML = `
+        <div class="stat-card-pro" style="border-bottom: 4px solid var(--primary)">
+            <i class="fas fa-users stat-bg-icon" style="color:var(--primary)"></i>
+            <div class="stat-icon-wrap" style="background:var(--primary-l); color:var(--primary)"><i class="fas fa-users"></i></div>
+            <div class="stat-info-pro">
+                <div class="stat-val-pro">${D.personas.length}</div>
+                <div class="stat-lbl-pro">Personas</div>
+            </div>
+        </div>
+        <div class="stat-card-pro" style="border-bottom: 4px solid var(--green-v)">
+            <i class="fas fa-check stat-bg-icon" style="color:var(--green-v)"></i>
+            <div class="stat-icon-wrap" style="background:var(--green-l); color:var(--green-v)"><i class="fas fa-check"></i></div>
+            <div class="stat-info-pro">
+                <div class="stat-val-pro">${pagadosCount}</div>
+                <div class="stat-lbl-pro">Pagados</div>
+            </div>
+        </div>
+        <div class="stat-card-pro" style="border-bottom: 4px solid var(--rose-v)">
+            <i class="fas fa-church stat-bg-icon" style="color:var(--rose-v)"></i>
+            <div class="stat-icon-wrap" style="background:var(--rose-l); color:var(--rose-v)"><i class="fas fa-church"></i></div>
+            <div class="stat-info-pro">
+                <div class="stat-val-pro">${invitadosCount}</div>
+                <div class="stat-lbl-pro">Invitados</div>
+            </div>
+        </div>
+        <div class="stat-card-pro" style="border-bottom: 4px solid var(--sky)">
+            <i class="fas fa-child stat-bg-icon" style="color:var(--sky)"></i>
+            <div class="stat-icon-wrap" style="background:var(--sky-l); color:var(--sky)"><i class="fas fa-child"></i></div>
+            <div class="stat-info-pro">
+                <div class="stat-val-pro">${menoresCount}</div>
+                <div class="stat-lbl-pro">Menores</div>
+            </div>
+        </div>
+        <div class="stat-card-pro" style="border-bottom: 4px solid var(--amber-v)">
+            <i class="fas fa-flag stat-bg-icon" style="color:var(--amber-v)"></i>
+            <div class="stat-icon-wrap" style="background:var(--amber-l); color:var(--amber-v)"><i class="fas fa-flag"></i></div>
+            <div class="stat-info-pro">
+                <div class="stat-val-pro">${D.grupos.length}</div>
+                <div class="stat-lbl-pro">Grupos</div>
+            </div>
+        </div>
+        <div class="stat-card-pro" style="border-bottom: 4px solid var(--indigo-d)">
+            <i class="fas fa-car stat-bg-icon" style="color:var(--indigo-d)"></i>
+            <div class="stat-icon-wrap" style="background:var(--indigo-l); color:var(--indigo-d)"><i class="fas fa-car"></i></div>
+            <div class="stat-info-pro">
+                <div class="stat-val-pro">${D.coches.length}</div>
+                <div class="stat-lbl-pro">Coches</div>
+            </div>
+        </div>
+        <div class="stat-card-pro" style="border-bottom: 4px solid var(--green-v)">
+            <i class="fas fa-bed stat-bg-icon" style="color:var(--green-v)"></i>
+            <div class="stat-icon-wrap" style="background:var(--green-l); color:var(--green-v)"><i class="fas fa-bed"></i></div>
+            <div class="stat-info-pro">
+                <div class="stat-val-pro">${D.cabanas.reduce((s,c)=>s+(c.capacidad||0),0)}</div>
+                <div class="stat-lbl-pro">Camas</div>
+            </div>
+        </div>
+    `;
     // 1. HORARIO - THE GRAND TIMELINE
     const containerHorario = document.getElementById('d-horario-preview');
     if(!D.horario.length) {
@@ -1670,11 +1813,27 @@ function renderHorario() {
   tl.innerHTML = html;
 }
 
+// Variable para recordar la última fecha que usó el usuario
+let lastUsedDate = '';
+
 function openModHorario() { 
   document.getElementById('mHorarioT').textContent='Añadir Evento'; 
   document.getElementById('hId').value=''; 
   ['hTit','hUbi','hIni','hFin','hDesc'].forEach(id=>document.getElementById(id).value=''); 
-  document.getElementById('hFec').value=new Date().toISOString().split('T')[0]; 
+  
+  // LÓGICA INTELIGENTE DE FECHA:
+  // Si no hay última fecha usada, buscamos la fecha del último evento del campamento
+  let defaultDate = lastUsedDate;
+  if (!defaultDate) {
+      if (D.horario && D.horario.length > 0) {
+          const fechas = D.horario.map(h => h.fecha).sort();
+          defaultDate = fechas[fechas.length - 1]; // Toma la fecha más avanzada
+      } else {
+          defaultDate = new Date().toISOString().split('T')[0]; // Si está vacío, toma hoy
+      }
+  }
+  document.getElementById('hFec').value = defaultDate; 
+  
   document.getElementById('hResp').innerHTML='<option value="">-- Ninguno --</option>'+D.personas.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join(''); 
   om('modHorario'); 
 }
@@ -1698,6 +1857,10 @@ function openModHorarioEdit(id) {
 async function saveHorario() {
   const obj = { titulo: document.getElementById('hTit').value.trim(), fecha: document.getElementById('hFec').value, hora_inicio: document.getElementById('hIni').value, hora_fin: document.getElementById('hFin').value||null, tipo: document.getElementById('hTipo').value, ubicacion: document.getElementById('hUbi').value, descripcion: document.getElementById('hDesc').value, responsable_id: document.getElementById('hResp').value||null };
   if(!obj.titulo || !obj.fecha || !obj.hora_inicio) { toast('Título, Fecha y Hora Inicio son obligatorios','err'); return; }
+  
+  // Guardamos la fecha en la memoria temporal para el siguiente evento
+  lastUsedDate = obj.fecha;
+  
   const eid = document.getElementById('hId').value;
   try {
       if(eid) { await sb.from('horario_general').update(obj).eq('id', eid); Object.assign(D.horario.find(h=>h.id===eid), obj); } 
@@ -1715,25 +1878,15 @@ async function delHorario(id) {
 /* ═══════════════════════════════════════
    PERSONAS
 ═══════════════════════════════════════ */
-function renderPersonas() {
-  const sel=document.getElementById('pFilter'); const cur=sel.value;
-  sel.innerHTML='<option value="">Todos los departamentos</option>'+D.departamentos.map(d=>`<option value="${d.id}">${d.nombre}</option>`).join(''); if(cur) sel.value=cur;
-  const search=(document.getElementById('pSearch').value||'').toLowerCase(), fD=document.getElementById('pFilter').value;
-  let p=D.personas.filter(x=>{ if(search&&!x.nombre.toLowerCase().includes(search))return false; if(fD){ const d=D.departamentos.find(y=>y.id===fD); if(!d)return false; if(!(d.miembros||[]).includes(x.id)&&d.responsable!==x.id)return false; } return true; });
-  const g=document.getElementById('p-grid'), e=document.getElementById('p-empty');
-  if(!p.length){g.innerHTML='';e.style.display='block';return;} e.style.display='none';
-  g.innerHTML=p.map(x=>{
-    const dp=D.departamentos.filter(d=>(d.miembros||[]).includes(x.id)||d.responsable===x.id).map(d=>`<span class="pill" style="background:${hexLight(d.color,.1)};color:${d.color};border:1px solid ${hexLight(d.color,.2)}"><i class="fas ${d.icono}" style="font-size:.65rem"></i>${d.nombre}</span>`).join('');
-    return `<div class="pcard ${x.otra_iglesia?'is-guest':''}">${x.otra_iglesia?'<div class="guest-badge"><i class="fas fa-church"></i> Invitado/a</div>':''}<div class="pcard-acts"><button class="icon-btn edit" onclick="openModPersonaEdit('${x.id}')"><i class="fas fa-pen"></i></button><button class="icon-btn del" onclick="delPersona('${x.id}')"><i class="fas fa-trash"></i></button></div><div class="pcard-top"><div class="av av-lg" style="background:${x.color}">${ini(x.nombre)}</div><div class="pcard-info"><h3>${x.nombre}</h3><p>${x.rol}</p></div></div><div class="pcard-depts">${dp||'<span style="font-size:.72rem;color:var(--ink4);font-style:italic">Sin departamento</span>'}</div></div>`;
-  }).join('');
-}
-
 function openModPersona() { 
   document.getElementById('pId').value=''; 
   ['pNom','pTel','pNotas'].forEach(id=>document.getElementById(id).value=''); 
   document.getElementById('pRol').value='Voluntario/a'; 
   document.getElementById('pColor').value='#0f766e'; 
   document.getElementById('pOtraIglesia').checked=false; 
+  document.getElementById('pMenor').checked=false; 
+  document.getElementById('pPagado').checked=false; 
+  document.getElementById('pUnDia').checked=false; 
   om('modPersona'); 
 }
 
@@ -1746,29 +1899,64 @@ function openModPersonaEdit(id) {
   document.getElementById('pNotas').value=p.notas||''; 
   document.getElementById('pColor').value=p.color; 
   document.getElementById('pOtraIglesia').checked=p.otra_iglesia||false; 
+  document.getElementById('pMenor').checked=p.es_menor||false; 
+  document.getElementById('pPagado').checked=p.ha_pagado||false; 
+  document.getElementById('pUnDia').checked=p.solo_un_dia||false; 
   om('modPersona'); 
 }
 
 async function savePersona() {
   const nom=document.getElementById('pNom').value.trim(); if(!nom){toast('Nombre obligatorio','err');return;}
-  const obj={ nombre:nom, rol:document.getElementById('pRol').value, telefono:document.getElementById('pTel').value, notas:document.getElementById('pNotas').value, color:document.getElementById('pColor').value, otra_iglesia: document.getElementById('pOtraIglesia').checked };
+  const obj={ 
+    nombre:nom, 
+    rol:document.getElementById('pRol').value || 'Voluntario/a', 
+    telefono:document.getElementById('pTel').value, 
+    notas:document.getElementById('pNotas').value, 
+    color:document.getElementById('pColor').value, 
+    otra_iglesia: document.getElementById('pOtraIglesia').checked,
+    es_menor: document.getElementById('pMenor').checked,
+    ha_pagado: document.getElementById('pPagado').checked,
+    solo_un_dia: document.getElementById('pUnDia').checked
+  };
   const eid=document.getElementById('pId').value;
   try {
     if(eid){ await sb.from('personas').update(obj).eq('id',eid); Object.assign(D.personas.find(p=>p.id===eid), obj); } 
     else { const {data,error}=await sb.from('personas').insert(obj).select().single(); if(error)throw error; D.personas.push(data); }
     cm('modPersona'); renderPersonas(); renderDash(); toast(eid?'Actualizada':'Añadida','ok');
-  } catch(e){ console.error(e); }
+  } catch(e){ console.error(e); toast('Error al guardar. Verifica columnas en DB.','err'); }
 }
 
-async function delPersona(id) { 
-  if(!confirm('¿Eliminar persona?')) return; 
-  try{ 
-    await sb.from('personas').delete().eq('id',id); 
-    D.personas=D.personas.filter(p=>p.id!==id); 
-    D.departamentos.forEach(d=>{d.miembros=(d.miembros||[]).filter(m=>m!==id);if(d.responsable===id)d.responsable=null;}); 
-    D.canciones.forEach(c=>{c.cantantes=(c.cantantes||[]).filter(x=>x!==id);}); 
-    renderPersonas(); renderDash(); toast('Eliminada','info'); 
-  }catch(e){ console.error(e); } 
+function renderPersonas() {
+  const sel=document.getElementById('pFilter'); const cur=sel.value;
+  sel.innerHTML='<option value="">Todos los departamentos</option>'+D.departamentos.map(d=>`<option value="${d.id}">${d.nombre}</option>`).join(''); if(cur) sel.value=cur;
+  const search=(document.getElementById('pSearch').value||'').toLowerCase(), fD=document.getElementById('pFilter').value;
+  let p=D.personas.filter(x=>{ if(search&&!x.nombre.toLowerCase().includes(search))return false; if(fD){ const d=D.departamentos.find(y=>y.id===fD); if(!d)return false; if(!(d.miembros||[]).includes(x.id)&&d.responsable!==x.id)return false; } return true; });
+  const g=document.getElementById('p-grid'), e=document.getElementById('p-empty');
+  if(!p.length){g.innerHTML='';e.style.display='block';return;} e.style.display='none';
+  
+  g.innerHTML=p.map(x=>{
+    const dp=D.departamentos.filter(d=>(d.miembros||[]).includes(x.id)||d.responsable===x.id).map(d=>`<span class="pill" style="background:${hexLight(d.color,.1)};color:${d.color};border:1px solid ${hexLight(d.color,.2)}"><i class="fas ${d.icono}" style="font-size:.65rem"></i>${d.nombre}</span>`).join('');
+    
+    // Apilamos los badges visuales asegurando colores de fondo y texto sólidos
+    let badges = '';
+    if(x.ha_pagado) badges += `<div class="guest-badge" style="position:relative; top:0; right:0; margin-bottom:4px; background:var(--green-v); color:#ffffff; box-shadow: 0 4px 8px rgba(16, 185, 129, 0.25); display:inline-flex;"><i class="fas fa-check"></i> Pagado</div>`;
+    if(x.otra_iglesia) badges += `<div class="guest-badge" style="position:relative; top:0; right:0; margin-bottom:4px; background:var(--rose-v); color:#ffffff; box-shadow: 0 4px 8px rgba(225, 29, 72, 0.25); display:inline-flex;"><i class="fas fa-church"></i> Invitado</div>`;
+    if(x.es_menor) badges += `<div class="guest-badge" style="position:relative; top:0; right:0; margin-bottom:4px; background:var(--sky); color:#ffffff; box-shadow: 0 4px 8px rgba(3, 105, 161, 0.25); display:inline-flex;"><i class="fas fa-child"></i> Menor</div>`;
+    if(x.solo_un_dia) badges += `<div class="guest-badge" style="position:relative; top:0; right:0; margin-bottom:4px; background:var(--amber-v); color:#ffffff; box-shadow: 0 4px 8px rgba(245, 158, 11, 0.25); display:inline-flex;"><i class="fas fa-calendar-day"></i> 1 Día</div>`;
+
+    // Le damos un borde especial
+    let borderClass = '';
+    let bgGradient = '';
+    if(x.es_menor) { borderClass = 'border: 1px solid var(--sky-m);'; bgGradient = 'background: linear-gradient(to bottom right, var(--surf), var(--sky-l));'; } 
+    else if(x.otra_iglesia) { borderClass = 'border: 1px solid var(--rose-m);'; bgGradient = 'background: linear-gradient(to bottom right, var(--surf), var(--rose-l));'; }
+
+    return `<div class="pcard" style="${borderClass} ${bgGradient}">
+              <div class="pcard-acts" style="z-index:10;"><button class="icon-btn edit" onclick="openModPersonaEdit('${x.id}')"><i class="fas fa-pen"></i></button><button class="icon-btn del" onclick="delPersona('${x.id}')"><i class="fas fa-trash"></i></button></div>
+              <div style="position:absolute; top:-10px; right:15px; display:flex; flex-direction:column; align-items:flex-end; z-index:5;">${badges}</div>
+              <div class="pcard-top"><div class="av av-lg" style="background:${x.color}">${ini(x.nombre)}</div><div class="pcard-info"><h3>${x.nombre}</h3><p>${x.rol}</p></div></div>
+              <div class="pcard-depts">${dp||'<span style="font-size:.72rem;color:var(--ink4);font-style:italic">Sin departamento</span>'}</div>
+            </div>`;
+  }).join('');
 }
 
 /* ═══════════════════════════════════════
