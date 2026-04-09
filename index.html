@@ -361,6 +361,7 @@ nav{flex:1;overflow-y:auto;padding:1rem .875rem;}
         <div class="ni active" data-p="dashboard" onclick="go(this,'dashboard')"><i class="fas fa-house"></i>Inicio</div>
         <div class="ni" data-p="horario" onclick="go(this,'horario')"><i class="fas fa-calendar-days"></i>Horario General</div>
         <div class="ni" data-p="personas" onclick="go(this,'personas')"><i class="fas fa-users"></i>Personas<span class="badge warn" id="niBadge" style="display:none">0</span></div>
+        <div class="ni" data-p="normas" onclick="go(this,'normas')"><i class="fas fa-scroll"></i>Normativas</div>
       </div>
       <div class="nav-g">
         <div class="nav-glbl">Equipos y Culto</div>
@@ -469,9 +470,23 @@ nav{flex:1;overflow-y:auto;padding:1rem .875rem;}
       <div class="people-grid" id="p-grid"></div>
       <div class="empty" id="p-empty" style="display:none"><i class="fas fa-users"></i><p>Añade personas al campamento</p></div>
     </div>
+        <div class="page" id="page-normas">
+      <div class="ph">
+        <div class="ph-title">
+          <h1>Normativas del Campamento</h1>
+          <p>Reglas de convivencia oficiales de Biserica Maranata</p>
+        </div>
+        <div class="ph-actions">
+          <button class="btn btn-primary" onclick="openModNorma()"><i class="fas fa-plus"></i> Añadir Norma</button>
+          <button class="btn btn-green" onclick="descargarNormasPDF()"><i class="fas fa-download"></i> Exportar PDF</button>
+        </div>
+      </div>
+      <div id="normas-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:1.5rem; margin-bottom:2rem;"></div>
+    </div>
 
     <div class="page" id="page-departamentos">
       <div id="dept-list">
+    
         <div class="ph">
           <div class="ph-title"><h1>Departamentos</h1><p>Organización por áreas de servicio</p></div>
           <div class="ph-actions"><button class="btn btn-primary" onclick="openModDepto()"><i class="fas fa-plus"></i> Nuevo depto</button></div>
@@ -903,7 +918,19 @@ nav{flex:1;overflow-y:auto;padding:1rem .875rem;}
     <div id="csvStep3" style="display:none;text-align:center;"><i class="fas fa-spinner fa-spin" style="font-size:2rem;color:var(--primary);margin-bottom:1rem"></i><p id="csvProgressTxt">Importando...</p></div>
   </div>
 </div>
-
+<div class="mov" id="modNorma">
+  <div class="mbox">
+    <div class="mhd"><h3 id="mNormaT">Nueva Norma</h3><button class="mcls" onclick="cm('modNorma')">&times;</button></div>
+    <input type="hidden" id="nId">
+    <div class="fgroup"><label class="flbl">Título de la sección*</label><input class="fctl" id="nTit" placeholder="Ej: Respeto y Actitud"></div>
+    <div class="frow">
+      <div class="fgroup"><label class="flbl">Icono (FontAwesome)</label><input class="fctl" id="nIco" placeholder="fa-hands-praying"></div>
+      <div class="fgroup"><label class="flbl">Color</label><input class="fctl" type="color" id="nCol" value="#0f766e" style="height:44px;padding:4px"></div>
+    </div>
+    <div class="fgroup"><label class="flbl">Reglas (Cada línea será un punto diferente)*</label><textarea class="fctl" id="nCont" rows="6" placeholder="1. Primera regla...&#10;2. Segunda regla..."></textarea></div>
+    <div class="mft"><button class="btn btn-ghost" onclick="cm('modNorma')">Cancelar</button><button class="btn btn-primary" onclick="saveNorma()">Guardar</button></div>
+  </div>
+</div>
 <div class="toasts" id="toasts"></div>
 <div class="mov" id="modWorkload">
   <div class="mbox">
@@ -953,7 +980,7 @@ const HORARIO_CFG = {
     'Otro': {c:'#94a3b8', i:'fa-clock'}
 };
 
-let D = { personas:[], departamentos:[], canciones:[], horario:[], servicios:[], grupos:[], juegos:[], cabanas:[], coches:[], materiales:{} };
+let D = { personas:[], departamentos:[], canciones:[], horario:[], servicios:[], grupos:[], juegos:[], cabanas:[], coches:[], materiales:{}, normas:[] };
 let currentDept = null;
 let currentSvcId = null;
 let editingSong = null, editingItem = null;
@@ -1021,7 +1048,7 @@ async function loadAll() {
       {data: per}, {data: dep}, {data: dm}, {data: can}, {data: cc},
       {data: hor}, {data: ser}, {data: itm}, {data: pa},
       {data: gru}, {data: gm}, {data: jue}, {data: jpu},
-      {data: cab}, {data: ca}, {data: coc}, {data: cp}, {data: mat}
+      {data: cab}, {data: ca}, {data: coc}, {data: cp}, {data: mat}, {data: nrm}
     ] = await Promise.all([
       sb.from('personas').select('*').order('nombre'), sb.from('departamentos').select('*').order('nombre'),
       sb.from('departamento_miembros').select('*'), sb.from('canciones').select('*').order('titulo'),
@@ -1031,9 +1058,9 @@ async function loadAll() {
       sb.from('grupo_miembros').select('*'), sb.from('juegos').select('*').order('created_at'),
       sb.from('juego_puntuaciones').select('*'), sb.from('cabanas').select('*').order('nombre'),
       sb.from('cabana_asignaciones').select('*'), sb.from('coches').select('*').order('nombre'),
-      sb.from('coche_pasajeros').select('*'), sb.from('departamento_materiales').select('*').order('posicion')
+      sb.from('coche_pasajeros').select('*'), sb.from('departamento_materiales').select('*').order('posicion'),
+      sb.from('normas').select('*').order('created_at')
     ]);
-
     D.personas = per || [];
     D.horario = hor || [];
     D.departamentos = (dep||[]).map(d => ({...d, desc: d.descripcion, miembros: (dm||[]).filter(x=>x.departamento_id===d.id).map(x=>x.persona_id)}));
@@ -1043,8 +1070,8 @@ async function loadAll() {
     D.cabanas = (cab||[]).map(c => ({...c, asignados: (ca||[]).filter(x=>x.cabana_id===c.id).map(x=>x.persona_id)}));
     D.coches = (coc||[]).map(c => ({...c, pasajeros: (cp||[]).filter(x=>x.coche_id===c.id).map(x=>x.persona_id)}));
     D.servicios = (ser||[]).map(s => ({...s, prog: (itm||[]).filter(i=>i.servicio_id===s.id).sort((a,b)=>a.posicion-b.posicion).map(i=>({...i, dur: i.duracion, asignados: (pa||[]).filter(x=>x.item_id===i.id).map(x=>x.persona_id)}))}));
-    D.materiales = {}; (mat||[]).forEach(m => { if(!D.materiales[m.departamento_id]) D.materiales[m.departamento_id]=[]; D.materiales[m.departamento_id].push(m); });
-  } catch(e) { console.error(e); }
+    D.materiales = {}; (mat||[]).forEach(m => { if(!D.materiales[m.departamento_id]) D.materiales[m.departamento_id]=[]; D.materiales[m.departamento_id].push(m); D.normas = nrm || [];});
+  }  catch(e) { console.error(e); }
 }
 
 function renderAll() { 
@@ -1070,8 +1097,8 @@ function go(el, pg) {
   if(pg==='dashboard') renderDash(); if(pg==='horario') renderHorario(); if(pg==='personas') renderPersonas();
   if(pg==='departamentos') renderDepts(); if(pg==='alabanza') renderAlabanza(); if(pg==='programa') renderProg();
   if(pg==='grupos') renderGruposStats(); if(pg==='cabanas') renderCabanas();
+  if(pg==='normas') renderNormas(); 
 }
-
 function toggleSb() { const sb=document.getElementById('sidebar'), ov=document.getElementById('mobOverlay'); const open = sb.classList.toggle('open'); ov.style.display = open?'block':'none'; }
 function om(id) { document.getElementById(id).classList.add('open'); }
 function cm(id) { document.getElementById(id).classList.remove('open'); }
@@ -1444,17 +1471,61 @@ function renderHorario() {
   let evs = D.horario; 
   if(!evs.length) { tl.innerHTML = '<div class="empty" style="grid-column:1/-1"><i class="fas fa-calendar-times"></i><p>No hay eventos programados en el campamento.</p></div>'; return; }
   const g = {}; evs.forEach(h => { if(!g[h.fecha]) g[h.fecha]=[]; g[h.fecha].push(h); });
-  let html = '';
-  Object.keys(g).sort().forEach(f => {
-      html += `<div class="card" style="box-shadow:var(--sh-sm);"><div class="card-hd" style="background:var(--surf2); border-bottom:2px solid var(--primary);"><div class="card-title" style="color:var(--primary); font-family:'Lora',serif; font-size:1.2rem;"><i class="fas fa-calendar-day"></i> Día: ${f.split('-').reverse().join('/')}</div></div><div class="card-body"><div class="timeline-modern">`;
-      g[f].forEach(h => {
-          const c = HORARIO_CFG[h.tipo] || HORARIO_CFG['Otro'];
-          const resp = h.responsable_id ? `<div style="font-size:.75rem;margin-top:.5rem;display:flex;align-items:center;gap:.4rem"><div class="av" style="width:20px;height:20px;font-size:.55rem;background:${pColor(h.responsable_id)}">${ini(pName(h.responsable_id))}</div> Responsable: ${pName(h.responsable_id).split(' ')[0]}</div>` : '';
-          html += `<div class="tl-item"><div class="tl-dot" style="border-color:${c.c}"></div><div class="tl-content" style="border-left: 4px solid ${c.c}"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div class="tl-time">${h.hora_inicio.substring(0,5)} ${h.hora_fin?'- '+h.hora_fin.substring(0,5):''}</div><div style="display:flex;gap:.5rem; margin-top:-5px; margin-right:-5px;"><button class="icon-btn edit" onclick="openModHorarioEdit('${h.id}')" style="border:none;box-shadow:none;background:transparent;width:26px;height:26px;font-size:.8rem"><i class="fas fa-pen"></i></button><button class="icon-btn del" onclick="delHorario('${h.id}')" style="border:none;box-shadow:none;background:transparent;width:26px;height:26px;font-size:.8rem"><i class="fas fa-trash"></i></button></div></div><div class="tl-title"><i class="fas ${c.i}" style="color:${c.c}"></i> ${h.titulo} <span class="pill pill-gray" style="font-weight:600;font-size:.65rem;margin-left:.4rem;padding:.15rem .4rem">${h.tipo}</span></div>${h.ubicacion?`<div style="font-size:.8rem;color:var(--ink3);margin-bottom:.5rem;"><i class="fas fa-location-dot"></i> ${h.ubicacion}</div>`:''}${h.descripcion?`<div style="font-size:.85rem;color:var(--ink2);background:var(--surf2);padding:.6rem;border-radius:6px;border:1px solid var(--border)">${h.descripcion}</div>`:''}${resp}</div></div>`;
-      });
-      html += `</div></div></div>`;
+  
+  // Contenedor principal de la cuadrícula
+  let html = '<div class="timeline-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(340px, 1fr)); gap:2.5rem; align-items:start;">';
+  
+  Object.keys(g).sort().forEach((f) => {
+      const dateObj = new Date(f + "T00:00:00");
+      const dayName = window.innerWidth < 600 ? dateObj.toLocaleDateString('es-ES', { weekday: 'short' }) : dateObj.toLocaleDateString('es-ES', { weekday: 'long' });
+      const dayShort = dateObj.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+      
+      html += `
+      <div class="timeline-day-column" style="position:relative;">
+          <div class="day-big-number" style="position:absolute; right:10px; top:-20px; font-size:4.5rem; font-weight:900; color:var(--ink); opacity:0.04; line-height:1; pointer-events:none; z-index:1;">${dateObj.getDate()}</div>
+          
+          <div class="timeline-day-header" style="position:relative; margin-bottom:2rem; padding-left:1.2rem; border-left:3px solid var(--primary); z-index:2;">
+              <span class="day-full-date" style="font-size:0.7rem; text-transform:uppercase; color:var(--primary); font-weight:700; letter-spacing:1px;">${dayShort}</span>
+              <span class="day-name" style="font-family:'Lora',serif; font-size:1.6rem; font-weight:700; color:var(--ink); display:block;">${dayName.toUpperCase()}</span>
+          </div>
+          
+          <div class="timeline-events" style="position:relative; border-left:1.5px solid var(--border); padding-left:1.5rem; margin-left:0.4rem; z-index:2;">` + 
+          g[f].map(h => {
+              const cfg = HORARIO_CFG[h.tipo] || HORARIO_CFG['Otro'];
+              
+              // Sección del responsable rediseñada
+              const respHtml = h.responsable_id ? `
+                <div style="display:flex; align-items:center; gap:8px; margin-top:0.8rem; padding-top:0.8rem; border-top:1px solid var(--border); background:var(--surf2); margin-left:-1rem; margin-right:-1rem; padding-left:1rem; padding-right:1rem; margin-bottom:-1rem; padding-bottom:1rem; border-radius:0 0 16px 16px;">
+                    <div class="av" style="width:24px;height:24px;font-size:0.6rem;background:${pColor(h.responsable_id)};box-shadow:var(--sh-sm);">${ini(pName(h.responsable_id))}</div>
+                    <span style="font-size:0.75rem; color:var(--ink3); font-weight:600;">Resp: <strong>${pName(h.responsable_id).split(' ')[0]}</strong></span>
+                </div>` : '';
+              
+              return `
+              <div style="position:relative; margin-bottom:1.8rem;">
+                  <div class="tl-node" style="position:absolute; left:-1.5rem; transform:translateX(-50%); top:20px; width:12px; height:12px; border-radius:50%; background:${cfg.c}; border:3px solid #fff; box-shadow:0 0 0 2px ${hexLight(cfg.c, 0.2)}, var(--sh-sm); z-index:3;"></div>
+                  
+                  <div class="event-card-pro" style="background:var(--surf); border-radius:16px; padding:1.2rem 1.4rem; border:1px solid var(--border); border-left:4px solid ${cfg.c}; box-shadow:var(--sh-sm); transition:transform 0.2s cubic-bezier(0.165, 0.84, 0.44, 1), box-shadow 0.2s cubic-bezier(0.165, 0.84, 0.44, 1); position:relative;" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='var(--sh-lg)';" onmouseout="this.style.transform='none'; this.style.boxShadow='var(--sh-sm)';">
+                      
+                      <div class="event-icon-box" style="position:absolute; top:1.2rem; right:1.2rem; font-size:1.1rem; color:${cfg.c}; opacity:0.15;"><i class="fas ${cfg.i}"></i></div>
+                      
+                      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.7rem;">
+                          <div class="event-time-badge" style="display:inline-flex; align-items:center; gap:5px; background:${hexLight(cfg.c, 0.1)}; color:${cfg.c}; padding:3px 10px; border-radius:8px; font-size:0.7rem; font-weight:800;"><i class="far fa-clock"></i> ${h.hora_inicio.substring(0,5)}${h.hora_fin ? ' - ' + h.hora_fin.substring(0,5) : ''}</div>
+                          <div style="display:flex; gap:0.3rem; margin-top:-6px; margin-right:-6px;">
+                              <button class="icon-btn edit" onclick="openModHorarioEdit('${h.id}')" style="width:26px;height:26px;border:none;background:transparent;box-shadow:none; color:var(--ink4);"><i class="fas fa-pen" style="font-size:0.7rem"></i></button>
+                              <button class="icon-btn del" onclick="delHorario('${h.id}')" style="width:26px;height:26px;border:none;background:transparent;box-shadow:none; color:var(--red-v);"><i class="fas fa-trash" style="font-size:0.7rem"></i></button>
+                          </div>
+                      </div>
+                      
+                      <div class="event-title-pro" style="font-family:'Lora',serif; font-size:1.15rem; font-weight:700; color:var(--ink); line-height:1.2; margin-bottom:0.3rem; padding-right:2rem;">${h.titulo} <span style="font-family:'Plus Jakarta Sans',sans-serif;font-size:0.65rem; background:var(--surf3); color:var(--ink3); padding:2px 6px; border-radius:6px; font-weight:600; margin-left:6px; vertical-align:middle;">${h.tipo}</span></div>
+                      ${h.ubicacion ? `<div class="event-location-pro" style="display:flex; align-items:center; gap:6px; font-size:0.75rem; color:var(--primary); font-weight:600;"><i class="fas fa-location-dot" style="opacity:0.7;"></i> <span>${h.ubicacion}</span></div>` : ''}
+                      ${h.descripcion ? `<div style="font-size:0.8rem; color:var(--ink3); margin-top:0.6rem; line-height:1.5; padding:0.7rem; background:var(--surf2); border-radius:8px;">${h.descripcion}</div>` : ''}
+                      
+                      ${respHtml}
+                  </div>
+              </div>`;
+          }).join('') + `</div></div>`;
   });
-  tl.innerHTML = html;
+  tl.innerHTML = html + '</div>'; // Cerramos timeline-grid
 }
 
 function openModHorario() { 
@@ -2732,6 +2803,184 @@ function generarPDFLimpio() {
   const printWin = window.open('', '_blank');
   if (printWin) { printWin.document.open(); printWin.document.write(html); printWin.document.close(); setTimeout(() => { printWin.print(); }, 500); } 
   else { alert("Por favor, permite las ventanas emergentes (pop-ups) para generar el PDF."); }
+}
+/* ═══════════════════════════════════════
+   📜 DESCARGAR NORMAS DEL CAMPAMENTO
+═══════════════════════════════════════ */
+function descargarNormasPDF() {
+  let html = `<!DOCTYPE html>
+  <html lang="es">
+  <head>
+  <meta charset="UTF-8">
+  <title>Normativas - Biserica Maranata</title>
+  <style>
+    body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #1e293b; padding: 40px; line-height: 1.6; background: #fff; max-width: 750px; margin: auto; }
+    .header { text-align: center; border-bottom: 3px solid #0f766e; padding-bottom: 25px; margin-bottom: 35px; }
+    .logo-text { font-size: 16px; color: #0f766e; text-transform: uppercase; letter-spacing: 3px; font-weight: 800; margin-bottom: 10px; }
+    h1 { color: #0f172a; font-size: 32px; margin: 0 0 10px 0; font-family: Georgia, serif; }
+    .subtitle { color: #64748b; font-size: 18px; margin: 0; font-style: italic; }
+    h2 { color: #b45309; margin-top: 30px; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; font-size: 20px; }
+    ul { margin-top: 15px; padding-left: 25px; }
+    li { margin-bottom: 10px; font-size: 15px; color: #334155; }
+    .footer { margin-top: 50px; text-align: center; font-size: 12px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 20px; }
+    @media print { body { padding: 20px; } }
+  </style>
+  </head>
+  <body>
+    <div class="header">
+      <div class="logo-text">🕊️ Biserica Maranata</div>
+      <h1>Normativas del Campamento</h1>
+      <p class="subtitle">Reîntâlnire cu Tatăl</p>
+    </div>
+    
+    <h2>1. Respeto y Actitud</h2>
+    <ul>
+      <li>Mantener una actitud de respeto y amor fraternal hacia los líderes, monitores y compañeros.</li>
+      <li>Participar activamente y con reverencia en todos los cultos, tiempos de oración y devocionales.</li>
+      <li>Usar un vocabulario adecuado, edificante y constructivo en todo momento.</li>
+    </ul>
+
+    <h2>2. Horarios y Asistencia</h2>
+    <ul>
+      <li>Cumplir estrictamente con los horarios establecidos (levantarse, comidas, actividades y toque de queda).</li>
+      <li>La asistencia a los cultos, talleres y actividades generales es obligatoria para todos los acampados.</li>
+      <li>Respetar las horas de silencio y descanso nocturno para no molestar a los demás.</li>
+    </ul>
+
+    <h2>3. Uso de Instalaciones y Cabañas</h2>
+    <ul>
+      <li>Mantener el orden, la higiene y la limpieza en las cabañas, baños y todas las zonas comunes.</li>
+      <li><strong>Está estrictamente prohibido entrar en las cabañas o habitaciones del sexo opuesto.</strong></li>
+      <li>Cuidar el entorno natural, no dañar las instalaciones y depositar la basura en los contenedores correspondientes.</li>
+    </ul>
+
+    <h2>4. Dispositivos Móviles</h2>
+    <ul>
+      <li>El uso de teléfonos móviles estará restringido durante los cultos, charlas y dinámicas de grupo.</li>
+      <li>Animamos a desconectar de la tecnología para poder conectar de manera genuina con Dios y con los hermanos durante estos días.</li>
+    </ul>
+    
+    <div class="footer">
+      Documento oficial generado desde el Panel de Gestión TML • Biserica Maranata
+    </div>
+  </body>
+  </html>`;
+  
+  const printWin = window.open('', '_blank');
+  if (printWin) { 
+      printWin.document.open(); 
+      printWin.document.write(html); 
+      printWin.document.close(); 
+      // Pequeño retardo para que cargue la fuente antes de imprimir
+      setTimeout(() => { printWin.print(); }, 500); 
+  } else { 
+      alert("Por favor, permite las ventanas emergentes (pop-ups) en tu navegador para generar el documento."); 
+  }
+}
+/* ═══════════════════════════════════════
+   📜 NORMATIVAS Y PDF
+═══════════════════════════════════════ */
+function renderNormas() {
+  const g = document.getElementById('normas-grid');
+  if(!D.normas || !D.normas.length) { g.innerHTML = '<div class="empty" style="grid-column:1/-1"><p>No hay normativas registradas.</p></div>'; return; }
+  
+  g.innerHTML = D.normas.map(n => {
+    // Convertimos los saltos de línea en puntos de lista (<li>)
+    const puntos = n.contenido.split('\n').filter(x=>x.trim()).map(x=>`<li style="margin-bottom:8px;">${x}</li>`).join('');
+    
+    return `
+    <div class="card" style="border-top:4px solid ${n.color}; box-shadow:var(--sh-sm); position:relative;">
+      <div style="position:absolute; top:12px; right:12px; display:flex; gap:5px; z-index:10;">
+        <button class="icon-btn edit" style="border:none; background:transparent; width:28px; height:28px;" onclick="openModNormaEdit('${n.id}')"><i class="fas fa-pen"></i></button>
+        <button class="icon-btn del" style="border:none; background:transparent; width:28px; height:28px; color:var(--red-v)" onclick="delNorma('${n.id}')"><i class="fas fa-trash"></i></button>
+      </div>
+      <div class="card-hd" style="background:${hexLight(n.color, 0.1)}; color:${n.color}; padding-right:80px;">
+        <div class="card-title"><i class="fas ${n.icono}"></i> ${n.titulo}</div>
+      </div>
+      <div class="card-body">
+        <ul style="padding-left:20px; color:var(--ink2); line-height:1.7; font-size:0.9rem; margin:0;">${puntos}</ul>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openModNorma() {
+  document.getElementById('nId').value = '';
+  document.getElementById('nTit').value = '';
+  document.getElementById('nIco').value = 'fa-check';
+  document.getElementById('nCol').value = '#0f766e';
+  document.getElementById('nCont').value = '';
+  document.getElementById('mNormaT').textContent = 'Nueva Norma';
+  om('modNorma');
+}
+
+function openModNormaEdit(id) {
+  const n = D.normas.find(x => x.id === id); if(!n) return;
+  document.getElementById('nId').value = n.id;
+  document.getElementById('nTit').value = n.titulo;
+  document.getElementById('nIco').value = n.icono;
+  document.getElementById('nCol').value = n.color;
+  document.getElementById('nCont').value = n.contenido;
+  document.getElementById('mNormaT').textContent = 'Editar Norma';
+  om('modNorma');
+}
+
+async function saveNorma() {
+  const t = document.getElementById('nTit').value.trim();
+  const c = document.getElementById('nCont').value.trim();
+  if(!t || !c) { toast('Título y reglas obligatorias', 'err'); return; }
+  
+  const obj = { titulo: t, icono: document.getElementById('nIco').value || 'fa-check', color: document.getElementById('nCol').value, contenido: c };
+  const eid = document.getElementById('nId').value;
+  
+  try {
+    let nid = eid;
+    if(eid) { await sb.from('normas').update(obj).eq('id', eid); Object.assign(D.normas.find(x=>x.id===eid), obj); }
+    else { const {data, error} = await sb.from('normas').insert(obj).select().single(); if(error) throw error; D.normas.push(data); }
+    cm('modNorma'); renderNormas(); toast('Norma guardada', 'ok');
+  } catch(e) { console.error(e); toast('Error al guardar', 'err'); }
+}
+
+async function delNorma(id) {
+  if(!confirm('¿Seguro que quieres borrar esta normativa?')) return;
+  try { await sb.from('normas').delete().eq('id', id); D.normas = D.normas.filter(n => n.id !== id); renderNormas(); toast('Borrada', 'info'); } catch(e) { console.error(e); }
+}
+
+// IMPORTANTE: Dile a la app que pinte las normas al cambiar de pestaña
+// Busca la función go() y añade esto dentro (sobre la línea 562):
+// if(pg==='normas') renderNormas();
+
+function descargarNormasPDF() {
+  if (!D.normas || !D.normas.length) { alert("No hay normativas registradas para exportar."); return; }
+  
+  let html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Normativas - Biserica Maranata</title><style>
+    body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #1e293b; padding: 40px; line-height: 1.6; background: #fff; max-width: 750px; margin: auto; }
+    .header { text-align: center; border-bottom: 3px solid #0f766e; padding-bottom: 25px; margin-bottom: 35px; }
+    .logo-text { font-size: 16px; color: #0f766e; text-transform: uppercase; letter-spacing: 3px; font-weight: 800; margin-bottom: 10px; }
+    h1 { color: #0f172a; font-size: 32px; margin: 0 0 10px 0; font-family: Georgia, serif; }
+    .subtitle { color: #64748b; font-size: 18px; margin: 0; font-style: italic; }
+    h2 { margin-top: 30px; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; font-size: 20px; page-break-after: avoid;}
+    ul { margin-top: 15px; padding-left: 25px; }
+    li { margin-bottom: 10px; font-size: 15px; color: #334155; }
+    .footer { margin-top: 50px; text-align: center; font-size: 12px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 20px; }
+    @media print { body { padding: 20px; } }
+  </style></head><body>
+    <div class="header">
+      <div class="logo-text">🕊️ Biserica Maranata</div>
+      <h1>Normativas del Campamento</h1>
+      <p class="subtitle">Reîntâlnire cu Tatăl</p>
+    </div>`;
+    
+  D.normas.forEach((n, index) => {
+      const puntos = n.contenido.split('\n').filter(x=>x.trim()).map(x=>`<li>${x}</li>`).join('');
+      html += `<h2 style="color:${n.color}">${index + 1}. ${n.titulo}</h2><ul>${puntos}</ul>`;
+  });
+
+  html += `<div class="footer">Documento oficial generado desde el Panel de Gestión TML • Biserica Maranata</div></body></html>`;
+  
+  const printWin = window.open('', '_blank');
+  if (printWin) { printWin.document.open(); printWin.document.write(html); printWin.document.close(); setTimeout(() => { printWin.print(); }, 500); } 
+  else { alert("Por favor, permite las ventanas emergentes (pop-ups)."); }
 }
 
 </script>
