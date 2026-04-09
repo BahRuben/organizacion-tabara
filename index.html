@@ -2204,8 +2204,19 @@ function openModGrupo() {
   document.getElementById('gNom').value=''; 
   document.getElementById('gColor').value='#ea580c'; 
   document.getElementById('gDesc').value=''; 
-  document.getElementById('gPort').innerHTML='<option value="">-- Ninguno --</option>'+D.personas.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join(''); 
-  buildPicker('gMiembrosPick',[]); 
+
+  
+  let ocupados = new Set();
+  D.grupos.forEach(gr => { 
+    if(gr.portavoz_id) ocupados.add(String(gr.portavoz_id)); 
+    (gr.miembros||[]).forEach(pid => ocupados.add(String(pid))); 
+  });
+  
+ 
+  let disponibles = D.personas.filter(p => !ocupados.has(String(p.id)));
+
+  document.getElementById('gPort').innerHTML='<option value="">-- Ninguno --</option>'+disponibles.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join(''); 
+  buildPicker('gMiembrosPick', [], disponibles); 
   om('modGrupo'); 
 }
 
@@ -2215,9 +2226,22 @@ function openModGrupoEdit(id) {
   document.getElementById('gNom').value=g.nombre; 
   document.getElementById('gColor').value=g.color; 
   document.getElementById('gDesc').value=g.descripcion||''; 
-  document.getElementById('gPort').innerHTML='<option value="">-- Ninguno --</option>'+D.personas.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join(''); 
+
+ 
+  let ocupados = new Set();
+  D.grupos.forEach(gr => { 
+    if(gr.id !== id) { 
+      if(gr.portavoz_id) ocupados.add(String(gr.portavoz_id)); 
+      (gr.miembros||[]).forEach(pid => ocupados.add(String(pid))); 
+    } 
+  });
+  
+  
+  let disponibles = D.personas.filter(p => !ocupados.has(String(p.id)) || (g.miembros||[]).includes(p.id) || g.portavoz_id === p.id);
+
+  document.getElementById('gPort').innerHTML='<option value="">-- Ninguno --</option>'+disponibles.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join(''); 
   document.getElementById('gPort').value=g.portavoz_id||''; 
-  buildPicker('gMiembrosPick',g.miembros||[]); 
+  buildPicker('gMiembrosPick', g.miembros||[], disponibles); 
   om('modGrupo'); 
 }
 
