@@ -540,7 +540,7 @@ nav{flex:1;overflow-y:auto;padding:1rem .875rem;}
         <div class="ph-actions" style="display:flex; align-items:center; gap:0.5rem;">
           <button class="icon-btn" id="btnDelSvc" onclick="delSvc()" style="display:none; color: var(--red-v); border-color: var(--red-m); background: var(--red-l);" title="Eliminar Culto Completo"><i class="fas fa-trash-alt"></i></button>
           <button class="btn btn-ghost" onclick="openModSvc()"><i class="fas fa-plus"></i> Nuevo Culto</button>
-          <button class="btn btn-primary" id="btnAddItem" onclick="openModItem()" disabled><i class="fas fa-plus"></i> Añadir Elemento</button>
+          <button class="btn btn-primary" id="btnAddItem" onclick="openModItem()"><i class="fas fa-plus"></i> Añadir Elemento</button>
         </div>
       </div>
       
@@ -2004,16 +2004,11 @@ function selectSvc(id) {
 
 function renderProg() {
   if (D.servicios.length > 0 && !currentSvcId) currentSvcId = D.servicios[0].id;
+
+  const btnAdd = document.getElementById('btnAddItem');
+  if(btnAdd) btnAdd.disabled = !currentSvcId;
+
   const selContainer = document.getElementById('custom-svc-selector');
-  if(selContainer) {
-      selContainer.innerHTML = D.servicios.map(s => {
-          const isActive = s.id === currentSvcId;
-          return `<div class="svc-card ${isActive ? 'active' : ''}" onclick="selectSvc('${s.id}')">
-              <div class="svc-card-title">${s.nombre}</div>
-              <div class="svc-card-date"><i class="far fa-clock"></i> ${s.hora.substring(0,5)} • <i class="far fa-calendar"></i> ${s.fecha.split('-').reverse().join('/')}</div>
-          </div>`;
-      }).join('');
-  }
 
   const btnDel = document.getElementById('btnDelSvc');
   const tl = document.getElementById('prog-timeline');
@@ -2100,6 +2095,11 @@ async function delSvc() {
 }
 
 function openModItem() { 
+  // Si no hay culto seleccionado, avisamos y no abrimos nada
+  if(!currentSvcId) {
+     toast('⚠️ Debes crear o seleccionar un Culto primero', 'err');
+     return;
+  }
   editingItem=null; 
   document.getElementById('itId').value=''; 
   document.getElementById('itTit').value=''; 
@@ -2111,6 +2111,19 @@ function openModItem() {
   om('modItem'); 
 }
 
+// Función para autocompletar al elegir una canción del desplegable
+function onSongSelect() {
+  const sid = document.getElementById('itRef').value;
+  if(!sid) return;
+  const song = D.canciones.find(c => String(c.id) === String(sid));
+  if(song) {
+    document.getElementById('itTit').value = song.titulo;
+    document.getElementById('itDur').value = song.dur || 5;
+    // Selecciona automáticamente a todos los músicos que tenga esa canción
+    const asg = [...new Set([...(song.cantantes||[]), ...(song.instrumentistas||[])])];
+    buildPicker('itPick', asg, getAlabanzaDeptId());
+  }
+}
 function openModItemEdit(iid, sid) { 
   const s=(D.servicios||[]).find(x=>x.id===sid), i=(s.prog||[]).find(x=>x.id===iid); 
   if(!i)return; 
