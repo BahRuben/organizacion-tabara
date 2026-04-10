@@ -1023,6 +1023,32 @@ async function showApp() {
   showLoading(false);
   renderAll();
   setTimeout(setupCSVDrop, 300); 
+
+  //  SINCRONIZACIÓN EN TIEMPO REAL 
+  sb.channel('sincronizacion-en-vivo')
+    .on('postgres_changes', { event: '*', schema: 'public' }, async (payload) => {
+        // 1. Si tú tienes una ventana abierta editando, ignoramos el aviso para no borrarte lo que escribes
+        if (document.querySelector('.mov.open')) return; 
+        
+        // 2. Si no estás editando nada, descargamos los datos nuevos en segundo plano (sin molestar)
+        await loadAll();
+        
+        // 3. Volvemos a pintar de forma invisible solo la pestaña que estés mirando en ese momento
+        const pestanaActual = document.querySelector('.ni.active');
+        if(pestanaActual) {
+           const pg = pestanaActual.dataset.p;
+           if(pg === 'dashboard') renderDash(); 
+           if(pg === 'horario') renderHorario(); 
+           if(pg === 'personas') renderPersonas();
+           if(pg === 'departamentos') renderDepts(); 
+           if(pg === 'alabanza') renderAlabanza(); 
+           if(pg === 'programa') renderProg();
+           if(pg === 'grupos') renderGruposStats(); 
+           if(pg === 'cabanas') renderCabanas();
+           if(pg === 'normas') renderNormas(); 
+        }
+    })
+    .subscribe();
 }
 
 function showLoading(on) {
