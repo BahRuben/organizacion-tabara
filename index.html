@@ -1159,11 +1159,15 @@ function toast(msg, type='info') {
 }
 
 function workload(id) {
-  const i=String(id), d=D.departamentos.filter(x=>x.miembros.includes(i)||x.responsable===i).length, c=D.canciones.filter(x=>(x.cantantes||[]).includes(i) || (x.instrumentistas||[]).includes(i)).length, de=(D.servicios||[]).reduce((a,s)=>a+(s.prog||[]).filter(x=>x.tipo==='devocional'&&(x.asignados||[]).includes(i)).length,0), pr=(D.servicios||[]).reduce((a,s)=>a+(s.prog||[]).filter(x=>x.tipo==='predicacion'&&(x.asignados||[]).includes(i)).length,0), hr=D.horario.filter(x=>x.responsable_id===i).length;
-  const s=d*2+c+de*2+pr*3+hr; return {depts:d, canciones:c, devoc:de, pred:pr, horarioResp:hr, score:s, level:s<=3?'low':s<=8?'med':'high'};
+  const i=String(id), 
+        d=D.departamentos.filter(x=>x.miembros.includes(i)||x.responsable===i).length, 
+        c=D.canciones.filter(x=>(x.cantantes||[]).includes(i) || (x.instrumentistas||[]).includes(i)).length, 
+        de=(D.servicios||[]).reduce((a,s)=>a+(s.prog||[]).filter(x=>x.tipo==='devocional'&&(x.asignados||[]).includes(i)).length,0), 
+        pr=(D.servicios||[]).reduce((a,s)=>a+(s.prog||[]).filter(x=>x.tipo==='predicacion'&&(x.asignados||[]).includes(i)).length,0), 
+        hr=D.horario.filter(x=>x.responsable_id===i).length;
+  const s = d; 
+  return {depts:d, canciones:c, devoc:de, pred:pr, horarioResp:hr, score:s, level:s<=1?'low':s===2?'med':'high'};
 }
-function getAlabanzaDeptId() { const d = D.departamentos.find(x => x.nombre.toLowerCase().includes('alabanza') || x.nombre.toLowerCase().includes('música') || x.icono === 'fa-music'); return d ? d.id : ''; }
-
 
 /* ═══════════════════════════════════════
    🏠 DASHBOARD Y RADAR
@@ -1313,7 +1317,7 @@ function renderDash() {
     } else {
         workloadContainer.innerHTML = `<div style="display:flex; flex-direction:column; gap:1rem;">` + allSorted.map(p => {
             const w = workload(p.id);
-            const pct = Math.min(100, (w.score / 15) * 100);
+            const pct = Math.min(100, (w.score / 10) * 100);
             let stateColor = w.level === 'high' ? 'var(--red-v)' : w.level === 'med' ? 'var(--amber-v)' : 'var(--green-v)';
             let stateBg = w.level === 'high' ? 'var(--red-l)' : w.level === 'med' ? 'var(--amber-l)' : 'var(--green-l)';
             
@@ -1334,7 +1338,7 @@ function renderDash() {
                         <div style="flex:1; min-width:0;">
                             <div style="font-weight:800; font-size:0.95rem; color:var(--ink); display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
                                 <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${p.nombre.split(' ')[0]}</span>
-                                <span style="font-size:0.65rem; font-weight:800; padding:0.15rem 0.5rem; border-radius:6px; background:${stateBg}; color:${stateColor}; line-height:1;">${w.score} pts</span>
+                                <span style="font-size:0.65rem; font-weight:800; padding:0.15rem 0.5rem; border-radius:6px; background:${stateBg}; color:${stateColor}; line-height:1;">${w.score} Equipos</span>
                             </div>
                             <div style="font-size:0.65rem; color:var(--ink3); font-weight:600; margin-top:3px; letter-spacing:0.02em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
                                 <i class="fas fa-layer-group" style="color:var(--ink4); margin-right:3px;"></i> ${detailsStr}
@@ -1387,12 +1391,17 @@ function renderDash() {
     const mD = Object.keys(D.materiales).filter(id => D.materiales[id] && D.materiales[id].length);
     const deptOptions = D.departamentos.map(d => `<option value="${d.id}">${d.nombre}</option>`).join('');
     
+    // 1. Selector Global (Rediseño a Barra Unificada Minimalista)
     let selectorGlobal = `
-      <div style="background:var(--primary-l); padding:1rem; border-radius:var(--r-sm); margin-bottom:1.5rem; border:1px dashed var(--primary-m); display:flex; align-items:center; gap:1rem; flex-wrap:wrap;">
-          <div style="font-weight:700; color:var(--primary-d); font-size:.85rem;"><i class="fas fa-plus-circle"></i> Nuevo Material para:</div>
-          <select class="fctl" id="dash-new-dept-sel" style="width:auto; min-width:180px;"><option value="">Selecciona un departamento...</option>${deptOptions}</select>
-          <input class="fctl" id="dash-new-item-input" style="flex:1; min-width:200px;" placeholder="Ej: Comprar cuerdas para gymkana..." onkeypress="if(event.key==='Enter')addMaterialFromDash()">
-          <button class="btn btn-primary" onclick="addMaterialFromDash()"><i class="fas fa-plus"></i> Añadir</button>
+      <div style="background:var(--surf2); padding:0.75rem 1rem; border-radius:var(--r); margin-bottom:1.5rem; border:1px solid var(--border); display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap; box-shadow:inset 0 1px 3px rgba(0,0,0,0.02);">
+          <div style="font-weight:700; color:var(--ink2); font-size:.85rem; display:flex; align-items:center; gap:0.4rem;"><i class="fas fa-clipboard-list" style="color:var(--primary)"></i> Asignar tarea:</div>
+          <div style="display:flex; flex:1; min-width:250px; background:var(--surf); border:1px solid var(--border2); border-radius:8px; overflow:hidden; box-shadow:var(--sh-sm);">
+              <select id="dash-new-dept-sel" style="border:none; border-right:1px solid var(--border2); background:var(--surf2); padding:0.6rem 0.8rem; font-size:0.8rem; font-weight:600; color:var(--ink); outline:none; cursor:pointer; width:140px;">
+                  <option value="">📁 Equipo...</option>${deptOptions}
+              </select>
+              <input id="dash-new-item-input" style="flex:1; border:none; padding:0.6rem 0.8rem; font-size:0.85rem; outline:none; color:var(--ink);" placeholder="¿Qué se necesita comprar o preparar?" onkeypress="if(event.key==='Enter')addMaterialFromDash()">
+          </div>
+          <button class="btn btn-primary" onclick="addMaterialFromDash()" style="padding:0.6rem 1rem;"><i class="fas fa-plus"></i> Añadir</button>
       </div>`;
 
     if (!mD.length && D.departamentos.length === 0) {
@@ -1406,41 +1415,66 @@ function renderDash() {
             const orderMap = { 'comprar': 1, 'pendiente': 2, 'tengo': 3 };
             const sortedItems = [...items].sort((a,b) => (orderMap[a.estado]||2) - (orderMap[b.estado]||2));
 
+            // 2. Lista de Ítems (Rediseño sin cajas pesadas)
             const itemsHtml = sortedItems.map(m => { 
                 let isT = m.estado === 'tengo'; let isC = m.estado === 'comprar';
-                let col = isT ? 'var(--green-v)' : isC ? 'var(--amber-v)' : 'var(--ink3)';
-                let bg  = isT ? 'var(--green-l)' : isC ? 'var(--amber-l)' : 'var(--surf3)';
-                let ic  = isT ? 'fa-check' : isC ? 'fa-cart-shopping' : 'fa-clock';
+                let col = isT ? 'var(--green-v)' : isC ? 'var(--amber-v)' : 'var(--ink4)';
+                let ic  = isT ? 'fa-circle-check' : isC ? 'fa-cart-shopping' : 'fa-circle';
+                let textColor = isT ? 'var(--ink4)' : 'var(--ink)';
+                let textWeight = isT ? '500' : '600';
+                
                 return `
-                <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.5rem;padding:.4rem;border-radius:8px;background:${isT?'transparent':'var(--surf)'};border:1px solid ${isT?'transparent':'var(--border)'};transition:all .2s;">
-                    <button onclick="event.stopPropagation(); cycleMaterial('${m.id}','${id}','${m.estado||'pendiente'}')" style="width:28px;height:28px;border-radius:6px;background:${bg};color:${col};border:none;display:flex;align-items:center;justify-content:center;font-size:.8rem;cursor:pointer;flex-shrink:0;box-shadow:var(--sh-sm)"><i class="fas ${ic}"></i></button>
-                    <div style="font-size:.85rem;color:var(--ink);font-weight:${isT?'500':'700'};text-decoration:${isT?'line-through':'none'};flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${m.texto}">${m.texto}</div>
-                    <div style="display:flex; gap:2px; flex-shrink:0;">
-                        <button class="icon-btn edit" onclick="event.stopPropagation(); editMaterialText('${m.id}','${id}')" title="Editar texto"><i class="fas fa-pen" style="font-size:.7rem"></i></button>
-                        <button class="icon-btn del" onclick="event.stopPropagation(); delMaterial('${m.id}','${id}')" style="border:none;background:transparent;width:24px;height:24px;min-height:24px;color:var(--red-v)" title="Eliminar material"><i class="fas fa-times" style="font-size:.7rem"></i></button>
+                <div style="display:flex; align-items:flex-start; gap:0.6rem; padding:0.5rem 0; border-bottom:1px dashed var(--border2); position:relative;">
+                    <button onclick="event.stopPropagation(); cycleMaterial('${m.id}','${id}','${m.estado||'pendiente'}')" style="background:none; border:none; color:${col}; font-size:1.1rem; cursor:pointer; padding:0; margin-top:2px; flex-shrink:0; transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='none'">
+                        <i class="fas ${ic}"></i>
+                    </button>
+                    <div style="font-size:0.85rem; color:${textColor}; font-weight:${textWeight}; text-decoration:${isT?'line-through':'none'}; flex:1; line-height:1.4;" title="${m.texto}">${m.texto}</div>
+                    <div style="display:flex; gap:2px; flex-shrink:0; opacity:0.4; transition:opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.4">
+                        <button class="icon-btn edit" onclick="event.stopPropagation(); editMaterialText('${m.id}','${id}')" title="Editar" style="width:24px; height:24px; border:none; background:transparent;"><i class="fas fa-pen" style="font-size:0.7rem"></i></button>
+                        <button class="icon-btn del" onclick="event.stopPropagation(); delMaterial('${m.id}','${id}')" title="Eliminar" style="width:24px; height:24px; border:none; background:transparent; color:var(--red-v);"><i class="fas fa-times" style="font-size:0.7rem"></i></button>
                     </div>
                 </div>`; 
             }).join('');
 
+            // 3. Tarjeta Final y barra sutil de añadir ítem
+            const dColor = d ? d.color : '#0f766e';
+            const bgGradient = `linear-gradient(to bottom, ${hexLight(dColor, 0.04)}, var(--surf) 40%)`;
+            const borderColor = hexLight(dColor, 0.25);
+            
             return `
-            <div style="background:var(--surf2);border:1px solid var(--border);border-radius:var(--r);padding:1.25rem;box-shadow:var(--sh-sm);display:flex;flex-direction:column;">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem;">
-                    <div style="font-size:.95rem;font-weight:800;color:${d ? d.color : '#000'};display:flex;align-items:center;gap:.5rem;"><i class="fas ${d ? d.icono : 'fa-box'}"></i> ${d ? d.nombre : '?'}</div>
-                    <span style="font-size:.75rem;font-weight:700;color:var(--ink3);background:var(--surf3);padding:.15rem .6rem;border-radius:99px;">${doneC}/${items.length}</span>
+            <div style="background:${bgGradient}; border:1px solid ${borderColor}; border-radius:12px; padding:1.25rem; box-shadow:var(--sh-sm); display:flex; flex-direction:column; position:relative; overflow:hidden; transition:all 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 24px ${hexLight(dColor, 0.15)}'; this.style.borderColor='${hexLight(dColor, 0.5)}'" onmouseout="this.style.transform='none'; this.style.boxShadow='var(--sh-sm)'; this.style.borderColor='${borderColor}'">
+                <div style="position:absolute; top:0; left:0; right:0; height:4px; background:${dColor};"></div>
+                
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; margin-top:0.25rem;">
+                    <div style="font-size:0.95rem; font-weight:800; color:var(--ink); display:flex; align-items:center; gap:0.6rem;">
+                        <div style="width:34px; height:34px; border-radius:8px; background:${hexLight(dColor, 0.15)}; color:${dColor}; display:flex; align-items:center; justify-content:center; font-size:1rem; flex-shrink:0;">
+                            <i class="fas ${d ? d.icono : 'fa-box'}"></i>
+                        </div>
+                        <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${d ? d.nombre : '?'}</span>
+                    </div>
+                    <div style="font-size:0.7rem; font-weight:800; color:${pct===100?'var(--green-v)':dColor}; background:${pct===100?'var(--green-l)':hexLight(dColor, 0.1)}; padding:2px 8px; border-radius:99px; border:1px solid ${pct===100?'var(--green-m)':hexLight(dColor, 0.2)};">
+                        ${doneC}/${items.length}
+                    </div>
                 </div>
-                <div style="width:100%;height:6px;background:var(--border);border-radius:99px;margin-bottom:1.25rem;overflow:hidden;">
-                    <div style="width:${pct}%;height:100%;background:${pct===100?'var(--green-v)':(d?d.color:'var(--primary)')};border-radius:99px;transition:width .3s;"></div>
+                
+                <div style="width:100%; height:4px; background:var(--surf3); border-radius:99px; margin-bottom:1rem; overflow:hidden;">
+                    <div style="width:${pct}%; height:100%; background:${pct===100?'var(--green-v)':dColor}; border-radius:99px; transition:width 0.3s;"></div>
                 </div>
-                <div style="flex:1">${itemsHtml}</div>
-                <div style="margin-top:1rem; display:flex; gap:5px;">
-                    <input class="fctl" id="new-item-${id}" placeholder="Añadir material..." style="font-size:.8rem; padding:.4rem .6rem;" onkeypress="if(event.key==='Enter')addMaterialDashInline('${id}')">
-                    <button class="btn btn-primary" onclick="addMaterialDashInline('${id}')" style="padding:.4rem .8rem;"><i class="fas fa-plus"></i></button>
+                
+                <div style="flex:1; max-height:220px; overflow-y:auto; padding-right:5px; margin-bottom:0.5rem; margin-right:-5px;">
+                    ${itemsHtml}
                 </div>
-            </div>`; 
+                
+                <div style="margin-top:auto; padding-top:0.5rem;">
+                    <div style="display:flex; background:var(--surf); border:1px solid var(--border); border-radius:8px; overflow:hidden; transition:border-color 0.2s;" onfocusin="this.style.borderColor='${dColor}'" onfocusout="this.style.borderColor='var(--border)'">
+                        <input id="new-item-${id}" placeholder="Añadir a ${d?d.nombre:'lista'}..." style="flex:1; border:none; background:transparent; padding:0.45rem 0.6rem; font-size:0.8rem; outline:none; color:var(--ink);" onkeypress="if(event.key==='Enter')addMaterialDashInline('${id}')">
+                        <button onclick="addMaterialDashInline('${id}')" style="background:transparent; border:none; color:${dColor}; padding:0 0.75rem; cursor:pointer; font-size:0.85rem; transition:transform 0.1s;" onmousedown="this.style.transform='scale(0.9)'" onmouseup="this.style.transform='none'" title="Añadir"><i class="fas fa-plus"></i></button>
+                    </div>
+                </div>
+            </div>`;
         }).join('');
         mC.innerHTML = selectorGlobal + '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.25rem;">' + cardsHtml + '</div>';
     }
-
     // ALABANZA DASH
     const musicContainer = document.getElementById('d-songs');
     if (!D.canciones.length) {
