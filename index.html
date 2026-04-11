@@ -227,14 +227,14 @@ nav{flex:1;overflow-y:auto;padding:1rem .875rem;}
 .juego-scores{padding:1.25rem;}
 
 /* ================== CABAÑAS Y COCHES ================== */
-.cabana-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1.5rem;}
+.cabana-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1rem;}
 .cabana-card{background:var(--surf);border:1px solid var(--border);border-radius:var(--r); box-shadow:var(--sh-sm);overflow:hidden;transition:all .2s;}
 .cabana-card:hover{box-shadow:var(--sh);border-color:var(--border2);}
 .cabana-slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:.5rem;margin-bottom:1rem;}
 .slot{display:flex;align-items:center;gap:.4rem;padding:.5rem;border-radius:8px;font-size:.78rem;border:1px solid var(--border);font-weight:500;}
 .slot.occupied{background:var(--surf2);}
 .slot.empty{background:transparent;border-style:dashed;color:var(--ink4);}
-.coche-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.5rem;}
+.coche-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1rem;}
 .coche-card{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh-sm);}
 .asiento-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:.5rem;margin-bottom:1rem;}
 .asiento{display:flex;align-items:center;gap:.4rem;padding:.5rem;border-radius:8px;font-size:.78rem;border:1px solid var(--border); width:100%; overflow:hidden;}
@@ -613,6 +613,19 @@ nav{flex:1;overflow-y:auto;padding:1rem .875rem;}
 
     <div class="page" id="page-cabanas">
       <div class="ph"><div class="ph-title"><h1>Logística</h1><p>Cabañas y Transporte</p></div></div>
+      <div class="card" style="margin-bottom: 2rem; border-radius: var(--r-lg); border-top: 4px solid var(--primary);">
+          <div style="padding: 1.25rem 1.25rem 0.5rem; font-weight: 800; font-size: 1.1rem; color: var(--ink); display: flex; align-items: center; justify-content: space-between;">
+              <div style="display:flex; align-items:center; gap:0.6rem;">
+                  <div style="width:32px; height:32px; border-radius:8px; background:var(--primary-l); color:var(--primary); display:flex; align-items:center; justify-content:center; font-size:.9rem;"><i class="fas fa-map-location-dot"></i></div>
+                  Mapa del Campamento
+              </div>
+          </div>
+          <div style="padding: 1.25rem;">
+              <div style="width: 100%; border-radius: 12px; overflow: hidden; background: var(--surf2); border: 2px dashed var(--border2); display: flex; justify-content: center; align-items: center; min-height: 200px;">
+                  <img src="https://www.albergue-paradiso.com/es/wp-content/uploads/2023/11/plano%20albergue%20paradiso%202024.jpg" alt="Mapa Cabañas" style="width: 100%; object-fit: cover;">
+              </div>
+          </div>
+      </div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem;">
         <h2 style="font-family:'Lora',serif;font-size:1.5rem;color:var(--ink)"><i class="fas fa-house-chimney" style="color:var(--primary)"></i> Cabañas</h2>
         <button class="btn btn-primary" onclick="openModCabana()"><i class="fas fa-plus"></i> Nueva Cabaña</button>
@@ -945,7 +958,10 @@ nav{flex:1;overflow-y:auto;padding:1rem .875rem;}
   </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+    
 /* ═══════════════════════════════════════
    ⚙️ CONFIGURACIÓN Y VARIABLES GLOBALES
 ═══════════════════════════════════════ */
@@ -1082,8 +1098,8 @@ async function loadAll() {
       sb.from('servicios').select('*').order('fecha').order('hora'), sb.from('programa_items').select('*').order('posicion'),
       sb.from('programa_asignados').select('*'), sb.from('grupos').select('*').order('nombre'),
       sb.from('grupo_miembros').select('*'), sb.from('juegos').select('*').order('created_at'),
-      sb.from('juego_puntuaciones').select('*'), sb.from('cabanas').select('*').order('nombre'),
-      sb.from('cabana_asignaciones').select('*'), sb.from('coches').select('*').order('nombre'),
+      sb.from('juego_puntuaciones').select('*'), sb.from('cabanas').select('*').order('posicion', {ascending: true}),
+      sb.from('cabana_asignaciones').select('*'), sb.from('coches').select('*').order('posicion', {ascending: true}),
       sb.from('coche_pasajeros').select('*'), sb.from('departamento_materiales').select('*').order('posicion'),
       sb.from('normas').select('*').order('created_at')
     ]);
@@ -1157,6 +1173,44 @@ function toast(msg, type='info') {
   const t=document.createElement('div'); t.className='toast'; t.style.borderLeft=`4px solid ${co[type]}`; t.innerHTML=`<i class="fas fa-${ic[type]}" style="color:${co[type]};font-size:1.2rem"></i><span style="flex:1">${msg}</span>`; c.appendChild(t);
   setTimeout(()=>{ t.style.cssText='opacity:0;transform:translateX(100%);transition:.3s'; setTimeout(()=>t.remove(),300); },3500);
 }
+function initDragAndDrop(containerId, tablaDB, arrayDatos) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  Sortable.create(container, {
+    animation: 150,
+    handle: '.drag-handle', 
+    ghostClass: 'sortable-ghost',
+    onEnd: async function (evt) {
+      const tarjetas = container.querySelectorAll(`[data-id]`);
+      const actualizaciones = [];
+      
+      tarjetas.forEach((tarjeta, index) => {
+        const id = tarjeta.getAttribute('data-id');
+        actualizaciones.push({ id: id, posicion: index });
+      
+        const itemLocal = arrayDatos.find(x => String(x.id) === String(id));
+        if(itemLocal) itemLocal.posicion = index;
+      });
+
+      
+      arrayDatos.sort((a, b) => (a.posicion || 0) - (b.posicion || 0));
+
+      try {
+        await Promise.all(
+          actualizaciones.map(u => {
+            const dbId = isNaN(u.id) ? u.id : Number(u.id);
+            return sb.from(tablaDB).update({ posicion: u.posicion }).eq('id', dbId);
+          })
+        );
+        toast('Orden guardado', 'ok');
+      } catch (e) {
+        console.error(e);
+        toast('Error al guardar el orden', 'err');
+      }
+    }
+  });
+}
 
 function workload(id) {
   const i=String(id), 
@@ -1167,6 +1221,10 @@ function workload(id) {
         hr=D.horario.filter(x=>x.responsable_id===i).length;
   const s = d; 
   return {depts:d, canciones:c, devoc:de, pred:pr, horarioResp:hr, score:s, level:s<=1?'low':s===2?'med':'high'};
+}
+function getAlabanzaDeptId() { 
+  const d = D.departamentos.find(x => x.nombre.toLowerCase().includes('alabanza') || x.nombre.toLowerCase().includes('música') || x.icono === 'fa-music'); 
+  return d ? d.id : ''; 
 }
 
 /* ═══════════════════════════════════════
@@ -2140,12 +2198,33 @@ function renderProg() {
   if(btnAdd) btnAdd.disabled = !currentSvcId;
 
   const selContainer = document.getElementById('custom-svc-selector');
+  
+  // --- ESTE ES EL BLOQUE QUE FALTABA PARA DIBUJAR LOS BOTONES DE LOS CULTOS ---
+  if (selContainer) {
+    if (!D.servicios.length) {
+      selContainer.innerHTML = '';
+    } else {
+      selContainer.innerHTML = D.servicios.map(s => {
+        const isAct = s.id === currentSvcId ? 'active' : '';
+        const f = s.fecha ? s.fecha.split('-').reverse().join('/') : '';
+        return `
+        <div class="svc-card ${isAct}" onclick="selectSvc('${s.id}')">
+            <div class="svc-card-title">${s.nombre}</div>
+            <div class="svc-card-date"><i class="far fa-clock"></i> ${f} · ${s.hora||''}</div>
+        </div>`;
+      }).join('');
+    }
+  }
+  // --------------------------------------------------------------------------
 
   const btnDel = document.getElementById('btnDelSvc');
   const tl = document.getElementById('prog-timeline');
+  
   if(!currentSvcId){ 
     if(btnDel) btnDel.style.display = 'none'; 
-    tl.innerHTML = '<div class="empty">Selecciona un culto</div>'; 
+    tl.innerHTML = '<div class="empty">Crea un nuevo culto primero</div>'; 
+    document.getElementById('prog-timebar').innerHTML = '';
+    document.getElementById('prog-side-panel').innerHTML = '';
     return; 
   }
   
@@ -2172,7 +2251,7 @@ function renderProg() {
         <div class="prog-dot-pro" style="border-color: ${c.c}"></div>
         <div class="prog-card-pro" style="--item-color: ${c.c}; --item-bg: ${c.bg}">
           <div class="prog-card-header"><div class="prog-type-badge"><i class="fas ${c.i}"></i> ${c.l}</div>
-            <div style="display:flex; gap:.4rem; opacity: 0.4;">
+            <div style="display:flex; gap:.4rem; opacity: 0.4; transition: opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.4">
               <button class="icon-btn edit" onclick="openModItemEdit('${i.id}','${currentSvcId}')"><i class="fas fa-pen"></i></button>
               <button class="icon-btn del" onclick="delItem('${i.id}','${currentSvcId}')"><i class="fas fa-trash"></i></button>
             </div>
@@ -2180,7 +2259,7 @@ function renderProg() {
           <div class="prog-title-pro">${i.titulo||'—'}</div>
           ${i.notas ? `<div class="prog-notes-pro"><span>${i.notas}</span></div>` : ''}
           ${i.recursos ? `<div class="prog-resource-tag"><span><strong>Logística:</strong> ${i.recursos}</span></div>` : ''}
-          <div class="prog-footer-pro">${avatars || 'Sin asignar'}</div>
+          <div class="prog-footer-pro">${avatars || '<span style="font-size:0.75rem; color:var(--ink4); font-style:italic;">Sin asignar</span>'}</div>
         </div>
       </div>`; 
     }).join('') + '</div>'; 
@@ -2218,7 +2297,8 @@ async function delSvc() {
   if(!confirm('¿Eliminar este culto?')) return;
   try {
     await sb.from('servicios').delete().eq('id', currentSvcId);
-    D.servicios = D.servicios.filter(s => s.id !== currentSvcId);
+    // Añadimos String() para evitar el fallo de Número vs Texto
+    D.servicios = D.servicios.filter(s => String(s.id) !== String(currentSvcId));
     currentSvcId = null;
     renderProg();
     toast('Culto eliminado', 'info');
@@ -2318,11 +2398,21 @@ function onItTipo() {
 }
 
 async function delItem(iid, sid) { 
-    if(!confirm('¿Borrar?'))return; 
-    await sb.from('programa_items').delete().eq('id',iid); 
-    const svc=D.servicios.find(x=>x.id===sid);
-    if (svc) svc.prog = svc.prog.filter(i => i.id !== iid);
-    renderProg(); 
+    if(!confirm('¿Borrar elemento?')) return; 
+    try {
+        await sb.from('programa_items').delete().eq('id', iid); 
+        // Buscamos el servicio asegurando que comparamos texto con texto
+        const svc = D.servicios.find(x => String(x.id) === String(sid));
+        if (svc) {
+            // Filtramos asegurando que comparamos texto con texto
+            svc.prog = svc.prog.filter(i => String(i.id) !== String(iid));
+        }
+        renderProg(); 
+        toast('Elemento borrado', 'info');
+    } catch(e) {
+        console.error(e);
+        toast('Error al borrar', 'err');
+    }
 }
 
 /* ═══════════════════════════════════════
@@ -2531,12 +2621,48 @@ function renderCabanas() {
   document.getElementById('cabBadge').textContent=sin.length;
   const cg=document.getElementById('cabanas-grid'); 
   if(!D.cabanas.length){ cg.innerHTML='<div class="empty"><p>Añade cabañas</p></div>'; renderCoches(); return; }
-  cg.innerHTML=D.cabanas.map(c=>{ 
+  
+  // AQUI APLICAMOS EL NUEVO DISEÑO
+ cg.innerHTML=D.cabanas.map(c=>{ 
     const as=c.asignados||[], l=(c.capacidad||0)-as.length; 
-    return `<div class="cabana-card"><div style="padding:1.25rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;background:var(--surf2)"><div style="font-weight:800;font-size:1.1rem;color:var(--primary)"><i class="fas fa-house"></i> ${c.nombre}</div><div style="display:flex;gap:.5rem"><button class="icon-btn edit" style="border:none;background:transparent;" onclick="openModCabanaEdit('${c.id}')"><i class="fas fa-pen"></i></button><button class="icon-btn del" style="border:none;background:transparent;" onclick="delCabana('${c.id}')"><i class="fas fa-trash"></i></button></div></div><div style="padding:1.25rem"><div style="margin-bottom:1rem;font-size:.85rem;font-weight:600;color:${l<=0?'var(--red-v)':'var(--green-v)'}">${l<=0?'Lleno':l+' plazas libres'} (${as.length}/${c.capacidad||0})</div><div class="cabana-slots">${as.map(id=>`<div class="slot occupied"><div class="av av-sm" style="background:${pColor(id)}">${ini(pName(id))}</div><span style="overflow:hidden;text-overflow:ellipsis">${pName(id).split(' ')[0]}</span></div>`).join('')}${Array(Math.max(0,l)).fill('<div class="slot empty"><i class="fas fa-bed" style="opacity:.5;margin-right:4px"></i> Libre</div>').join('')}</div></div></div>`; 
+    
+    return `<div class="cabana-card" data-id="${c.id}" style="background:var(--surf); border:1px solid var(--border); border-top:4px solid var(--primary); border-radius:12px; box-shadow:var(--sh-sm); display:flex; flex-direction:column; overflow:hidden;">
+      <div style="padding:0.6rem 0.8rem; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--surf3);">
+        <div style="font-weight:800; font-size:0.95rem; color:var(--ink); display:flex; align-items:center; gap:0.4rem;">
+          <i class="fas fa-grip-lines drag-handle" style="color:var(--ink4); cursor:grab; font-size:0.8rem;"></i>
+          <div style="width:24px; height:24px; border-radius:6px; background:var(--primary-l); color:var(--primary); display:flex; align-items:center; justify-content:center; font-size:.7rem;"><i class="fas fa-house"></i></div>
+          ${c.nombre}
+        </div>
+        <div style="display:flex; align-items:center; gap:0.5rem;">
+            <div style="font-size:0.65rem; font-weight:800; color:${l<=0?'var(--red-v)':'var(--primary-d)'}; background:${l<=0?'var(--red-l)':'var(--primary-l)'}; padding:2px 8px; border-radius:99px; border: 1px solid ${l<=0?'var(--red-m)':'var(--primary-m)'};">${as.length}/${c.capacidad||0}</div>
+            <div style="display:flex; gap:2px; opacity:0.4; transition:opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.4">
+                <button class="icon-btn edit" style="width:20px;height:20px;min-height:20px;border:none;background:transparent;" onclick="openModCabanaEdit('${c.id}')"><i class="fas fa-pen" style="font-size:0.6rem;"></i></button>
+                <button class="icon-btn del" style="width:20px;height:20px;min-height:20px;border:none;background:transparent;color:var(--red-v)" onclick="delCabana('${c.id}')"><i class="fas fa-trash" style="font-size:0.6rem;"></i></button>
+            </div>
+        </div>
+      </div>
+      
+      <div style="padding:0.4rem 0.8rem 0.6rem; flex:1;">
+        <div style="display:flex; flex-direction:column;">
+            ${as.map(id=>`
+            <div style="display:flex; align-items:center; gap:0.5rem; padding:0.25rem 0; border-bottom:1px dashed var(--border2);">
+                <div class="av" style="width:22px; height:22px; font-size:0.55rem; background:${pColor(id)}; box-shadow:var(--sh-sm); flex-shrink:0;">${ini(pName(id))}</div>
+                <span style="font-size:0.8rem; font-weight:600; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${pName(id)}</span>
+            </div>`).join('')}
+            ${Array(Math.max(0,l)).fill(`
+            <div style="display:flex; align-items:center; gap:0.5rem; padding:0.25rem 0; border-bottom:1px dashed var(--border2); opacity:0.6;">
+                <div style="width:22px; height:22px; border-radius:50%; background:var(--surf2); border:1px solid var(--border2); flex-shrink:0; display:flex; align-items:center; justify-content:center;"><i class="fas fa-bed" style="font-size:0.5rem; color:var(--ink4)"></i></div>
+                <span style="font-size:0.75rem; font-weight:500; color:var(--ink3);">Libre</span>
+            </div>`).join('')}
+        </div>
+      </div>
+    </div>`; 
   }).join('');
+  
   renderCoches();
+  setTimeout(() => initDragAndDrop('cabanas-grid', 'cabanas', D.cabanas), 100);
 }
+
 
 function openModCabana() { 
   document.getElementById('cabId').value=''; 
@@ -2625,8 +2751,56 @@ function renderCoches() {
   if(!D.coches.length){ cg.innerHTML='<div class="empty"><p>Añade el primer coche</p></div>'; return; }
   cg.innerHTML=D.coches.map(c=>{ 
     const p=c.pasajeros||[], cond=c.conductor, l=(c.plazas||5)-(p.length+(cond?1:0)); 
-    return `<div class="coche-card"><div style="padding:1.25rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;background:var(--surf2)"><div style="font-weight:800;font-size:1.1rem;color:var(--sky)"><i class="fas fa-car"></i> ${c.nombre}</div><div style="display:flex;gap:.5rem"><button class="icon-btn edit" style="border:none;background:transparent;" onclick="openModCocheEdit('${c.id}')"><i class="fas fa-pen"></i></button><button class="icon-btn del" style="border:none;background:transparent;" onclick="delCoche('${c.id}')"><i class="fas fa-trash"></i></button></div></div><div style="padding:1.25rem">${c.ruta?`<div style="font-size:.8rem;color:var(--ink3);margin-bottom:1rem"><i class="fas fa-route"></i> ${c.ruta}</div>`:''}<div style="margin-bottom:1rem;font-size:.85rem;font-weight:600;color:${l<=0?'var(--red-v)':'var(--green-v)'}">${l<=0?'Lleno':l+' libres'}</div><div class="asiento-grid">${cond?`<div class="asiento ocup" style="border:1px solid var(--sky);background:var(--sky-l)"><div class="av av-sm" style="background:var(--sky)"><i class="fas fa-steering-wheel"></i></div><span style="font-weight:700;color:var(--sky-d)" title="${pName(cond)}">${pName(cond)}</span></div>`:'<div class="asiento lib"><i class="fas fa-steering-wheel"></i> Cond.</div>'}${p.map(id=>`<div class="asiento ocup"><div class="av av-sm" style="background:${pColor(id)}">${ini(pName(id))}</div><span title="${pName(id)}">${pName(id)}</span></div>`).join('')}${Array(Math.max(0,l)).fill('<div class="asiento lib"><i class="fas fa-plus"></i> Libre</div>').join('')}</div></div></div>`; 
+    
+    return `<div class="coche-card" data-id="${c.id}" style="background:var(--surf); border:1px solid var(--border); border-top:4px solid var(--sky); border-radius:12px; box-shadow:var(--sh-sm); display:flex; flex-direction:column; overflow:hidden;">
+      <div style="padding:0.6rem 0.8rem; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--surf3);">
+        <div style="font-weight:800; font-size:0.95rem; color:var(--ink); display:flex; align-items:center; gap:0.4rem;">
+          <i class="fas fa-grip-lines drag-handle" style="color:var(--ink4); cursor:grab; font-size:0.8rem;"></i>
+          <div style="width:24px; height:24px; border-radius:6px; background:var(--sky-l); color:var(--sky-d); display:flex; align-items:center; justify-content:center; font-size:.7rem;"><i class="fas fa-car"></i></div>
+          ${c.nombre}
+        </div>
+        <div style="display:flex; align-items:center; gap:0.5rem;">
+            <div style="font-size:0.65rem; font-weight:800; color:${l<=0?'var(--red-v)':'var(--sky-d)'}; background:${l<=0?'var(--red-l)':'var(--sky-l)'}; padding:2px 8px; border-radius:99px; border: 1px solid ${l<=0?'var(--red-m)':'var(--sky-m)'};">${p.length + (cond?1:0)}/${c.plazas||5}</div>
+            <div style="display:flex; gap:2px; opacity:0.4; transition:opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.4">
+                <button class="icon-btn edit" style="width:20px;height:20px;min-height:20px;border:none;background:transparent;" onclick="openModCocheEdit('${c.id}')"><i class="fas fa-pen" style="font-size:0.6rem;"></i></button>
+                <button class="icon-btn del" style="width:20px;height:20px;min-height:20px;border:none;background:transparent;color:var(--red-v)" onclick="delCoche('${c.id}')"><i class="fas fa-trash" style="font-size:0.6rem;"></i></button>
+            </div>
+        </div>
+      </div>
+      
+      <div style="padding:0.4rem 0.8rem 0.6rem; flex:1;">
+        ${c.ruta?`<div style="font-size:0.65rem; color:var(--ink3); font-weight:600; margin-bottom:0.4rem; display:flex; align-items:center; gap:0.3rem; background:var(--surf2); padding:0.2rem 0.5rem; border-radius:4px;"><i class="fas fa-route" style="color:var(--sky)"></i> <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${c.ruta}</span></div>`:''}
+        
+        <div style="display:flex; flex-direction:column;">
+            ${cond?`
+            <div style="display:flex; align-items:center; gap:0.5rem; padding:0.25rem 0; border-bottom:1px dashed var(--border2);">
+                <div class="av" style="width:22px; height:22px; font-size:0.55rem; background:${pColor(cond)}; box-shadow:var(--sh-sm); flex-shrink:0;">${ini(pName(cond))}</div>
+                <div style="flex:1; min-width:0;">
+                    <div style="font-size:0.8rem; font-weight:700; color:var(--sky-d); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1;">${pName(cond)}</div>
+                    <div style="font-size:0.55rem; color:var(--ink4); font-weight:700; text-transform:uppercase; letter-spacing:0.05em;">Conductor</div>
+                </div>
+            </div>` : `
+            <div style="display:flex; align-items:center; gap:0.5rem; padding:0.25rem 0; border-bottom:1px dashed var(--border2); opacity:0.8;">
+                <div style="width:22px; height:22px; border-radius:50%; background:var(--sky-l); border:1px dashed var(--sky-m); color:var(--sky-d); flex-shrink:0; display:flex; align-items:center; justify-content:center;"><i class="fas fa-steering-wheel" style="font-size:0.6rem;"></i></div>
+                <span style="font-size:0.75rem; font-weight:700; color:var(--sky-d);">Falta Conductor</span>
+            </div>`}
+            
+            ${p.map(id=>`
+            <div style="display:flex; align-items:center; gap:0.5rem; padding:0.25rem 0; border-bottom:1px dashed var(--border2);">
+                <div class="av" style="width:22px; height:22px; font-size:0.55rem; background:${pColor(id)}; box-shadow:var(--sh-sm); flex-shrink:0;">${ini(pName(id))}</div>
+                <span style="font-size:0.8rem; font-weight:500; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${pName(id)}</span>
+            </div>`).join('')}
+            
+            ${Array(Math.max(0,l)).fill(`
+            <div style="display:flex; align-items:center; gap:0.5rem; padding:0.25rem 0; border-bottom:1px dashed var(--border2); opacity:0.6;">
+                <div style="width:22px; height:22px; border-radius:50%; background:var(--surf2); border:1px solid var(--border2); flex-shrink:0; display:flex; align-items:center; justify-content:center;"><i class="fas fa-plus" style="font-size:0.5rem; color:var(--ink4)"></i></div>
+                <span style="font-size:0.75rem; font-weight:500; color:var(--ink3);">Asiento libre</span>
+            </div>`).join('')}
+        </div>
+      </div>
+    </div>`; 
   }).join('');
+  setTimeout(() => initDragAndDrop('coches-grid', 'coches', D.coches), 100);
 }
 
 function openModCoche() { 
@@ -2637,9 +2811,7 @@ function openModCoche() {
   let ocupados = new Set();
   D.coches.forEach(cb => { if(cb.conductor) ocupados.add(String(cb.conductor)); (cb.pasajeros||[]).forEach(pid => ocupados.add(String(pid))); });
   
-  // Pasajeros: Todos los disponibles (¡Incluye invitados!)
   let disponiblesPasajeros = D.personas.filter(p => !ocupados.has(String(p.id)));
-  // Conductores: Los disponibles PERO que no sean de otra iglesia
   let disponiblesConductor = disponiblesPasajeros.filter(p => !p.otra_iglesia);
 
   document.getElementById('cocheConductor').innerHTML='<option value="">-- Ninguno --</option>'+disponiblesConductor.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join(''); 
@@ -2657,12 +2829,9 @@ function openModCocheEdit(id) {
   let ocupados = new Set();
   D.coches.forEach(cb => { if(cb.id !== id) { if(cb.conductor) ocupados.add(String(cb.conductor)); (cb.pasajeros||[]).forEach(pid => ocupados.add(String(pid))); } });
   
-  // Pasajeros: Todos los disponibles + los que ya están en este coche
   let disponiblesPasajeros = D.personas.filter(p => !ocupados.has(String(p.id)) || (c.pasajeros||[]).includes(p.id) || c.conductor === p.id);
-  // Conductores: Los de la lista anterior, pero sin los invitados
   let disponiblesConductor = disponiblesPasajeros.filter(p => !p.otra_iglesia);
   
-  // Quitamos al conductor actual de la lista de pasajeros para el selector de abajo
   let pickerPasajeros = disponiblesPasajeros.filter(p => p.id !== c.conductor);
 
   document.getElementById('cocheConductor').innerHTML='<option value="">-- Ninguno --</option>'+disponiblesConductor.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join(''); 
@@ -2931,7 +3100,6 @@ function descargarNormasPDF() {
       printWin.document.open(); 
       printWin.document.write(html); 
       printWin.document.close(); 
-      // Pequeño retardo para que cargue la fuente antes de imprimir
       setTimeout(() => { printWin.print(); }, 500); 
   } else { 
       alert("Por favor, permite las ventanas emergentes (pop-ups) en tu navegador para generar el documento."); 
