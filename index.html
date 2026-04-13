@@ -2435,47 +2435,63 @@ function renderGruposStats() {
 
 function renderGruposCards() {
     document.getElementById('grupos-grid').innerHTML = D.grupos.map(g => {
+        const barColor = g.color || '#ea580c';
+        const totalOcup = (g.miembros||[]).length + (g.portavoz_id ? 1 : 0);
+
+        // Generador de etiquetas limpias para la lista
+        const getTags = (id) => {
+            const p = D.personas.find(x => String(x.id) === String(id));
+            if (!p) return '';
+            let t = '';
+            if (p.otra_iglesia) t += `<span style="color:var(--rose-v); font-size:0.7rem; font-weight:800; margin-left:6px;">(⛪ Invitado)</span>`;
+            if (p.es_menor) t += `<span style="color:var(--sky-d); font-size:0.7rem; font-weight:800; margin-left:6px;">(-18 Menor)</span>`;
+            if (p.solo_un_dia) t += `<span style="color:var(--amber-v); font-size:0.7rem; font-weight:800; margin-left:6px;">(1 Día)</span>`;
+            return t;
+        };
+
         const port = g.portavoz_id ? `
-            <div style="display:flex; align-items:center; gap:0.6rem; padding:0.5rem 0; border-bottom:1px solid ${hexLight(g.color, 0.3)}; background:${hexLight(g.color, 0.1)}; border-radius:8px; padding-left:8px; margin-bottom:8px;">
-                <div class="av av-sm" style="background:${g.color}; box-shadow:var(--sh-sm);"><i class="fas fa-bullhorn"></i></div>
-                <div style="font-size:0.85rem; font-weight:800; color:var(--ink); flex:1;">${pName(g.portavoz_id)} ${pBadges(g.portavoz_id)}</div>
-                <span style="font-size:0.6rem; font-weight:800; background:${g.color}; color:#fff; padding:2px 6px; border-radius:4px; margin-right:8px;">PORTAVOZ</span>
-            </div>` : `
-            <div style="display:flex; align-items:center; gap:0.6rem; padding:0.5rem 0; border-bottom:1px dashed var(--border2); opacity:0.7; margin-bottom:8px;">
-                <div style="width:28px; height:28px; border-radius:50%; background:var(--surf2); border:1px dashed var(--ink4); display:flex; align-items:center; justify-content:center;"><i class="fas fa-bullhorn" style="font-size:0.6rem; color:var(--ink4)"></i></div>
-                <div style="font-size:0.8rem; font-weight:700; color:var(--ink3); flex:1;">Falta portavoz</div>
-            </div>`;
+            <div style="display:flex; align-items:center; gap:0.75rem; padding:0.6rem 0; border-bottom:1px dashed var(--border2);">
+                <div class="av av-sm" style="background:${barColor}; color:#fff; font-size:0.65rem; width:26px; height:26px;"><i class="fas fa-bullhorn"></i></div>
+                <div style="font-size:0.9rem; font-weight:700; color:var(--ink); flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                    ${pName(g.portavoz_id)}${getTags(g.portavoz_id)}
+                </div>
+                <span style="font-size:0.65rem; font-weight:800; color:${barColor}; background:${hexLight(barColor, 0.1)}; padding:2px 6px; border-radius:4px;">PORTAVOZ</span>
+            </div>` : '';
 
         const memHtml = (g.miembros||[]).map(id => `
-            <div style="display:flex; align-items:center; gap:0.6rem; padding:0.5rem 0; border-bottom:1px dashed var(--border2);">
-                <div class="av av-sm" style="background:${pColor(id)};">${ini(pName(id))}</div>
-                <div style="font-size:0.85rem; font-weight:600; color:var(--ink); flex:1;">${pName(id)} ${pBadges(id)}</div>
+            <div style="display:flex; align-items:center; gap:0.75rem; padding:0.6rem 0; border-bottom:1px dashed var(--border2);">
+                <div class="av av-sm" style="background:${pColor(id)}; font-size:0.65rem; width:26px; height:26px;">${ini(pName(id))}</div>
+                <div style="font-size:0.9rem; font-weight:500; color:var(--ink); flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                    ${pName(id)}${getTags(id)}
+                </div>
             </div>
         `).join('');
 
-        const desc = g.descripcion ? `<div style="font-size:0.75rem; color:var(--ink3); font-weight:600; margin-top:-0.5rem; display:flex; align-items:center; gap:4px;"><i class="fas fa-info-circle" style="color:${g.color}"></i> ${g.descripcion}</div>` : '';
-
         return `
-        <div class="card" style="border-top:4px solid ${g.color}; box-shadow:var(--sh-sm); display:flex; flex-direction:column; background:var(--surf); transition:all 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='var(--sh-lg)';" onmouseout="this.style.transform='none'; this.style.boxShadow='var(--sh-sm)';">
-            <div style="padding:1.25rem; flex:1; display:flex; flex-direction:column; gap:1rem;">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <div style="font-weight:800; font-size:1.1rem; color:var(--ink); display:flex; align-items:center; gap:0.6rem;">
-                        <div style="width:32px; height:32px; border-radius:8px; background:${hexLight(g.color, 0.15)}; color:${g.color}; display:flex; align-items:center; justify-content:center; font-size:.9rem;"><i class="fas fa-flag"></i></div>
-                        ${g.nombre}
+        <div class="card" style="background:var(--surf); border:1px solid var(--border); border-radius:12px; padding:1.25rem; box-shadow:var(--sh-sm); display:flex; flex-direction:column; position:relative; overflow:hidden;">
+            <div style="position:absolute; top:0; left:0; right:0; height:4px; background:${barColor};"></div>
+            
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; margin-top:0.25rem;">
+                <div style="font-size:1.05rem; font-weight:800; color:var(--ink); display:flex; align-items:center; gap:0.6rem;">
+                    <div style="width:34px; height:34px; border-radius:8px; background:${hexLight(barColor, 0.15)}; color:${barColor}; display:flex; align-items:center; justify-content:center; font-size:1rem; flex-shrink:0;">
+                        <i class="fas fa-flag"></i>
                     </div>
-                    <div style="font-size:0.7rem; font-weight:800; color:${g.color}; background:${hexLight(g.color, 0.1)}; padding:2px 8px; border-radius:99px; border: 1px solid ${hexLight(g.color, 0.3)};">
-                        ${(g.miembros||[]).length + (g.portavoz_id ? 1 : 0)} pers.
-                    </div>
+                    <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width: 140px;">${g.nombre}</span>
                 </div>
-                ${desc}
-                <div style="flex:1; max-height:250px; overflow-y:auto; padding-right:5px;">
-                    ${port}
-                    ${memHtml || '<div style="font-size:0.8rem; color:var(--ink4); font-style:italic; padding-top:0.5rem;">Sin miembros</div>'}
+                <div style="display:flex; align-items:center; gap:0.5rem;">
+                    <div style="font-size:0.7rem; font-weight:800; color:${barColor}; background:${hexLight(barColor, 0.1)}; padding:2px 8px; border-radius:99px; border: 1px solid ${hexLight(barColor, 0.2)};">
+                        ${totalOcup} pers.
+                    </div>
+                    <button class="icon-btn edit" onclick="openModGrupoEdit('${g.id}')" style="border:none; background:transparent; width:24px; height:24px;"><i class="fas fa-pen" style="font-size:0.75rem;"></i></button>
+                    <button class="icon-btn del" onclick="delGrupo('${g.id}')" style="border:none; background:transparent; color:var(--red-v); width:24px; height:24px;"><i class="fas fa-trash" style="font-size:0.75rem;"></i></button>
                 </div>
             </div>
-            <div style="padding:0.75rem 1.25rem; border-top:1px solid var(--border); background:var(--surf2); display:flex; justify-content:flex-end; gap:0.5rem;">
-                <button class="btn btn-ghost btn-sm" onclick="openModGrupoEdit('${g.id}')"><i class="fas fa-pen"></i> Editar</button>
-                <button class="btn btn-danger btn-sm" onclick="delGrupo('${g.id}')"><i class="fas fa-trash"></i></button>
+            
+            ${g.descripcion ? `<div style="font-size:0.8rem; color:var(--ink3); font-weight:500; margin-top:-0.5rem; margin-bottom:1rem; font-style:italic;">${g.descripcion}</div>` : ''}
+            
+            <div style="flex:1; max-height:220px; overflow-y:auto; padding-right:5px;">
+                ${port}
+                ${memHtml || '<div style="font-size:0.8rem; color:var(--ink4); font-style:italic; padding-top:0.5rem;">Sin miembros</div>'}
             </div>
         </div>`;
     }).join('');
@@ -2715,50 +2731,64 @@ function renderCabanas() {
   const cg=document.getElementById('cabanas-grid'); 
   if(!D.cabanas.length){ cg.innerHTML='<div class="empty"><p>Añade cabañas</p></div>'; renderCoches(); return; }
   
-  // DISEÑO NUEVO + ARRASTRAR Y SOLTAR (data-id y drag-handle)
   cg.innerHTML = D.cabanas.map(c => { 
     const as = c.asignados || [], l = (c.capacidad || 0) - as.length; 
     const pct = c.capacidad > 0 ? Math.round((as.length / c.capacidad) * 100) : 0;
     const isFull = l <= 0;
     const barColor = isFull ? 'var(--red-v)' : 'var(--primary)';
     
+    const getTags = (id) => {
+        const p = D.personas.find(x => String(x.id) === String(id));
+        if (!p) return '';
+        let t = '';
+        if (p.otra_iglesia) t += `<span style="color:var(--rose-v); font-size:0.7rem; font-weight:800; margin-left:6px;">(⛪ Invitado)</span>`;
+        if (p.es_menor) t += `<span style="color:var(--sky-d); font-size:0.7rem; font-weight:800; margin-left:6px;">(-18 Menor)</span>`;
+        if (p.solo_un_dia) t += `<span style="color:var(--amber-v); font-size:0.7rem; font-weight:800; margin-left:6px;">(1 Día)</span>`;
+        return t;
+    };
+
     const slotsHtml = as.map(id => `
-        <div style="display:flex; align-items:center; gap:0.6rem; padding:0.5rem 0; border-bottom:1px dashed var(--border2);">
-            <div class="av av-sm" style="background:${pColor(id)};">${ini(pName(id))}</div>
-            <div style="font-size:0.85rem; font-weight:600; color:var(--ink); flex:1;">${pName(id)} ${pBadges(id)}</div>
+        <div style="display:flex; align-items:center; gap:0.75rem; padding:0.6rem 0; border-bottom:1px dashed var(--border2);">
+            <div class="av av-sm" style="background:${pColor(id)}; font-size:0.65rem; width:26px; height:26px;">${ini(pName(id))}</div>
+            <div style="font-size:0.9rem; font-weight:500; color:var(--ink); flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                ${pName(id)}${getTags(id)}
+            </div>
         </div>
     `).join('') + Array(Math.max(0,l)).fill(`
-        <div style="display:flex; align-items:center; gap:0.6rem; padding:0.5rem 0; border-bottom:1px dashed var(--border2); opacity:0.5;">
-            <div style="width:28px; height:28px; border-radius:50%; background:var(--surf2); border:1px solid var(--border2); display:flex; align-items:center; justify-content:center;"><i class="fas fa-bed" style="font-size:0.6rem; color:var(--ink4)"></i></div>
-            <div style="font-size:0.8rem; font-weight:500; color:var(--ink3); flex:1;">Cama libre</div>
+        <div style="display:flex; align-items:center; gap:0.75rem; padding:0.6rem 0; border-bottom:1px dashed var(--border2); opacity:0.5;">
+            <div style="width:26px; height:26px; border-radius:50%; background:var(--surf2); border:1px dashed var(--ink4); display:flex; align-items:center; justify-content:center;"><i class="fas fa-bed" style="font-size:0.6rem; color:var(--ink4)"></i></div>
+            <div style="font-size:0.9rem; font-weight:500; color:var(--ink3); flex:1;">Cama libre</div>
         </div>
     `).join('');
 
     return `
-    <div class="card" data-id="${c.id}" style="border-top:4px solid ${barColor}; box-shadow:var(--sh-sm); display:flex; flex-direction:column; background:var(--surf);">
-        <div style="padding:1.25rem; flex:1; display:flex; flex-direction:column; gap:1rem;">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <div style="font-weight:800; font-size:1.1rem; color:var(--ink); display:flex; align-items:center; gap:0.6rem;">
-                    <i class="fas fa-grip-vertical drag-handle" style="color:var(--ink4); cursor:grab; font-size:1rem;" title="Arrastrar para ordenar"></i>
-                    <div style="width:32px; height:32px; border-radius:8px; background:${hexLight(barColor, 0.15)}; color:${barColor}; display:flex; align-items:center; justify-content:center; font-size:.9rem;"><i class="fas fa-house"></i></div>
-                    ${c.nombre}
+    <div class="card" data-id="${c.id}" style="background:var(--surf); border:1px solid var(--border); border-radius:12px; padding:1.25rem; box-shadow:var(--sh-sm); display:flex; flex-direction:column; position:relative; overflow:hidden;">
+        <div style="position:absolute; top:0; left:0; right:0; height:4px; background:${barColor};"></div>
+        
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; margin-top:0.25rem;">
+            <div style="font-size:1.05rem; font-weight:800; color:var(--ink); display:flex; align-items:center; gap:0.6rem;">
+                <i class="fas fa-grip-vertical drag-handle" style="color:var(--border2); cursor:grab; font-size:1rem;" title="Arrastrar para ordenar"></i>
+                <div style="width:34px; height:34px; border-radius:8px; background:${hexLight(barColor, 0.15)}; color:${barColor}; display:flex; align-items:center; justify-content:center; font-size:1rem; flex-shrink:0;">
+                    <i class="fas fa-house"></i>
                 </div>
-                <div style="font-size:0.7rem; font-weight:800; color:${isFull?'var(--red-v)':barColor}; background:${isFull?'var(--red-l)':hexLight(barColor, 0.1)}; padding:2px 8px; border-radius:99px; border: 1px solid ${isFull?'var(--red-m)':hexLight(barColor, 0.3)};">
+                <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width: 140px;">${c.nombre}</span>
+            </div>
+            
+            <div style="display:flex; align-items:center; gap:0.5rem;">
+                <div style="font-size:0.7rem; font-weight:800; color:${isFull?'var(--red-v)':barColor}; background:${isFull?'var(--red-l)':hexLight(barColor, 0.1)}; padding:2px 8px; border-radius:99px; border: 1px solid ${isFull?'var(--red-m)':hexLight(barColor, 0.2)};">
                     ${as.length}/${c.capacidad||0}
                 </div>
-            </div>
-            
-            <div style="width:100%; height:6px; background:var(--surf3); border-radius:99px; overflow:hidden;">
-                <div style="width:${pct}%; height:100%; background:${barColor}; border-radius:99px; transition:width 0.3s;"></div>
-            </div>
-            
-            <div style="flex:1; max-height:250px; overflow-y:auto; padding-right:5px;">
-                ${slotsHtml}
+                <button class="icon-btn edit" onclick="openModCabanaEdit('${c.id}')" style="border:none; background:transparent; width:24px; height:24px;"><i class="fas fa-pen" style="font-size:0.75rem;"></i></button>
+                <button class="icon-btn del" onclick="delCabana('${c.id}')" style="border:none; background:transparent; color:var(--red-v); width:24px; height:24px;"><i class="fas fa-trash" style="font-size:0.75rem;"></i></button>
             </div>
         </div>
-        <div style="padding:0.75rem 1.25rem; border-top:1px solid var(--border); background:var(--surf2); display:flex; justify-content:flex-end; gap:0.5rem;">
-            <button class="btn btn-ghost btn-sm" onclick="openModCabanaEdit('${c.id}')"><i class="fas fa-pen"></i> Editar</button>
-            <button class="btn btn-danger btn-sm" onclick="delCabana('${c.id}')"><i class="fas fa-trash"></i></button>
+        
+        <div style="width:100%; height:4px; background:var(--surf3); border-radius:99px; margin-bottom:1rem; overflow:hidden;">
+            <div style="width:${pct}%; height:100%; background:${isFull?'var(--red-v)':barColor}; border-radius:99px; transition:width 0.3s;"></div>
+        </div>
+        
+        <div style="flex:1; max-height:220px; overflow-y:auto; padding-right:5px;">
+            ${slotsHtml}
         </div>
     </div>`;
   }).join('');
@@ -2805,7 +2835,6 @@ function renderCoches() {
   const cg=document.getElementById('coches-grid'); 
   if(!D.coches.length){ cg.innerHTML='<div class="empty"><p>Añade el primer coche</p></div>'; return; }
   
-  // DISEÑO NUEVO + ARRASTRAR Y SOLTAR (data-id y drag-handle)
   cg.innerHTML = D.coches.map(c => { 
     const p = c.pasajeros || [], cond = c.conductor, l = (c.plazas || 5) - (p.length + (cond ? 1 : 0)); 
     const totalOcup = p.length + (cond ? 1 : 0);
@@ -2813,57 +2842,74 @@ function renderCoches() {
     const isFull = l <= 0;
     const barColor = isFull ? 'var(--red-v)' : 'var(--sky)';
     
+    const getTags = (id) => {
+        const p = D.personas.find(x => String(x.id) === String(id));
+        if (!p) return '';
+        let t = '';
+        if (p.otra_iglesia) t += `<span style="color:var(--rose-v); font-size:0.7rem; font-weight:800; margin-left:6px;">(⛪ Invitado)</span>`;
+        if (p.es_menor) t += `<span style="color:var(--sky-d); font-size:0.7rem; font-weight:800; margin-left:6px;">(-18 Menor)</span>`;
+        if (p.solo_un_dia) t += `<span style="color:var(--amber-v); font-size:0.7rem; font-weight:800; margin-left:6px;">(1 Día)</span>`;
+        return t;
+    };
+
     let condHtml = cond ? `
-        <div style="display:flex; align-items:center; gap:0.6rem; padding:0.5rem 0; border-bottom:1px solid var(--sky-m); background:var(--sky-l); border-radius:8px; padding-left:8px; margin-bottom:8px;">
-            <div class="av av-sm" style="background:var(--sky); box-shadow:var(--sh-sm);"><i class="fas fa-steering-wheel"></i></div>
-            <div style="font-size:0.85rem; font-weight:800; color:var(--sky-d); flex:1;">${pName(cond)} ${pBadges(cond)}</div>
-            <span style="font-size:0.6rem; font-weight:800; background:var(--sky); color:#fff; padding:2px 6px; border-radius:4px; margin-right:8px;">CONDUCTOR</span>
+        <div style="display:flex; align-items:center; gap:0.75rem; padding:0.6rem 0; border-bottom:1px dashed var(--border2);">
+            <div class="av av-sm" style="background:var(--sky); font-size:0.65rem; width:26px; height:26px; color:#fff;"><i class="fas fa-steering-wheel"></i></div>
+            <div style="font-size:0.9rem; font-weight:700; color:var(--ink); flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                ${pName(cond)}${getTags(cond)}
+            </div>
+            <span style="font-size:0.65rem; font-weight:800; color:var(--sky-d); background:var(--sky-l); padding:2px 6px; border-radius:4px;">COND</span>
         </div>` : `
-        <div style="display:flex; align-items:center; gap:0.6rem; padding:0.5rem 0; border-bottom:1px dashed var(--sky-m); opacity:0.7; margin-bottom:8px;">
-            <div style="width:28px; height:28px; border-radius:50%; background:var(--surf2); border:1px dashed var(--sky); display:flex; align-items:center; justify-content:center;"><i class="fas fa-steering-wheel" style="font-size:0.6rem; color:var(--sky)"></i></div>
-            <div style="font-size:0.8rem; font-weight:700; color:var(--sky-d); flex:1;">Falta conductor</div>
+        <div style="display:flex; align-items:center; gap:0.75rem; padding:0.6rem 0; border-bottom:1px dashed var(--border2); opacity:0.6;">
+            <div style="width:26px; height:26px; border-radius:50%; background:var(--surf2); border:1px dashed var(--sky); display:flex; align-items:center; justify-content:center;"><i class="fas fa-steering-wheel" style="font-size:0.6rem; color:var(--sky)"></i></div>
+            <div style="font-size:0.9rem; font-weight:500; color:var(--ink3); flex:1;">Falta conductor</div>
         </div>`;
 
     const pasHtml = p.map(id => `
-        <div style="display:flex; align-items:center; gap:0.6rem; padding:0.5rem 0; border-bottom:1px dashed var(--border2);">
-            <div class="av av-sm" style="background:${pColor(id)};">${ini(pName(id))}</div>
-            <div style="font-size:0.85rem; font-weight:600; color:var(--ink); flex:1;">${pName(id)} ${pBadges(id)}</div>
+        <div style="display:flex; align-items:center; gap:0.75rem; padding:0.6rem 0; border-bottom:1px dashed var(--border2);">
+            <div class="av av-sm" style="background:${pColor(id)}; font-size:0.65rem; width:26px; height:26px;">${ini(pName(id))}</div>
+            <div style="font-size:0.9rem; font-weight:500; color:var(--ink); flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                ${pName(id)}${getTags(id)}
+            </div>
         </div>
     `).join('') + Array(Math.max(0,l)).fill(`
-        <div style="display:flex; align-items:center; gap:0.6rem; padding:0.5rem 0; border-bottom:1px dashed var(--border2); opacity:0.5;">
-            <div style="width:28px; height:28px; border-radius:50%; background:var(--surf2); border:1px solid var(--border2); display:flex; align-items:center; justify-content:center;"><i class="fas fa-plus" style="font-size:0.6rem; color:var(--ink4)"></i></div>
-            <div style="font-size:0.8rem; font-weight:500; color:var(--ink3); flex:1;">Asiento libre</div>
+        <div style="display:flex; align-items:center; gap:0.75rem; padding:0.6rem 0; border-bottom:1px dashed var(--border2); opacity:0.5;">
+            <div style="width:26px; height:26px; border-radius:50%; background:var(--surf2); border:1px dashed var(--ink4); display:flex; align-items:center; justify-content:center;"><i class="fas fa-plus" style="font-size:0.6rem; color:var(--ink4)"></i></div>
+            <div style="font-size:0.9rem; font-weight:500; color:var(--ink3); flex:1;">Asiento libre</div>
         </div>
     `).join('');
 
     return `
-    <div class="card" data-id="${c.id}" style="border-top:4px solid ${barColor}; box-shadow:var(--sh-sm); display:flex; flex-direction:column; background:var(--surf);">
-        <div style="padding:1.25rem; flex:1; display:flex; flex-direction:column; gap:1rem;">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <div style="font-weight:800; font-size:1.1rem; color:var(--ink); display:flex; align-items:center; gap:0.6rem;">
-                    <i class="fas fa-grip-vertical drag-handle" style="color:var(--ink4); cursor:grab; font-size:1rem;" title="Arrastrar para ordenar"></i>
-                    <div style="width:32px; height:32px; border-radius:8px; background:${hexLight(barColor, 0.15)}; color:${barColor}; display:flex; align-items:center; justify-content:center; font-size:.9rem;"><i class="fas fa-car"></i></div>
-                    ${c.nombre}
+    <div class="card" data-id="${c.id}" style="background:var(--surf); border:1px solid var(--border); border-radius:12px; padding:1.25rem; box-shadow:var(--sh-sm); display:flex; flex-direction:column; position:relative; overflow:hidden;">
+        <div style="position:absolute; top:0; left:0; right:0; height:4px; background:${barColor};"></div>
+        
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; margin-top:0.25rem;">
+            <div style="font-size:1.05rem; font-weight:800; color:var(--ink); display:flex; align-items:center; gap:0.6rem;">
+                <i class="fas fa-grip-vertical drag-handle" style="color:var(--border2); cursor:grab; font-size:1rem;" title="Arrastrar para ordenar"></i>
+                <div style="width:34px; height:34px; border-radius:8px; background:${hexLight(barColor, 0.15)}; color:${barColor}; display:flex; align-items:center; justify-content:center; font-size:1rem; flex-shrink:0;">
+                    <i class="fas fa-car"></i>
                 </div>
-                <div style="font-size:0.7rem; font-weight:800; color:${isFull?'var(--red-v)':barColor}; background:${isFull?'var(--red-l)':hexLight(barColor, 0.1)}; padding:2px 8px; border-radius:99px; border: 1px solid ${isFull?'var(--red-m)':hexLight(barColor, 0.3)};">
+                <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width: 140px;">${c.nombre}</span>
+            </div>
+            
+            <div style="display:flex; align-items:center; gap:0.5rem;">
+                <div style="font-size:0.7rem; font-weight:800; color:${isFull?'var(--red-v)':barColor}; background:${isFull?'var(--red-l)':hexLight(barColor, 0.1)}; padding:2px 8px; border-radius:99px; border: 1px solid ${isFull?'var(--red-m)':hexLight(barColor, 0.2)};">
                     ${totalOcup}/${c.plazas||5}
                 </div>
-            </div>
-            
-            ${c.ruta?`<div style="font-size:0.75rem; color:var(--ink3); font-weight:600; margin-top:-0.5rem; display:flex; align-items:center; gap:4px;"><i class="fas fa-route" style="color:var(--sky)"></i> ${c.ruta}</div>`:''}
-            
-            <div style="width:100%; height:6px; background:var(--surf3); border-radius:99px; overflow:hidden;">
-                <div style="width:${pct}%; height:100%; background:${barColor}; border-radius:99px; transition:width 0.3s;"></div>
-            </div>
-            
-            <div style="flex:1; max-height:250px; overflow-y:auto; padding-right:5px;">
-                ${condHtml}
-                ${pasHtml}
+                <button class="icon-btn edit" onclick="openModCocheEdit('${c.id}')" style="border:none; background:transparent; width:24px; height:24px;"><i class="fas fa-pen" style="font-size:0.75rem;"></i></button>
+                <button class="icon-btn del" onclick="delCoche('${c.id}')" style="border:none; background:transparent; color:var(--red-v); width:24px; height:24px;"><i class="fas fa-trash" style="font-size:0.75rem;"></i></button>
             </div>
         </div>
-        <div style="padding:0.75rem 1.25rem; border-top:1px solid var(--border); background:var(--surf2); display:flex; justify-content:flex-end; gap:0.5rem;">
-            <button class="btn btn-ghost btn-sm" onclick="openModCocheEdit('${c.id}')"><i class="fas fa-pen"></i> Editar</button>
-            <button class="btn btn-danger btn-sm" onclick="delCoche('${c.id}')"><i class="fas fa-trash"></i></button>
+        
+        ${c.ruta ? `<div style="font-size:0.8rem; color:var(--ink3); font-weight:600; margin-top:-0.5rem; margin-bottom:1rem; display:flex; align-items:center; gap:6px;"><i class="fas fa-route" style="color:var(--sky)"></i> ${c.ruta}</div>` : ''}
+        
+        <div style="width:100%; height:4px; background:var(--surf3); border-radius:99px; margin-bottom:1rem; overflow:hidden;">
+            <div style="width:${pct}%; height:100%; background:${isFull?'var(--red-v)':barColor}; border-radius:99px; transition:width 0.3s;"></div>
+        </div>
+        
+        <div style="flex:1; max-height:220px; overflow-y:auto; padding-right:5px;">
+            ${condHtml}
+            ${pasHtml}
         </div>
     </div>`;
   }).join('');
