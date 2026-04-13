@@ -1147,6 +1147,15 @@ function cm(id) { document.getElementById(id).classList.remove('open'); }
 function ini(n) { return n ? n.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase() : '?'; }
 function pColor(id) { const p=D.personas.find(x=>String(x.id)===String(id)); return p?p.color:'#94a3b8'; }
 function pName(id)  { const p=D.personas.find(x=>String(x.id)===String(id)); return p?p.nombre:'—'; }
+function pBadges(id) {
+ const p = D.personas.find(x => String(x.id) === String(id));
+ if (!p) return '';
+ let b = '';
+ if (p.otra_iglesia) b += `<span style="background:var(--rose-v); color:#fff; padding:2px 5px; border-radius:4px; font-size:0.55rem; font-weight:800; margin-left:4px; vertical-align:middle; line-height:1; border:none; display:inline-block;" title="Invitado de otra iglesia">INV ⛪</span>`;
+ if (p.es_menor) b += `<span style="background:var(--sky-d); color:#fff; padding:2px 5px; border-radius:4px; font-size:0.55rem; font-weight:800; margin-left:4px; vertical-align:middle; line-height:1; border:none; display:inline-block;" title="Menor de edad">-18</span>`;
+ if (p.solo_un_dia) b += `<span style="color:var(--amber-v); font-size:0.65rem; font-weight:800; margin-left:4px; vertical-align:middle;" title="Solo un día">(1D)</span>`;
+ return b;
+}
 function pRol(id)   { const p=D.personas.find(x=>String(x.id)===String(id)); return p?p.rol:''; }
 function hexLight(h,a=0.1) { const r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16); return `rgba(${r},${g},${b},${a})`; }
 
@@ -1158,13 +1167,13 @@ function buildPicker(cId, sel=[], fil='') {
   document.getElementById(cId).innerHTML = p.length ? p.map(p=>{
     const isGuest = p.otra_iglesia;
     const guestClass = isGuest ? ' guest' : '';
-    // Aquí está la etiqueta pequeña y moderna:
     const guestPrefix = isGuest ? `<span style="font-size:0.6rem; font-weight:800; background:var(--rose-v); color:#fff; padding:1px 4px; border-radius:4px; margin-right:4px; vertical-align:middle; border:none; line-height:1;">INV ⛪</span>` : '';
     
-    return `<button type="button" class="ptog${sel.includes(p.id)?' sel':''}${guestClass}" data-id="${p.id}" style="${sel.includes(p.id)?'background:'+p.color+';border-color:'+p.color+';color:#fff':''}" onclick="togP(this,'${p.id}','${p.color}')">${guestPrefix}${p.nombre.split(' ')[0]}</button>`;
+    let btnStyle = sel.includes(p.id) ? `background:${p.color};border-color:${p.color};color:#fff;` : '';
+    
+    return `<button type="button" class="ptog${sel.includes(p.id)?' sel':''}${guestClass}" data-id="${p.id}" style="${btnStyle}" onclick="togP(this,'${p.id}','${p.color}')">${guestPrefix}${p.nombre.split(' ')[0]}</button>`;
   }).join('') : '<span style="font-size:.75rem;color:var(--ink3)">No hay personas disponibles.</span>';
 }
-
 function togP(btn, id, col) { btn.classList.toggle('sel'); if(btn.classList.contains('sel')){btn.style.background=col;btn.style.borderColor=col;btn.style.color='#fff';}else{btn.style.background='';btn.style.borderColor='';btn.style.color='';} }
 function getSelected(cId) { return [...document.querySelectorAll(`#${cId} .ptog.sel`)].map(b=>b.dataset.id); }
 
@@ -1233,7 +1242,7 @@ function getAlabanzaDeptId() {
 function openModWorkload(id) {
     const p = D.personas.find(x => x.id === id);
     if(!p) return;
-    document.getElementById('mWkName').textContent = 'Tareas de ' + p.nombre.split(' ')[0];
+    document.getElementById('mWkName').innerHTML = 'Tareas de ' + p.nombre.split(' ')[0] + ' ' + pBadges(p.id);
     
     let html = '<div style="display:flex; flex-direction:column; gap:1rem;">';
     
@@ -1802,11 +1811,11 @@ function openDeptDetail(id) {
   document.getElementById('dd-sub').textContent=d.desc||'';
   let mHTML = ''; 
   if(d.responsable) mHTML+=`<div style="padding:.75rem;background:var(--surf2);border-radius:8px;border:1px solid var(--border);margin-bottom:1rem;"><div style="font-size:.7rem;color:var(--primary);font-weight:700;text-transform:uppercase;margin-bottom:.5rem">⭐ Responsable</div><div style="display:flex;align-items:center;gap:1rem;"><div class="av av-lg" style="background:${pColor(d.responsable)}">${ini(pName(d.responsable))}</div><div><div style="font-weight:700;font-size:1.1rem">${pName(d.responsable)}</div></div></div></div>`;
-  mHTML+=`<div class="people-grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr))">${(d.miembros||[]).map(mid=>`<div class="pcard" style="padding:1rem;"><div class="pcard-top" style="margin-bottom:0"><div class="av" style="background:${pColor(mid)}">${ini(pName(mid))}</div><div class="pcard-info"><h3>${pName(mid)}</h3><p>${pRol(mid)}</p></div></div></div>`).join('')}</div>`;
+  mHTML+=`<div class="people-grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr))">${(d.miembros||[]).map(mid=>`<div class="pcard" style="padding:1rem;"><div class="pcard-top" style="margin-bottom:0"><div class="av" style="background:${pColor(mid)}">${ini(pName(mid))}</div><div class="pcard-info"><h3>${pName(mid)} ${pBadges(mid)}</h3><p>${pRol(mid)}</p></div></div></div>`).join('')}</div>`;
   document.getElementById('dd-resp-members').innerHTML=mHTML; 
   renderMateriales(id);
   const aI=[...(d.responsable?[d.responsable]:[]),...(d.miembros||[])]; 
-  document.getElementById('dd-stats').innerHTML=`<div style="display:flex;justify-content:space-between;margin-bottom:.5rem"><span style="color:var(--ink3)">Equipo</span><strong>${aI.length}</strong></div><div style="display:flex;justify-content:space-between;margin-bottom:1rem"><span style="color:var(--ink3)">Materiales</span><strong>${(D.materiales[id]||[]).length}</strong></div><div style="font-size:.75rem;font-weight:700;color:var(--ink4);text-transform:uppercase;margin-bottom:.5rem;border-top:1px solid var(--border);padding-top:1rem;">Miembros</div>${aI.map(mid=>`<div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.4rem"><div class="av av-sm" style="background:${pColor(mid)}">${ini(pName(mid))}</div><span style="font-size:.8rem">${pName(mid).split(' ')[0]}</span></div>`).join('')}`;
+ document.getElementById('dd-stats').innerHTML=`<div style="display:flex;justify-content:space-between;margin-bottom:.5rem"><span style="color:var(--ink3)">Equipo</span><strong>${aI.length}</strong></div><div style="display:flex;justify-content:space-between;margin-bottom:1rem"><span style="color:var(--ink3)">Materiales</span><strong>${(D.materiales[id]||[]).length}</strong></div><div style="font-size:.75rem;font-weight:700;color:var(--ink4);text-transform:uppercase;margin-bottom:.5rem;border-top:1px solid var(--border);padding-top:1rem;">Miembros</div>${aI.map(mid=>`<div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.4rem"><div class="av av-sm" style="background:${pColor(mid)}">${ini(pName(mid))}</div><span style="font-size:.8rem; display:flex; align-items:center; flex-wrap:wrap;">${pName(mid).split(' ')[0]} ${pBadges(mid)}</span></div>`).join('')}`;
 }
 
 function backDept() { 
@@ -2269,7 +2278,7 @@ function renderProg() {
   const tot=Object.values(td).reduce((a,v)=>a+v,0); 
   document.getElementById('prog-timebar').innerHTML=Object.keys(td).sort((a,b)=>td[b]-td[a]).map(t=>`<div style="display:flex;justify-content:space-between;font-size:.8rem;margin-bottom:.6rem; align-items:center;"><span style="color:var(--ink3); display:flex; align-items:center; gap:8px;"><span style="width:26px; height:26px; border-radius:8px; background:${TC[t].bg}; color:${TC[t].c}; display:flex; align-items:center; justify-content:center;"><i class="fas ${TC[t].i}" style="font-size:.8rem;"></i></span> ${TC[t].l}</span><strong style="color:var(--ink)">${td[t]} min</strong></div>`).join('')+`<div style="border-top:1px dashed var(--border2);margin-top:1rem;padding-top:1rem;display:flex;justify-content:space-between;font-size:1.1rem;font-family:'Lora',serif;font-weight:700"><span>Total</span><span style="color:var(--primary)">${tot} min</span></div>`;
   const pc={}; p.forEach(i=>{(i.asignados||[]).forEach(id=>{if(!pc[id])pc[id]=0;pc[id]++;});}); 
-  document.getElementById('prog-side-panel').innerHTML=Object.keys(pc).sort((a,b)=>pc[b]-pc[a]).map(id=>`<div style="display:flex;align-items:center;gap:.75rem;padding:.6rem 0;border-bottom:1px solid var(--border)"><div class="av av-sm" style="background:${pColor(id)}">${ini(pName(id))}</div><div style="flex:1;font-size:.85rem;font-weight:600">${pName(id).split(' ')[0]}</div><div style="font-weight:700;color:var(--primary);background:var(--primary-l);padding:.1rem .5rem;border-radius:99px;font-size:.7rem">${pc[id]}</div></div>`).join('');
+ document.getElementById('prog-side-panel').innerHTML=Object.keys(pc).sort((a,b)=>pc[b]-pc[a]).map(id=>`<div style="display:flex;align-items:center;gap:.75rem;padding:.6rem 0;border-bottom:1px solid var(--border)"><div class="av av-sm" style="background:${pColor(id)}">${ini(pName(id))}</div><div style="flex:1;font-size:.85rem;font-weight:600">${pName(id).split(' ')[0]} ${pBadges(id)}</div><div style="font-weight:700;color:var(--primary);background:var(--primary-l);padding:.1rem .5rem;border-radius:99px;font-size:.7rem">${pc[id]}</div></div>`).join('');
 }
 
 function openModSvc() { 
@@ -2426,10 +2435,49 @@ function renderGruposStats() {
 
 function renderGruposCards() {
     document.getElementById('grupos-grid').innerHTML = D.grupos.map(g => {
-        const av = (g.miembros||[]).map(id=>`<div class="av av-sm" style="background:${pColor(id)};border:2px solid #fff;" title="${pName(id)}">${ini(pName(id))}</div>`).join('');
-        const port = g.portavoz_id ? `<div style="font-size:.75rem;color:var(--ink3);margin-bottom:.5rem"><i class="fas fa-bullhorn" style="color:var(--primary)"></i> Portavoz: <strong>${pName(g.portavoz_id)}</strong></div>` : '';
-        const desc = g.descripcion ? `<div style="font-size:.8rem;color:var(--ink2);margin-bottom:1rem;font-style:italic">"${g.descripcion}"</div>` : '';
-        return `<div class="grupo-card" style="--grupo-color: ${g.color}"><div style="position:absolute;top:1rem;right:1rem;display:flex;gap:.3rem;"><button class="icon-btn edit" style="border:none;box-shadow:none;" onclick="openModGrupoEdit('${g.id}')"><i class="fas fa-pen"></i></button><button class="icon-btn del" style="border:none;box-shadow:none;" onclick="delGrupo('${g.id}')"><i class="fas fa-trash"></i></button></div><div class="grupo-body"><h3 style="font-size:1.2rem;font-weight:800;color:var(--ink);margin-bottom:.5rem;">${g.nombre}</h3>${port}${desc}<div style="font-size:.8rem;color:var(--ink3);margin-bottom:.5rem;border-top:1px solid var(--border);padding-top:1rem">${(g.miembros||[]).length} Miembros</div><div style="display:flex;flex-wrap:wrap;margin-left:8px;">${av||'<span style="font-size:.8rem;color:#999">Vacío</span>'}</div></div></div>`;
+        const port = g.portavoz_id ? `
+            <div style="display:flex; align-items:center; gap:0.6rem; padding:0.5rem 0; border-bottom:1px solid ${hexLight(g.color, 0.3)}; background:${hexLight(g.color, 0.1)}; border-radius:8px; padding-left:8px; margin-bottom:8px;">
+                <div class="av av-sm" style="background:${g.color}; box-shadow:var(--sh-sm);"><i class="fas fa-bullhorn"></i></div>
+                <div style="font-size:0.85rem; font-weight:800; color:var(--ink); flex:1;">${pName(g.portavoz_id)} ${pBadges(g.portavoz_id)}</div>
+                <span style="font-size:0.6rem; font-weight:800; background:${g.color}; color:#fff; padding:2px 6px; border-radius:4px; margin-right:8px;">PORTAVOZ</span>
+            </div>` : `
+            <div style="display:flex; align-items:center; gap:0.6rem; padding:0.5rem 0; border-bottom:1px dashed var(--border2); opacity:0.7; margin-bottom:8px;">
+                <div style="width:28px; height:28px; border-radius:50%; background:var(--surf2); border:1px dashed var(--ink4); display:flex; align-items:center; justify-content:center;"><i class="fas fa-bullhorn" style="font-size:0.6rem; color:var(--ink4)"></i></div>
+                <div style="font-size:0.8rem; font-weight:700; color:var(--ink3); flex:1;">Falta portavoz</div>
+            </div>`;
+
+        const memHtml = (g.miembros||[]).map(id => `
+            <div style="display:flex; align-items:center; gap:0.6rem; padding:0.5rem 0; border-bottom:1px dashed var(--border2);">
+                <div class="av av-sm" style="background:${pColor(id)};">${ini(pName(id))}</div>
+                <div style="font-size:0.85rem; font-weight:600; color:var(--ink); flex:1;">${pName(id)} ${pBadges(id)}</div>
+            </div>
+        `).join('');
+
+        const desc = g.descripcion ? `<div style="font-size:0.75rem; color:var(--ink3); font-weight:600; margin-top:-0.5rem; display:flex; align-items:center; gap:4px;"><i class="fas fa-info-circle" style="color:${g.color}"></i> ${g.descripcion}</div>` : '';
+
+        return `
+        <div class="card" style="border-top:4px solid ${g.color}; box-shadow:var(--sh-sm); display:flex; flex-direction:column; background:var(--surf); transition:all 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='var(--sh-lg)';" onmouseout="this.style.transform='none'; this.style.boxShadow='var(--sh-sm)';">
+            <div style="padding:1.25rem; flex:1; display:flex; flex-direction:column; gap:1rem;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div style="font-weight:800; font-size:1.1rem; color:var(--ink); display:flex; align-items:center; gap:0.6rem;">
+                        <div style="width:32px; height:32px; border-radius:8px; background:${hexLight(g.color, 0.15)}; color:${g.color}; display:flex; align-items:center; justify-content:center; font-size:.9rem;"><i class="fas fa-flag"></i></div>
+                        ${g.nombre}
+                    </div>
+                    <div style="font-size:0.7rem; font-weight:800; color:${g.color}; background:${hexLight(g.color, 0.1)}; padding:2px 8px; border-radius:99px; border: 1px solid ${hexLight(g.color, 0.3)};">
+                        ${(g.miembros||[]).length + (g.portavoz_id ? 1 : 0)} pers.
+                    </div>
+                </div>
+                ${desc}
+                <div style="flex:1; max-height:250px; overflow-y:auto; padding-right:5px;">
+                    ${port}
+                    ${memHtml || '<div style="font-size:0.8rem; color:var(--ink4); font-style:italic; padding-top:0.5rem;">Sin miembros</div>'}
+                </div>
+            </div>
+            <div style="padding:0.75rem 1.25rem; border-top:1px solid var(--border); background:var(--surf2); display:flex; justify-content:flex-end; gap:0.5rem;">
+                <button class="btn btn-ghost btn-sm" onclick="openModGrupoEdit('${g.id}')"><i class="fas fa-pen"></i> Editar</button>
+                <button class="btn btn-danger btn-sm" onclick="delGrupo('${g.id}')"><i class="fas fa-trash"></i></button>
+            </div>
+        </div>`;
     }).join('');
 }
 
@@ -2511,15 +2559,55 @@ function grupoTab(t,b) {
 }
 
 function renderJuegos() {
-  const l=document.getElementById('juegos-list'); 
-  if(!D.juegos.length){ l.innerHTML='<div class="empty"><p>Crea un juego primero</p></div>'; renderRankingSide(); return; }
-  l.innerHTML=D.juegos.map(j=>{
-    const sc=D.grupos.map(g=>{ const p=(j.puntuaciones||[]).find(x=>x.grupo_id===g.id), val=p?parseInt(p.puntuacion)||0:0, pct=j.puntuacion_max>0?Math.round(val/j.puntuacion_max*100):0; return `<div style="display:flex;align-items:center;gap:1rem;margin-bottom:.75rem;"><div style="width:12px;height:12px;border-radius:50%;background:${g.color}"></div><div style="width:100px;font-weight:600">${g.nombre}</div><input class="fctl" type="number" style="width:80px;padding:.3rem;text-align:center" value="${val}" onchange="updatePunt('${j.id}','${g.id}',this.value)"><div style="flex:1;height:8px;background:var(--surf3);border-radius:99px;overflow:hidden"><div style="height:100%;width:${pct}%;background:${g.color};border-radius:99px"></div></div></div>`; }).join('');
-    const mat = j.materiales?`<div style="font-size:.75rem;color:var(--ink3);margin-top:.5rem"><i class="fas fa-box-open" style="color:var(--amber-v)"></i> Materiales: ${j.materiales}</div>`:'';
-    const des = j.descripcion?`<div style="font-size:.8rem;color:var(--ink2);margin-top:.5rem;font-style:italic">"${j.descripcion}"</div>`:'';
-    return `<div class="juego-card"><div class="juego-hd"><div style="flex:1"><div style="font-weight:800;font-size:1.1rem">${j.nombre}</div><div style="font-size:.75rem;color:var(--ink3)">${j.tipo} · Máx: ${j.puntuacion_max} pts</div>${des}${mat}</div><div><button class="icon-btn edit" style="border:none;background:transparent;" onclick="openModJuegoEdit('${j.id}')"><i class="fas fa-pen"></i></button><button class="icon-btn del" style="border:none;background:transparent;" onclick="delJuego('${j.id}')"><i class="fas fa-trash"></i></button></div></div><div class="juego-scores">${sc}</div></div>`;
-  }).join(''); 
-  renderRankingSide();
+    const l=document.getElementById('juegos-list'); 
+    if(!D.juegos.length){ l.innerHTML='<div class="empty"><p>Crea un juego primero</p></div>'; renderRankingSide(); return; }
+    
+    l.innerHTML=D.juegos.map(j=>{
+        const isFinalizado = j.estado === 'finalizado';
+        const estColor = isFinalizado ? 'var(--green-v)' : j.estado === 'en_curso' ? 'var(--amber-v)' : 'var(--ink3)';
+        const estBg = isFinalizado ? 'var(--green-l)' : j.estado === 'en_curso' ? 'var(--amber-l)' : 'var(--surf2)';
+        const estText = isFinalizado ? 'Finalizado' : j.estado === 'en_curso' ? 'En curso' : 'Pendiente';
+        const estIcon = isFinalizado ? 'fa-check-circle' : j.estado === 'en_curso' ? 'fa-play-circle' : 'fa-clock';
+
+        const sc=D.grupos.map(g=>{ 
+            const p=(j.puntuaciones||[]).find(x=>x.grupo_id===g.id), val=p?parseInt(p.puntuacion)||0:0, pct=j.puntuacion_max>0?Math.round(val/j.puntuacion_max*100):0; 
+            return `<div style="display:flex;align-items:center;gap:1rem;margin-bottom:.75rem; padding:0.5rem; border-radius:8px; transition:background 0.2s;" onmouseover="this.style.background='var(--surf2)'" onmouseout="this.style.background='transparent'">
+                <div style="width:16px;height:16px;border-radius:4px;background:${g.color}; box-shadow:0 2px 4px ${hexLight(g.color, 0.3)};"></div>
+                <div style="width:120px;font-weight:700; color:var(--ink); font-size:0.9rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${g.nombre}</div>
+                <input class="fctl" type="number" style="width:70px;padding:.3rem;text-align:center; font-weight:800; color:var(--primary-d); background:var(--primary-l); border-color:var(--primary-m);" value="${val}" onchange="updatePunt('${j.id}','${g.id}',this.value)">
+                <div style="flex:1;height:10px;background:var(--surf3);border-radius:99px;overflow:hidden; box-shadow:inset 0 1px 2px rgba(0,0,0,0.05);">
+                    <div style="height:100%;width:${pct}%;background:${g.color};border-radius:99px; transition:width 0.5s cubic-bezier(0.4, 0, 0.2, 1);"></div>
+                </div>
+            </div>`; 
+        }).join('');
+        
+        const mat = j.materiales ? `<div style="font-size:.75rem;color:var(--ink3);margin-top:.5rem; display:flex; align-items:center; gap:4px; background:var(--amber-l); color:var(--amber-v); padding:4px 8px; border-radius:6px; width:fit-content;"><i class="fas fa-box-open"></i> ${j.materiales}</div>` : '';
+        const des = j.descripcion ? `<div style="font-size:.85rem;color:var(--ink2);margin-top:.8rem;font-style:italic; background:var(--surf2); padding:0.8rem; border-radius:8px; border-left:3px solid var(--border2);">${j.descripcion}</div>` : '';
+        
+        return `
+        <div class="card" style="margin-bottom:1.5rem; border-top:4px solid ${estColor}; box-shadow:var(--sh-sm); transition:all 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='var(--sh-lg)';" onmouseout="this.style.transform='none'; this.style.boxShadow='var(--sh-sm)';">
+            <div style="padding:1.25rem; border-bottom:1px solid var(--border); display:flex; align-items:flex-start; justify-content:space-between; background:var(--surf);">
+                <div style="flex:1;">
+                    <div style="display:flex; align-items:center; gap:0.8rem; margin-bottom:0.4rem;">
+                        <div style="width:36px; height:36px; border-radius:8px; background:${estBg}; color:${estColor}; display:flex; align-items:center; justify-content:center; font-size:1.1rem;"><i class="fas fa-gamepad"></i></div>
+                        <h3 style="font-size:1.2rem; font-weight:800; color:var(--ink); margin:0;">${j.nombre}</h3>
+                        <span style="font-size:0.65rem; font-weight:800; text-transform:uppercase; padding:0.2rem 0.6rem; border-radius:6px; background:${estBg}; color:${estColor}; border:1px solid ${hexLight(estColor, 0.3)};"><i class="fas ${estIcon}"></i> ${estText}</span>
+                    </div>
+                    <div style="font-size:.75rem;color:var(--ink3); font-weight:600; margin-left:48px;">${j.tipo} · Máx: <span style="color:var(--ink); font-weight:800;">${j.puntuacion_max} pts</span></div>
+                    <div style="margin-left:48px;">${mat}${des}</div>
+                </div>
+                <div style="display:flex; gap:0.3rem;">
+                    <button class="icon-btn edit" style="border:none;background:var(--surf2);" onclick="openModJuegoEdit('${j.id}')"><i class="fas fa-pen"></i></button>
+                    <button class="icon-btn del" style="border:none;background:var(--surf2);" onclick="delJuego('${j.id}')"><i class="fas fa-trash"></i></button>
+                </div>
+            </div>
+            <div style="padding:1.25rem; background:var(--surf);">
+                <h4 style="font-size:0.8rem; text-transform:uppercase; color:var(--ink4); font-weight:800; margin-bottom:1rem; letter-spacing:0.05em;">Puntuaciones</h4>
+                ${sc}
+            </div>
+        </div>`;
+    }).join(''); 
+    renderRankingSide();
 }
 
 function totalPts(gid) { 
@@ -2622,41 +2710,51 @@ function renderCabanas() {
   const cg=document.getElementById('cabanas-grid'); 
   if(!D.cabanas.length){ cg.innerHTML='<div class="empty"><p>Añade cabañas</p></div>'; renderCoches(); return; }
   
-  // AQUI APLICAMOS EL NUEVO DISEÑO
- cg.innerHTML=D.cabanas.map(c=>{ 
-    const as=c.asignados||[], l=(c.capacidad||0)-as.length; 
+  // NUEVO DISEÑO DE CABAÑAS
+  cg.innerHTML = D.cabanas.map(c => { 
+    const as = c.asignados || [], l = (c.capacidad || 0) - as.length; 
+    const pct = c.capacidad > 0 ? Math.round((as.length / c.capacidad) * 100) : 0;
+    const isFull = l <= 0;
+    const barColor = isFull ? 'var(--red-v)' : 'var(--primary)';
     
-    return `<div class="cabana-card" data-id="${c.id}" style="background:var(--surf); border:1px solid var(--border); border-top:4px solid var(--primary); border-radius:12px; box-shadow:var(--sh-sm); display:flex; flex-direction:column; overflow:hidden;">
-      <div style="padding:0.6rem 0.8rem; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--surf3);">
-        <div style="font-weight:800; font-size:0.95rem; color:var(--ink); display:flex; align-items:center; gap:0.4rem;">
-          <i class="fas fa-grip-lines drag-handle" style="color:var(--ink4); cursor:grab; font-size:0.8rem;"></i>
-          <div style="width:24px; height:24px; border-radius:6px; background:var(--primary-l); color:var(--primary); display:flex; align-items:center; justify-content:center; font-size:.7rem;"><i class="fas fa-house"></i></div>
-          ${c.nombre}
+    const slotsHtml = as.map(id => `
+        <div style="display:flex; align-items:center; gap:0.6rem; padding:0.5rem 0; border-bottom:1px dashed var(--border2);">
+            <div class="av av-sm" style="background:${pColor(id)};">${ini(pName(id))}</div>
+            <div style="font-size:0.85rem; font-weight:600; color:var(--ink); flex:1;">${pName(id)} ${pBadges(id)}</div>
         </div>
-        <div style="display:flex; align-items:center; gap:0.5rem;">
-            <div style="font-size:0.65rem; font-weight:800; color:${l<=0?'var(--red-v)':'var(--primary-d)'}; background:${l<=0?'var(--red-l)':'var(--primary-l)'}; padding:2px 8px; border-radius:99px; border: 1px solid ${l<=0?'var(--red-m)':'var(--primary-m)'};">${as.length}/${c.capacidad||0}</div>
-            <div style="display:flex; gap:2px; opacity:0.4; transition:opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.4">
-                <button class="icon-btn edit" style="width:20px;height:20px;min-height:20px;border:none;background:transparent;" onclick="openModCabanaEdit('${c.id}')"><i class="fas fa-pen" style="font-size:0.6rem;"></i></button>
-                <button class="icon-btn del" style="width:20px;height:20px;min-height:20px;border:none;background:transparent;color:var(--red-v)" onclick="delCabana('${c.id}')"><i class="fas fa-trash" style="font-size:0.6rem;"></i></button>
+    `).join('') + Array(Math.max(0,l)).fill(`
+        <div style="display:flex; align-items:center; gap:0.6rem; padding:0.5rem 0; border-bottom:1px dashed var(--border2); opacity:0.5;">
+            <div style="width:28px; height:28px; border-radius:50%; background:var(--surf2); border:1px solid var(--border2); display:flex; align-items:center; justify-content:center;"><i class="fas fa-bed" style="font-size:0.6rem; color:var(--ink4)"></i></div>
+            <div style="font-size:0.8rem; font-weight:500; color:var(--ink3); flex:1;">Cama libre</div>
+        </div>
+    `).join('');
+
+    return `
+    <div class="card" style="border-top:4px solid ${barColor}; box-shadow:var(--sh-sm); display:flex; flex-direction:column; background:var(--surf);">
+        <div style="padding:1.25rem; flex:1; display:flex; flex-direction:column; gap:1rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div style="font-weight:800; font-size:1.1rem; color:var(--ink); display:flex; align-items:center; gap:0.6rem;">
+                    <div style="width:32px; height:32px; border-radius:8px; background:${hexLight(barColor, 0.15)}; color:${barColor}; display:flex; align-items:center; justify-content:center; font-size:.9rem;"><i class="fas fa-house"></i></div>
+                    ${c.nombre}
+                </div>
+                <div style="font-size:0.7rem; font-weight:800; color:${isFull?'var(--red-v)':barColor}; background:${isFull?'var(--red-l)':hexLight(barColor, 0.1)}; padding:2px 8px; border-radius:99px; border: 1px solid ${isFull?'var(--red-m)':hexLight(barColor, 0.3)};">
+                    ${as.length}/${c.capacidad||0}
+                </div>
+            </div>
+            
+            <div style="width:100%; height:6px; background:var(--surf3); border-radius:99px; overflow:hidden;">
+                <div style="width:${pct}%; height:100%; background:${barColor}; border-radius:99px; transition:width 0.3s;"></div>
+            </div>
+            
+            <div style="flex:1; max-height:250px; overflow-y:auto; padding-right:5px;">
+                ${slotsHtml}
             </div>
         </div>
-      </div>
-      
-      <div style="padding:0.4rem 0.8rem 0.6rem; flex:1;">
-        <div style="display:flex; flex-direction:column;">
-            ${as.map(id=>`
-            <div style="display:flex; align-items:center; gap:0.5rem; padding:0.25rem 0; border-bottom:1px dashed var(--border2);">
-                <div class="av" style="width:22px; height:22px; font-size:0.55rem; background:${pColor(id)}; box-shadow:var(--sh-sm); flex-shrink:0;">${ini(pName(id))}</div>
-                <span style="font-size:0.8rem; font-weight:600; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${pName(id)}</span>
-            </div>`).join('')}
-            ${Array(Math.max(0,l)).fill(`
-            <div style="display:flex; align-items:center; gap:0.5rem; padding:0.25rem 0; border-bottom:1px dashed var(--border2); opacity:0.6;">
-                <div style="width:22px; height:22px; border-radius:50%; background:var(--surf2); border:1px solid var(--border2); flex-shrink:0; display:flex; align-items:center; justify-content:center;"><i class="fas fa-bed" style="font-size:0.5rem; color:var(--ink4)"></i></div>
-                <span style="font-size:0.75rem; font-weight:500; color:var(--ink3);">Libre</span>
-            </div>`).join('')}
+        <div style="padding:0.75rem 1.25rem; border-top:1px solid var(--border); background:var(--surf2); display:flex; justify-content:flex-end; gap:0.5rem;">
+            <button class="btn btn-ghost btn-sm" onclick="openModCabanaEdit('${c.id}')"><i class="fas fa-pen"></i> Editar</button>
+            <button class="btn btn-danger btn-sm" onclick="delCabana('${c.id}')"><i class="fas fa-trash"></i></button>
         </div>
-      </div>
-    </div>`; 
+    </div>`;
   }).join('');
   
   renderCoches();
@@ -2723,7 +2821,6 @@ function renderCoches() {
   const statsCocheEl = document.getElementById('coche-stats');
   if (statsCocheEl) {
       statsCocheEl.className = 'stats-row-pro';
-      
       let asigColor = localesSinCoche > 0 ? 'var(--red-v)' : 'var(--green-v)';
       let asigBg = localesSinCoche > 0 ? 'var(--red-l)' : 'var(--green-l)';
       let asigIcon = localesSinCoche > 0 ? 'fa-user-clock' : 'fa-user-check';
@@ -2749,59 +2846,71 @@ function renderCoches() {
 
   const cg=document.getElementById('coches-grid'); 
   if(!D.coches.length){ cg.innerHTML='<div class="empty"><p>Añade el primer coche</p></div>'; return; }
-  cg.innerHTML=D.coches.map(c=>{ 
-    const p=c.pasajeros||[], cond=c.conductor, l=(c.plazas||5)-(p.length+(cond?1:0)); 
+  
+  // NUEVO DISEÑO DE COCHES
+  cg.innerHTML = D.coches.map(c => { 
+    const p = c.pasajeros || [], cond = c.conductor, l = (c.plazas || 5) - (p.length + (cond ? 1 : 0)); 
+    const totalOcup = p.length + (cond ? 1 : 0);
+    const pct = c.plazas > 0 ? Math.round((totalOcup / c.plazas) * 100) : 0;
+    const isFull = l <= 0;
+    const barColor = isFull ? 'var(--red-v)' : 'var(--sky)';
     
-    return `<div class="coche-card" data-id="${c.id}" style="background:var(--surf); border:1px solid var(--border); border-top:4px solid var(--sky); border-radius:12px; box-shadow:var(--sh-sm); display:flex; flex-direction:column; overflow:hidden;">
-      <div style="padding:0.6rem 0.8rem; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--surf3);">
-        <div style="font-weight:800; font-size:0.95rem; color:var(--ink); display:flex; align-items:center; gap:0.4rem;">
-          <i class="fas fa-grip-lines drag-handle" style="color:var(--ink4); cursor:grab; font-size:0.8rem;"></i>
-          <div style="width:24px; height:24px; border-radius:6px; background:var(--sky-l); color:var(--sky-d); display:flex; align-items:center; justify-content:center; font-size:.7rem;"><i class="fas fa-car"></i></div>
-          ${c.nombre}
+    let condHtml = cond ? `
+        <div style="display:flex; align-items:center; gap:0.6rem; padding:0.5rem 0; border-bottom:1px solid var(--sky-m); background:var(--sky-l); border-radius:8px; padding-left:8px; margin-bottom:8px;">
+            <div class="av av-sm" style="background:var(--sky); box-shadow:var(--sh-sm);"><i class="fas fa-steering-wheel"></i></div>
+            <div style="font-size:0.85rem; font-weight:800; color:var(--sky-d); flex:1;">${pName(cond)} ${pBadges(cond)}</div>
+            <span style="font-size:0.6rem; font-weight:800; background:var(--sky); color:#fff; padding:2px 6px; border-radius:4px; margin-right:8px;">CONDUCTOR</span>
+        </div>` : `
+        <div style="display:flex; align-items:center; gap:0.6rem; padding:0.5rem 0; border-bottom:1px dashed var(--sky-m); opacity:0.7; margin-bottom:8px;">
+            <div style="width:28px; height:28px; border-radius:50%; background:var(--surf2); border:1px dashed var(--sky); display:flex; align-items:center; justify-content:center;"><i class="fas fa-steering-wheel" style="font-size:0.6rem; color:var(--sky)"></i></div>
+            <div style="font-size:0.8rem; font-weight:700; color:var(--sky-d); flex:1;">Falta conductor</div>
+        </div>`;
+
+    const pasHtml = p.map(id => `
+        <div style="display:flex; align-items:center; gap:0.6rem; padding:0.5rem 0; border-bottom:1px dashed var(--border2);">
+            <div class="av av-sm" style="background:${pColor(id)};">${ini(pName(id))}</div>
+            <div style="font-size:0.85rem; font-weight:600; color:var(--ink); flex:1;">${pName(id)} ${pBadges(id)}</div>
         </div>
-        <div style="display:flex; align-items:center; gap:0.5rem;">
-            <div style="font-size:0.65rem; font-weight:800; color:${l<=0?'var(--red-v)':'var(--sky-d)'}; background:${l<=0?'var(--red-l)':'var(--sky-l)'}; padding:2px 8px; border-radius:99px; border: 1px solid ${l<=0?'var(--red-m)':'var(--sky-m)'};">${p.length + (cond?1:0)}/${c.plazas||5}</div>
-            <div style="display:flex; gap:2px; opacity:0.4; transition:opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.4">
-                <button class="icon-btn edit" style="width:20px;height:20px;min-height:20px;border:none;background:transparent;" onclick="openModCocheEdit('${c.id}')"><i class="fas fa-pen" style="font-size:0.6rem;"></i></button>
-                <button class="icon-btn del" style="width:20px;height:20px;min-height:20px;border:none;background:transparent;color:var(--red-v)" onclick="delCoche('${c.id}')"><i class="fas fa-trash" style="font-size:0.6rem;"></i></button>
+    `).join('') + Array(Math.max(0,l)).fill(`
+        <div style="display:flex; align-items:center; gap:0.6rem; padding:0.5rem 0; border-bottom:1px dashed var(--border2); opacity:0.5;">
+            <div style="width:28px; height:28px; border-radius:50%; background:var(--surf2); border:1px solid var(--border2); display:flex; align-items:center; justify-content:center;"><i class="fas fa-plus" style="font-size:0.6rem; color:var(--ink4)"></i></div>
+            <div style="font-size:0.8rem; font-weight:500; color:var(--ink3); flex:1;">Asiento libre</div>
+        </div>
+    `).join('');
+
+    return `
+    <div class="card" style="border-top:4px solid ${barColor}; box-shadow:var(--sh-sm); display:flex; flex-direction:column; background:var(--surf);">
+        <div style="padding:1.25rem; flex:1; display:flex; flex-direction:column; gap:1rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div style="font-weight:800; font-size:1.1rem; color:var(--ink); display:flex; align-items:center; gap:0.6rem;">
+                    <div style="width:32px; height:32px; border-radius:8px; background:${hexLight(barColor, 0.15)}; color:${barColor}; display:flex; align-items:center; justify-content:center; font-size:.9rem;"><i class="fas fa-car"></i></div>
+                    ${c.nombre}
+                </div>
+                <div style="font-size:0.7rem; font-weight:800; color:${isFull?'var(--red-v)':barColor}; background:${isFull?'var(--red-l)':hexLight(barColor, 0.1)}; padding:2px 8px; border-radius:99px; border: 1px solid ${isFull?'var(--red-m)':hexLight(barColor, 0.3)};">
+                    ${totalOcup}/${c.plazas||5}
+                </div>
+            </div>
+            
+            ${c.ruta?`<div style="font-size:0.75rem; color:var(--ink3); font-weight:600; margin-top:-0.5rem; display:flex; align-items:center; gap:4px;"><i class="fas fa-route" style="color:var(--sky)"></i> ${c.ruta}</div>`:''}
+            
+            <div style="width:100%; height:6px; background:var(--surf3); border-radius:99px; overflow:hidden;">
+                <div style="width:${pct}%; height:100%; background:${barColor}; border-radius:99px; transition:width 0.3s;"></div>
+            </div>
+            
+            <div style="flex:1; max-height:250px; overflow-y:auto; padding-right:5px;">
+                ${condHtml}
+                ${pasHtml}
             </div>
         </div>
-      </div>
-      
-      <div style="padding:0.4rem 0.8rem 0.6rem; flex:1;">
-        ${c.ruta?`<div style="font-size:0.65rem; color:var(--ink3); font-weight:600; margin-bottom:0.4rem; display:flex; align-items:center; gap:0.3rem; background:var(--surf2); padding:0.2rem 0.5rem; border-radius:4px;"><i class="fas fa-route" style="color:var(--sky)"></i> <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${c.ruta}</span></div>`:''}
-        
-        <div style="display:flex; flex-direction:column;">
-            ${cond?`
-            <div style="display:flex; align-items:center; gap:0.5rem; padding:0.25rem 0; border-bottom:1px dashed var(--border2);">
-                <div class="av" style="width:22px; height:22px; font-size:0.55rem; background:${pColor(cond)}; box-shadow:var(--sh-sm); flex-shrink:0;">${ini(pName(cond))}</div>
-                <div style="flex:1; min-width:0;">
-                    <div style="font-size:0.8rem; font-weight:700; color:var(--sky-d); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1;">${pName(cond)}</div>
-                    <div style="font-size:0.55rem; color:var(--ink4); font-weight:700; text-transform:uppercase; letter-spacing:0.05em;">Conductor</div>
-                </div>
-            </div>` : `
-            <div style="display:flex; align-items:center; gap:0.5rem; padding:0.25rem 0; border-bottom:1px dashed var(--border2); opacity:0.8;">
-                <div style="width:22px; height:22px; border-radius:50%; background:var(--sky-l); border:1px dashed var(--sky-m); color:var(--sky-d); flex-shrink:0; display:flex; align-items:center; justify-content:center;"><i class="fas fa-steering-wheel" style="font-size:0.6rem;"></i></div>
-                <span style="font-size:0.75rem; font-weight:700; color:var(--sky-d);">Falta Conductor</span>
-            </div>`}
-            
-            ${p.map(id=>`
-            <div style="display:flex; align-items:center; gap:0.5rem; padding:0.25rem 0; border-bottom:1px dashed var(--border2);">
-                <div class="av" style="width:22px; height:22px; font-size:0.55rem; background:${pColor(id)}; box-shadow:var(--sh-sm); flex-shrink:0;">${ini(pName(id))}</div>
-                <span style="font-size:0.8rem; font-weight:500; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${pName(id)}</span>
-            </div>`).join('')}
-            
-            ${Array(Math.max(0,l)).fill(`
-            <div style="display:flex; align-items:center; gap:0.5rem; padding:0.25rem 0; border-bottom:1px dashed var(--border2); opacity:0.6;">
-                <div style="width:22px; height:22px; border-radius:50%; background:var(--surf2); border:1px solid var(--border2); flex-shrink:0; display:flex; align-items:center; justify-content:center;"><i class="fas fa-plus" style="font-size:0.5rem; color:var(--ink4)"></i></div>
-                <span style="font-size:0.75rem; font-weight:500; color:var(--ink3);">Asiento libre</span>
-            </div>`).join('')}
+        <div style="padding:0.75rem 1.25rem; border-top:1px solid var(--border); background:var(--surf2); display:flex; justify-content:flex-end; gap:0.5rem;">
+            <button class="btn btn-ghost btn-sm" onclick="openModCocheEdit('${c.id}')"><i class="fas fa-pen"></i> Editar</button>
+            <button class="btn btn-danger btn-sm" onclick="delCoche('${c.id}')"><i class="fas fa-trash"></i></button>
         </div>
-      </div>
-    </div>`; 
+    </div>`;
   }).join('');
-  setTimeout(() => initDragAndDrop('coches-grid', 'coches', D.coches), 100);
 }
+  setTimeout(() => initDragAndDrop('coches-grid', 'coches', D.coches), 100);
+
 
 function openModCoche() { 
   document.getElementById('cocheId').value=''; 
