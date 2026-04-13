@@ -2675,42 +2675,47 @@ async function delJuego(id) {
   try{ await sb.from('juegos').delete().eq('id',id); D.juegos=D.juegos.filter(j=>j.id!==id); renderJuegos(); toast('Borrado','info'); }catch(e){ console.error(e); } 
 }
 
-/* ═══════════════════════════════════════
+/* /* ═══════════════════════════════════════
    🏠 CABAÑAS Y 🚗 COCHES
 ═══════════════════════════════════════ */
 function renderCabanas() {
   const tc=D.cabanas.reduce((s,c)=>s+(c.capacidad||0),0), ta=D.cabanas.reduce((s,c)=>s+(c.asignados||[]).length,0), sin=D.personas.filter(p=>!D.cabanas.some(c=>(c.asignados||[]).includes(p.id)));
   const cabStats = document.getElementById('cab-stats');
-  cabStats.className = 'stats-row-pro';
-  
-  let asigColor = sin.length ? 'var(--red-v)' : 'var(--green-v)';
-  let asigBg = sin.length ? 'var(--red-l)' : 'var(--green-l)';
-  let asigIcon = sin.length ? 'fa-user-xmark' : 'fa-user-check';
+  if(cabStats) {
+      cabStats.className = 'stats-row-pro';
+      let asigColor = sin.length ? 'var(--red-v)' : 'var(--green-v)';
+      let asigBg = sin.length ? 'var(--red-l)' : 'var(--green-l)';
+      let asigIcon = sin.length ? 'fa-user-xmark' : 'fa-user-check';
 
-  cabStats.innerHTML = `
-    <div class="stat-card-pro" style="border-bottom: 4px solid var(--primary)">
-        <i class="fas fa-house stat-bg-icon" style="color:var(--primary)"></i>
-        <div class="stat-icon-wrap" style="background:var(--primary-l); color:var(--primary)"><i class="fas fa-house"></i></div>
-        <div class="stat-info-pro"><div class="stat-val-pro">${D.cabanas.length}</div><div class="stat-lbl-pro">Cabañas</div></div>
-    </div>
-    <div class="stat-card-pro" style="border-bottom: 4px solid var(--sky)">
-        <i class="fas fa-bed stat-bg-icon" style="color:var(--sky)"></i>
-        <div class="stat-icon-wrap" style="background:var(--sky-l); color:var(--sky)"><i class="fas fa-bed"></i></div>
-        <div class="stat-info-pro"><div class="stat-val-pro">${tc}</div><div class="stat-lbl-pro">Plazas</div></div>
-    </div>
-    <div class="stat-card-pro" style="border-bottom: 4px solid ${asigColor}">
-        <i class="fas ${asigIcon} stat-bg-icon" style="color:${asigColor}"></i>
-        <div class="stat-icon-wrap" style="background:${asigBg}; color:${asigColor}"><i class="fas ${asigIcon}"></i></div>
-        <div class="stat-info-pro"><div class="stat-val-pro">${ta}</div><div class="stat-lbl-pro">${sin.length ? sin.length + ' sin asignar' : 'Todos asignados'}</div></div>
-    </div>
-  `;
+      cabStats.innerHTML = `
+        <div class="stat-card-pro" style="border-bottom: 4px solid var(--primary)">
+            <i class="fas fa-house stat-bg-icon" style="color:var(--primary)"></i>
+            <div class="stat-icon-wrap" style="background:var(--primary-l); color:var(--primary)"><i class="fas fa-house"></i></div>
+            <div class="stat-info-pro"><div class="stat-val-pro">${D.cabanas.length}</div><div class="stat-lbl-pro">Cabañas</div></div>
+        </div>
+        <div class="stat-card-pro" style="border-bottom: 4px solid var(--sky)">
+            <i class="fas fa-bed stat-bg-icon" style="color:var(--sky)"></i>
+            <div class="stat-icon-wrap" style="background:var(--sky-l); color:var(--sky)"><i class="fas fa-bed"></i></div>
+            <div class="stat-info-pro"><div class="stat-val-pro">${tc}</div><div class="stat-lbl-pro">Plazas</div></div>
+        </div>
+        <div class="stat-card-pro" style="border-bottom: 4px solid ${asigColor}">
+            <i class="fas ${asigIcon} stat-bg-icon" style="color:${asigColor}"></i>
+            <div class="stat-icon-wrap" style="background:${asigBg}; color:${asigColor}"><i class="fas ${asigIcon}"></i></div>
+            <div class="stat-info-pro"><div class="stat-val-pro">${ta}</div><div class="stat-lbl-pro">${sin.length ? sin.length + ' sin asignar' : 'Todos asignados'}</div></div>
+        </div>
+      `;
+  }
   
-  document.getElementById('cabBadge').style.display=sin.length?'inline-block':'none'; 
-  document.getElementById('cabBadge').textContent=sin.length;
+  const badge = document.getElementById('cabBadge');
+  if(badge) {
+      badge.style.display=sin.length?'inline-block':'none'; 
+      badge.textContent=sin.length;
+  }
+  
   const cg=document.getElementById('cabanas-grid'); 
   if(!D.cabanas.length){ cg.innerHTML='<div class="empty"><p>Añade cabañas</p></div>'; renderCoches(); return; }
   
-  // NUEVO DISEÑO DE CABAÑAS
+  // DISEÑO NUEVO + ARRASTRAR Y SOLTAR (data-id y drag-handle)
   cg.innerHTML = D.cabanas.map(c => { 
     const as = c.asignados || [], l = (c.capacidad || 0) - as.length; 
     const pct = c.capacidad > 0 ? Math.round((as.length / c.capacidad) * 100) : 0;
@@ -2730,10 +2735,11 @@ function renderCabanas() {
     `).join('');
 
     return `
-    <div class="card" style="border-top:4px solid ${barColor}; box-shadow:var(--sh-sm); display:flex; flex-direction:column; background:var(--surf);">
+    <div class="card" data-id="${c.id}" style="border-top:4px solid ${barColor}; box-shadow:var(--sh-sm); display:flex; flex-direction:column; background:var(--surf);">
         <div style="padding:1.25rem; flex:1; display:flex; flex-direction:column; gap:1rem;">
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <div style="font-weight:800; font-size:1.1rem; color:var(--ink); display:flex; align-items:center; gap:0.6rem;">
+                    <i class="fas fa-grip-vertical drag-handle" style="color:var(--ink4); cursor:grab; font-size:1rem;" title="Arrastrar para ordenar"></i>
                     <div style="width:32px; height:32px; border-radius:8px; background:${hexLight(barColor, 0.15)}; color:${barColor}; display:flex; align-items:center; justify-content:center; font-size:.9rem;"><i class="fas fa-house"></i></div>
                     ${c.nombre}
                 </div>
@@ -2759,54 +2765,6 @@ function renderCabanas() {
   
   renderCoches();
   setTimeout(() => initDragAndDrop('cabanas-grid', 'cabanas', D.cabanas), 100);
-}
-
-
-function openModCabana() { 
-  document.getElementById('cabId').value=''; 
-  document.getElementById('cabNom').value=''; 
-  document.getElementById('cabCap').value='8'; 
-  let ocupados = new Set();
-  D.cabanas.forEach(cb => (cb.asignados||[]).forEach(pid => ocupados.add(String(pid))));
-  let disponibles = D.personas.filter(p => !ocupados.has(String(p.id)));
-  buildPicker('cabPick', [], disponibles); 
-  om('modCabana'); 
-}
-
-function openModCabanaEdit(id) { 
-  const c=D.cabanas.find(x=>x.id===id); if(!c)return; 
-  document.getElementById('cabId').value=c.id; 
-  document.getElementById('cabNom').value=c.nombre; 
-  document.getElementById('cabCap').value=c.capacidad||8; 
-  
-  let ocupados = new Set();
-  D.cabanas.forEach(cb => { if(cb.id !== id) (cb.asignados||[]).forEach(pid => ocupados.add(String(pid))) });
-  let disponibles = D.personas.filter(p => !ocupados.has(String(p.id)));
-
-  buildPicker('cabPick', c.asignados||[], disponibles); 
-  om('modCabana'); 
-}
-
-async function saveCabana() { 
-  const n=document.getElementById('cabNom').value.trim(); if(!n)return; 
-  const a=getSelected('cabPick'), cp=parseInt(document.getElementById('cabCap').value)||8; 
-  if(a.length>cp){toast('Excede capacidad','err');return;} 
-  const obj={nombre:n,capacidad:cp}, eid=document.getElementById('cabId').value; 
-  try{
-    let cid=eid;
-    if(eid){ await sb.from('cabanas').update(obj).eq('id',eid); }
-    else{ const{data,err}=await sb.from('cabanas').insert(obj).select().single(); if(err)throw err; cid=data.id; }
-    await sb.from('cabana_asignaciones').delete().eq('cabana_id',cid);
-    if(a.length)await sb.from('cabana_asignaciones').insert(a.map(pid=>({cabana_id:cid,persona_id:pid})));
-    if(eid){ Object.assign(D.cabanas.find(c=>c.id===eid),{...obj,asignados:a}); }
-    else{ D.cabanas.push({id:cid,...obj,asignados:a}); }
-    cm('modCabana'); renderCabanas(); toast('Guardado','ok');
-  }catch(e){ console.error(e); }
-}
-
-async function delCabana(id) { 
-  if(!confirm('¿Borrar?'))return; 
-  try{ await sb.from('cabanas').delete().eq('id',id); D.cabanas=D.cabanas.filter(c=>c.id!==id); renderCabanas(); toast('Borrado','info'); }catch(e){ console.error(e); } 
 }
 
 function renderCoches() {
@@ -2847,7 +2805,7 @@ function renderCoches() {
   const cg=document.getElementById('coches-grid'); 
   if(!D.coches.length){ cg.innerHTML='<div class="empty"><p>Añade el primer coche</p></div>'; return; }
   
-  // NUEVO DISEÑO DE COCHES
+  // DISEÑO NUEVO + ARRASTRAR Y SOLTAR (data-id y drag-handle)
   cg.innerHTML = D.coches.map(c => { 
     const p = c.pasajeros || [], cond = c.conductor, l = (c.plazas || 5) - (p.length + (cond ? 1 : 0)); 
     const totalOcup = p.length + (cond ? 1 : 0);
@@ -2879,10 +2837,11 @@ function renderCoches() {
     `).join('');
 
     return `
-    <div class="card" style="border-top:4px solid ${barColor}; box-shadow:var(--sh-sm); display:flex; flex-direction:column; background:var(--surf);">
+    <div class="card" data-id="${c.id}" style="border-top:4px solid ${barColor}; box-shadow:var(--sh-sm); display:flex; flex-direction:column; background:var(--surf);">
         <div style="padding:1.25rem; flex:1; display:flex; flex-direction:column; gap:1rem;">
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <div style="font-weight:800; font-size:1.1rem; color:var(--ink); display:flex; align-items:center; gap:0.6rem;">
+                    <i class="fas fa-grip-vertical drag-handle" style="color:var(--ink4); cursor:grab; font-size:1rem;" title="Arrastrar para ordenar"></i>
                     <div style="width:32px; height:32px; border-radius:8px; background:${hexLight(barColor, 0.15)}; color:${barColor}; display:flex; align-items:center; justify-content:center; font-size:.9rem;"><i class="fas fa-car"></i></div>
                     ${c.nombre}
                 </div>
@@ -2908,67 +2867,8 @@ function renderCoches() {
         </div>
     </div>`;
   }).join('');
-}
+  
   setTimeout(() => initDragAndDrop('coches-grid', 'coches', D.coches), 100);
-
-
-function openModCoche() { 
-  document.getElementById('cocheId').value=''; 
-  ['cocheNom','cocheRuta'].forEach(id=>document.getElementById(id).value=''); 
-  document.getElementById('cochePlazas').value='5'; 
-  
-  let ocupados = new Set();
-  D.coches.forEach(cb => { if(cb.conductor) ocupados.add(String(cb.conductor)); (cb.pasajeros||[]).forEach(pid => ocupados.add(String(pid))); });
-  
-  let disponiblesPasajeros = D.personas.filter(p => !ocupados.has(String(p.id)));
-  let disponiblesConductor = disponiblesPasajeros.filter(p => !p.otra_iglesia);
-
-  document.getElementById('cocheConductor').innerHTML='<option value="">-- Ninguno --</option>'+disponiblesConductor.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join(''); 
-  buildPicker('cochePick', [], disponiblesPasajeros); 
-  om('modCoche'); 
-}
-
-function openModCocheEdit(id) { 
-  const c=D.coches.find(x=>x.id===id); if(!c)return; 
-  document.getElementById('cocheId').value=c.id; 
-  document.getElementById('cocheNom').value=c.nombre; 
-  document.getElementById('cochePlazas').value=c.plazas||5; 
-  document.getElementById('cocheRuta').value=c.ruta||''; 
-  
-  let ocupados = new Set();
-  D.coches.forEach(cb => { if(cb.id !== id) { if(cb.conductor) ocupados.add(String(cb.conductor)); (cb.pasajeros||[]).forEach(pid => ocupados.add(String(pid))); } });
-  
-  let disponiblesPasajeros = D.personas.filter(p => !ocupados.has(String(p.id)) || (c.pasajeros||[]).includes(p.id) || c.conductor === p.id);
-  let disponiblesConductor = disponiblesPasajeros.filter(p => !p.otra_iglesia);
-  
-  let pickerPasajeros = disponiblesPasajeros.filter(p => p.id !== c.conductor);
-
-  document.getElementById('cocheConductor').innerHTML='<option value="">-- Ninguno --</option>'+disponiblesConductor.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join(''); 
-  document.getElementById('cocheConductor').value=c.conductor||''; 
-  buildPicker('cochePick', c.pasajeros||[], pickerPasajeros); 
-  om('modCoche'); 
-}
-
-async function saveCoche() {
-  const n=document.getElementById('cocheNom').value.trim(); if(!n)return; 
-  const p=getSelected('cochePick'), cond=document.getElementById('cocheConductor').value||null, plz=parseInt(document.getElementById('cochePlazas').value)||5, pasList=p.filter(id=>id!==cond); 
-  if(pasList.length+(cond?1:0)>plz){toast('Excede plazas','err');return;} 
-  const obj={nombre:n,plazas:plz,conductor:cond,ruta:document.getElementById('cocheRuta').value}, eid=document.getElementById('cocheId').value; 
-  try{
-    let cid=eid;
-    if(eid){ await sb.from('coches').update(obj).eq('id',eid); }
-    else{ const{data,err}=await sb.from('coches').insert(obj).select().single(); if(err)throw err; cid=data.id; }
-    await sb.from('coche_pasajeros').delete().eq('coche_id',cid);
-    if(pasList.length)await sb.from('coche_pasajeros').insert(pasList.map(pid=>({coche_id:cid,persona_id:pid})));
-    if(eid){ Object.assign(D.coches.find(c=>c.id===eid),{...obj,pasajeros:pasList}); }
-    else{ D.coches.push({id:cid,...obj,pasajeros:pasList}); }
-    cm('modCoche'); renderCoches(); toast('Guardado','ok');
-  }catch(e){ console.error(e); }
-}
-
-async function delCoche(id) { 
-  if(!confirm('¿Borrar?'))return; 
-  try{ await sb.from('coches').delete().eq('id',id); D.coches=D.coches.filter(c=>c.id!==id); renderCoches(); toast('Borrado','info'); }catch(e){ console.error(e); } 
 }
 
 /* ═══════════════════════════════════════
