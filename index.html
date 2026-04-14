@@ -3422,7 +3422,6 @@ function descargarNormasPDF() {
           let matchNum = txt.match(/^(\d+)[\)\.]\s*(.*)/);    // Detecta 1. 2. 3.
           
           if (matchNum) {
-              // Cierra el bloque anterior si existe
               if (!isFirstRule) html += `</div>`;
               html += `<div class="rule-block"><div class="rule-header"><span class="rule-num">${matchNum[1]}.</span><span style="flex:1;">${matchNum[2]}</span></div>`;
               isFirstRule = false;
