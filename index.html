@@ -3545,61 +3545,6 @@ async function delNorma(id) {
   try { await sb.from('normas').delete().eq('id', id); D.normas = D.normas.filter(n => n.id !== id); renderNormas(); toast('Borrada', 'info'); } catch(e) { console.error(e); }
 }
 
-
-function descargarNormasPDF() {
-  if (!D.normas || !D.normas.length) { alert("No hay normativas registradas para exportar."); return; }
-  
-  let html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Normativas - Biserica Maranata</title><style>
-    body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #1e293b; padding: 40px; line-height: 1.6; background: #fff; max-width: 750px; margin: auto; }
-    .header { text-align: center; border-bottom: 3px solid #0f766e; padding-bottom: 25px; margin-bottom: 35px; }
-    .logo-text { font-size: 16px; color: #0f766e; text-transform: uppercase; letter-spacing: 3px; font-weight: 800; margin-bottom: 10px; }
-    h1 { color: #0f172a; font-size: 32px; margin: 0 0 10px 0; font-family: Georgia, serif; }
-    .subtitle { color: #64748b; font-size: 18px; margin: 0; font-style: italic; }
-    h2 { margin-top: 30px; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; font-size: 20px; page-break-after: avoid;}
-    ul { margin-top: 15px; padding-left: 25px; }
-    li { margin-bottom: 10px; font-size: 15px; color: #334155; }
-    .footer { margin-top: 50px; text-align: center; font-size: 12px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 20px; }
-    @media print { body { padding: 20px; } }
-  </style></head><body>
-    <div class="header">
-      <div class="logo-text">🕊️ Biserica Maranata</div>
-      <h1>Normativas del Campamento</h1>
-      <p class="subtitle">Reîntâlnire cu Tatăl</p>
-    </div>`;
-    
- D.normas.forEach((n, index) => {
-      const lineas = n.contenido.split('\n').filter(x=>x.trim());
-      let puntos = '';
-      let enSublista = false;
-
-      lineas.forEach(linea => {
-          let txt = linea.trim();
-          let matchSub = txt.match(/^([a-z])[\)\.]\s*(.*)/i);
-          
-          if (matchSub) {
-              if (!enSublista) { puntos += `<div style="padding-left: 35px; margin-top: 5px; margin-bottom: 12px;">`; enSublista = true; }
-              puntos += `<div style="margin-bottom:6px; font-size:14px; display:flex;"><span style="font-weight:bold; color:#64748b; display:inline-block; width:25px; flex-shrink:0;">${matchSub[1].toLowerCase()})</span><span style="flex:1;">${matchSub[2]}</span></div>`;
-          } else {
-              if (enSublista) { puntos += `</div>`; enSublista = false; }
-              let matchNum = txt.match(/^(\d+)[\)\.]\s*(.*)/);
-              if(matchNum) {
-                  puntos += `<div style="margin-bottom:10px; margin-top:15px; font-size:15px; display:flex;"><span style="font-weight:bold; color:#0f172a; display:inline-block; width:25px; flex-shrink:0;">${matchNum[1]}.</span><span style="flex:1;">${matchNum[2]}</span></div>`;
-              } else {
-                  puntos += `<div style="margin-bottom:10px; margin-top:15px; font-size:15px;">${txt}</div>`;
-              }
-          }
-      });
-      if (enSublista) { puntos += `</div>`; }
-
-      const titleHtml = n.titulo ? `<h2 style="color:${n.color}; margin-bottom: 10px;">${n.titulo}</h2>` : `<div style="height:20px;"></div>`;
-      html += `${titleHtml}<div>${puntos}</div>`;
-  });
-  
-  const printWin = window.open('', '_blank');
-  if (printWin) { printWin.document.open(); printWin.document.write(html); printWin.document.close(); setTimeout(() => { printWin.print(); }, 500); } 
-  else { alert("Por favor, permite las ventanas emergentes (pop-ups)."); }
-}
-
 </script>
 </body>
 </html>
