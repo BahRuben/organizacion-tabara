@@ -3306,122 +3306,80 @@ function generarPDFLimpio() {
   else { alert("Por favor, permite las ventanas emergentes (pop-ups) para generar el PDF."); }
 }
 /* ═══════════════════════════════════════
-   📜 DESCARGAR NORMAS (MÁXIMA COMPRESIÓN)
-   Optimizado para 1 hoja y sin datos de navegador
+   📜 DESCARGAR NORMAS (OPTIMIZADO 1 HOJA)
 ═══════════════════════════════════════ */
 function descargarNormasPDF() {
   if (!D.normas || !D.normas.length) { alert("No hay normativas registradas."); return; }
   
-  let html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Normativas</title><style>
-    /* TRUCO PARA OCULTAR FECHA Y HORA DEL NAVEGADOR */
-    @page { 
-        size: A4; 
-        margin: 0; /* Al poner margen 0, el navegador suele quitar la fecha/hora automáticamente */
-    }
-    
+  let html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Normativas - Biserica Maranata</title><style>
+    @page { size: A4; margin: 1cm; }
     body { 
       font-family: 'Plus Jakarta Sans', helvetica, arial, sans-serif; 
       color: #1e293b; 
-      line-height: 1.2; 
+      line-height: 1.25; 
       background: #fff; 
-      margin: 0; 
-      padding: 1.5cm; /* El margen real lo damos aquí */
+      margin: 0; padding: 0;
     }
-
     .header { 
       text-align: center; 
+      border-bottom: 2px solid #0f766e; 
+      padding-bottom: 10px; 
       margin-bottom: 15px; 
-      padding-bottom: 8px;
-      border-bottom: 1px solid #0f766e;
     }
-
-    .logo-text { 
-      font-size: 10px; 
-      color: #0f766e; 
-      text-transform: uppercase; 
-      letter-spacing: 3px; 
-      font-weight: 800; 
-      display: block;
-    }
-
-    h1 { 
-      color: #0f172a; 
-      font-size: 18px; 
-      margin: 2px 0; 
-      font-family: Georgia, serif; 
-      text-transform: uppercase;
-    }
-
-    .intro-text {
-      font-size: 10px;
-      color: #64748b;
-      font-style: italic;
-      margin-bottom: 5px;
-    }
+    .logo-text { font-size: 12px; color: #0f766e; text-transform: uppercase; letter-spacing: 2px; font-weight: 800; }
+    h1 { color: #0f172a; font-size: 22px; margin: 5px 0; font-family: Georgia, serif; }
     
-    /* DISEÑO EN 2 COLUMNAS MUY COMPACTO */
+    /* CONTENEDOR DE COLUMNAS */
     .content-wrapper { 
       column-count: 2; 
-      column-gap: 25px; 
-      column-rule: 1px solid #f1f5f9;
+      column-gap: 30px; 
+      column-rule: 1px dashed #e2e8f0;
     }
     
     .norma-section { 
       break-inside: avoid; 
-      margin-bottom: 12px; 
+      margin-bottom: 15px; 
     }
-
     h2 { 
       color: #b45309; 
-      font-size: 12px; 
+      font-size: 14px; 
       text-transform: uppercase; 
-      background: #fff7ed;
-      padding: 3px 6px;
-      border-radius: 4px;
+      border-bottom: 1px solid #fed7aa; 
+      padding-bottom: 3px; 
       margin-top: 0; 
-      margin-bottom: 6px;
-      border-left: 3px solid #f97316;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
-
     .punto { 
       display: flex; 
-      margin-bottom: 4px; 
-      font-size: 10.5px; 
-      text-align: justify;
+      margin-bottom: 6px; 
+      font-size: 11.5px; 
     }
-
     .num { 
       font-weight: 800; 
       color: #0f766e; 
-      width: 15px; 
+      width: 18px; 
       flex-shrink: 0; 
     }
-
     .sub-lista { 
-      margin-left: 15px; 
-      border-left: 1px dashed #cbd5e1; 
-      padding-left: 8px; 
-      margin-bottom: 5px;
+      margin-left: 18px; 
+      margin-top: 2px; 
+      border-left: 1px solid #e2e8f0; 
+      padding-left: 10px; 
     }
-
-    .footer-note { 
-      margin-top: 20px;
-      text-align: center; 
-      font-size: 9px; 
-      color: #94a3b8; 
-      border-top: 1px solid #f1f5f9; 
-      padding-top: 10px;
-      clear: both;
+    .footer { 
+      position: fixed; bottom: 0; width: 100%;
+      text-align: center; font-size: 9px; color: #94a3b8; 
+      border-top: 1px solid #f1f5f9; padding-top: 5px; 
     }
-
-    @media print {
-      body { -webkit-print-color-adjust: exact; }
-    }
+    @media print { body { -webkit-print-color-adjust: exact; } }
   </style></head><body>
     <div class="header">
-      <span class="logo-text">Biserica Maranata</span>
-      <h1>Normas del Campamento</h1>
-      <p class="intro-text">Reîntâlnire cu Tatăl 2026</p>
+      <div class="logo-text">🕊️ Biserica Maranata</div>
+      <h1>Normativas del Campamento</h1>
+      <div style="font-size: 11px; color: #64748b; font-style: italic;">Reîntâlnire cu Tatăl</div>
     </div>
     
     <div class="content-wrapper">`;
@@ -3437,7 +3395,7 @@ function descargarNormasPDF() {
           
           if (matchSub) {
               if (!enSublista) { puntosHtml += `<div class="sub-lista">`; enSublista = true; }
-              puntosHtml += `<div class="punto" style="font-size:9.5px; color:#475569;"><span class="num" style="width:12px;">${matchSub[1].toLowerCase()})</span><span>${matchSub[2]}</span></div>`;
+              puntosHtml += `<div class="punto" style="font-size:10.5px;"><span class="num" style="width:15px; color:#64748b;">${matchSub[1].toLowerCase()})</span><span>${matchSub[2]}</span></div>`;
           } else {
               if (enSublista) { puntosHtml += `</div>`; enSublista = false; }
               let matchNum = txt.match(/^(\d+)[\)\.]\s*(.*)/);
@@ -3458,7 +3416,7 @@ function descargarNormasPDF() {
   });
   
   html += `</div>
-    <div class="footer-note">Documento informativo para el acampado. Mantengamos un ambiente de respeto y bendición.</div>
+    <div class="footer">Documento oficial TML • Por favor, mantén este documento contigo durante el campamento.</div>
   </body></html>`;
   
   const printWin = window.open('', '_blank');
@@ -3466,14 +3424,8 @@ function descargarNormasPDF() {
       printWin.document.open();
       printWin.document.write(html);
       printWin.document.close();
-      
-      // Forzar que el título de la ventana sea limpio por si el navegador lo intenta poner
-      printWin.document.title = "Normativas Campamento";
-
-      setTimeout(() => { 
-          printWin.print(); 
-          // Opcional: printWin.close(); 
-      }, 500);
+      // Un pequeño delay para asegurar que los estilos carguen antes de imprimir
+      setTimeout(() => { printWin.print(); }, 400);
   }
 }
 /* ═══════════════════════════════════════
