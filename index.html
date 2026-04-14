@@ -1166,12 +1166,20 @@ function buildPicker(cId, sel=[], fil='') {
   
   document.getElementById(cId).innerHTML = p.length ? p.map(p=>{
     const isGuest = p.otra_iglesia;
-    const guestClass = isGuest ? ' guest' : '';
-    const guestPrefix = isGuest ? `<span style="font-size:0.6rem; font-weight:800; background:var(--rose-v); color:#fff; padding:1px 4px; border-radius:4px; margin-right:4px; vertical-align:middle; border:none; line-height:1;">INV ⛪</span>` : '';
-    
+    const isOneDay = p.solo_un_dia; 
+
+    let extraClass = isGuest ? ' guest' : '';
     let btnStyle = sel.includes(p.id) ? `background:${p.color};border-color:${p.color};color:#fff;` : '';
+    if(isOneDay && !sel.includes(p.id)) {
+        btnStyle += `border: 1.5px dashed var(--amber-v); background: var(--amber-l); color: var(--amber-v);`;
+    }
+
     
-    return `<button type="button" class="ptog${sel.includes(p.id)?' sel':''}${guestClass}" data-id="${p.id}" style="${btnStyle}" onclick="togP(this,'${p.id}','${p.color}')">${guestPrefix}${p.nombre.split(' ')[0]}</button>`;
+    let prefix = '';
+    if(isGuest) prefix += `<span style="font-size:0.55rem; font-weight:800; background:var(--rose-v); color:#fff; padding:1px 3px; border-radius:4px; margin-right:3px; vertical-align:middle; border:none; line-height:1;">INV</span>`;
+    if(isOneDay) prefix += `<span style="font-size:0.55rem; font-weight:800; background:var(--amber-v); color:#fff; padding:1px 3px; border-radius:4px; margin-right:3px; vertical-align:middle; border:none; line-height:1;"><i class="fas fa-calendar-day"></i> 1D</span>`;
+    
+    return `<button type="button" class="ptog${sel.includes(p.id)?' sel':''}${extraClass}" data-id="${p.id}" style="${btnStyle}" onclick="togP(this,'${p.id}','${p.color}')">${prefix}${p.nombre.split(' ')[0]}</button>`;
   }).join('') : '<span style="font-size:.75rem;color:var(--ink3)">No hay personas disponibles.</span>';
 }
 function togP(btn, id, col) { btn.classList.toggle('sel'); if(btn.classList.contains('sel')){btn.style.background=col;btn.style.borderColor=col;btn.style.color='#fff';}else{btn.style.background='';btn.style.borderColor='';btn.style.color='';} }
@@ -1421,31 +1429,59 @@ function renderDash() {
         }).join('') + `</div>`;
     }
 
-    // HORARIO PREVIEW
+    // HORARIO PREVIEW (DISEÑO PREMIUM CON EDICIÓN DIRECTA)
     const containerHorario = document.getElementById('d-horario-preview');
     if(!D.horario.length) {
         containerHorario.innerHTML = `<div class="empty">Organiza el horario en su pestaña</div>`;
     } else {
         const g = {}; D.horario.forEach(h => { if(!g[h.fecha]) g[h.fecha]=[]; g[h.fecha].push(h); });
-        let gridHtml = '<div class="timeline-grid">';
+        
+        // Grid optimizado: 1 columna en móvil, varias en desktop
+        let gridHtml = '<div class="timeline-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1.5rem; align-items:start;">';
+        
         Object.keys(g).sort().forEach((f) => {
             const dateObj = new Date(f + "T00:00:00");
             const dayName = window.innerWidth < 600 ? dateObj.toLocaleDateString('es-ES', { weekday: 'short' }) : dateObj.toLocaleDateString('es-ES', { weekday: 'long' });
             const dayShort = dateObj.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
-            gridHtml += `<div class="timeline-day-column">
-                <div class="day-big-number">${dateObj.getDate()}</div>
-                <div class="timeline-day-header">
-                    <span class="day-full-date">${dayShort}</span>
-                    <span class="day-name">${dayName.toUpperCase()}</span>
+            
+            gridHtml += `
+            <div class="timeline-day-column" style="position:relative;">
+                <div class="day-big-number" style="position:absolute; right:0; top:-10px; font-size:3.5rem; font-weight:900; color:var(--ink); opacity:0.03; pointer-events:none;">${dateObj.getDate()}</div>
+                <div class="timeline-day-header" style="border-left: 3px solid var(--primary); padding-left: 0.8rem; margin-bottom: 1.25rem;">
+                    <span style="font-size: 0.65rem; text-transform: uppercase; color: var(--primary); font-weight: 800; letter-spacing: 0.05em;">${dayShort}</span>
+                    <span style="font-family: 'Lora', serif; font-size: 1.3rem; font-weight: 700; color: var(--ink); display: block; line-height: 1.1;">${dayName.toUpperCase()}</span>
                 </div>
-                <div class="timeline-events">` + 
+                <div class="timeline-events" style="border-left: 1.5px dashed var(--border2); padding-left: 1.2rem; margin-left: 0.3rem;">` + 
                 g[f].map(h => {
                     const cfg = HORARIO_CFG[h.tipo] || HORARIO_CFG['Otro'];
-                    return `<div class="event-card-pro" style="--ev-color: ${cfg.c}; --ev-bg: ${hexLight(cfg.c, 0.15)}">
-                        <div class="event-icon-box"><i class="fas ${cfg.i}"></i></div>
-                        <div class="event-time-badge">${h.hora_inicio.substring(0,5)}</div>
-                        <div class="event-title-pro">${h.titulo}</div>
-                        <div class="event-location-pro"><i class="fas fa-location-dot"></i> <span>${h.ubicacion || 'Definir'}</span></div>
+                    const lightCol = hexLight(cfg.c, 0.12);
+                    
+                    return `
+                    <div class="event-card-pro" style="--ev-color: ${cfg.c}; background: var(--surf); border: 1px solid var(--border); border-left: 4px solid ${cfg.c}; border-radius: 12px; padding: 1rem; margin-bottom: 1rem; box-shadow: var(--sh-sm); position: relative; transition: all 0.2s ease;" 
+                         onmouseover="this.style.transform='translateX(4px)'; this.style.boxShadow='var(--sh)';" 
+                         onmouseout="this.style.transform='none'; this.style.boxShadow='var(--sh-sm)';">
+                        
+                        <button class="icon-btn" onclick="openModHorarioEdit('${h.id}')" 
+                                style="position:absolute; top:0.75rem; right:0.75rem; width:28px; height:28px; border-radius:8px; border:1px solid var(--border); background:var(--surf2); color:var(--ink3); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.2s;"
+                                onmouseover="this.style.background='var(--primary-l)'; this.style.color='var(--primary)'; this.style.borderColor='var(--primary-m)';"
+                                onmouseout="this.style.background='var(--surf2)'; this.style.color='var(--ink3)'; this.style.borderColor='var(--border)';"
+                                title="Editar evento">
+                            <i class="fas fa-pen" style="font-size:0.7rem"></i>
+                        </button>
+
+                        <div style="display:flex; align-items:center; gap:6px; margin-bottom:0.4rem;">
+                             <span style="background:${lightCol}; color:${cfg.c}; padding:2px 8px; border-radius:6px; font-size:0.65rem; font-weight:800; display:inline-flex; align-items:center; gap:4px;">
+                                <i class="far fa-clock"></i> ${h.hora_inicio.substring(0,5)}
+                             </span>
+                             <i class="fas ${cfg.i}" style="color:${cfg.c}; font-size:0.75rem; opacity:0.5; margin-left:auto; margin-right:1.8rem;"></i>
+                        </div>
+
+                        <div style="font-weight:700; color:var(--ink); font-size:0.9rem; line-height:1.3; padding-right:1.5rem;">${h.titulo}</div>
+                        
+                        <div style="display:flex; align-items:center; gap:4px; font-size:0.7rem; color:var(--ink3); font-weight:600; margin-top:0.4rem;">
+                            <i class="fas fa-location-dot" style="color:var(--primary); opacity:0.7;"></i> 
+                            <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${h.ubicacion || 'Por definir'}</span>
+                        </div>
                     </div>`;
                 }).join('') + `</div></div>`;
         });
@@ -1454,11 +1490,12 @@ function renderDash() {
 
     // MATERIALES DASHBOARD
     const mC = document.getElementById('d-mats');
+    if (!mC) return;
     mC.style.padding = "1.25rem"; 
-    const mD = Object.keys(D.materiales).filter(id => D.materiales[id] && D.materiales[id].length);
+    
     const deptOptions = D.departamentos.map(d => `<option value="${d.id}">${d.nombre}</option>`).join('');
     
-    // 1. Selector Global (Rediseño a Barra Unificada Minimalista)
+    // 1. Barra superior de añadir tarea (Diseño Unificado)
     let selectorGlobal = `
       <div style="background:var(--surf2); padding:0.75rem 1rem; border-radius:var(--r); margin-bottom:1.5rem; border:1px solid var(--border); display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap; box-shadow:inset 0 1px 3px rgba(0,0,0,0.02);">
           <div style="font-weight:700; color:var(--ink2); font-size:.85rem; display:flex; align-items:center; gap:0.4rem;"><i class="fas fa-clipboard-list" style="color:var(--primary)"></i> Asignar tarea:</div>
@@ -1471,75 +1508,67 @@ function renderDash() {
           <button class="btn btn-primary" onclick="addMaterialFromDash()" style="padding:0.6rem 1rem;"><i class="fas fa-plus"></i> Añadir</button>
       </div>`;
 
-    if (!mD.length && D.departamentos.length === 0) {
-        mC.innerHTML = '<div class="empty" style="padding:1.5rem"><i class="fas fa-box-open"></i><p>No hay departamentos creados.</p></div>';
-    } else {
-        let cardsHtml = mD.map(id => { 
-            const d = D.departamentos.find(x => x.id === id);
-            const items = D.materiales[id];
-            const doneC = items.filter(i => i.estado === 'tengo').length; 
-            const pct = Math.round((doneC / items.length) * 100);
-            const orderMap = { 'comprar': 1, 'pendiente': 2, 'tengo': 3 };
-            const sortedItems = [...items].sort((a,b) => (orderMap[a.estado]||2) - (orderMap[b.estado]||2));
+    // --- SOLUCIÓN: Iteramos sobre D.departamentos para que el orden de las tarjetas sea SIEMPRE el mismo ---
+    let cardsHtml = D.departamentos.map(d => { 
+        const id = d.id;
+        const items = D.materiales[id] || [];
+        
+        // Si este departamento no tiene materiales, no pintamos su tarjeta
+        if (items.length === 0) return '';
 
-            // 2. Lista de Ítems (Rediseño sin cajas pesadas)
-            const itemsHtml = sortedItems.map(m => { 
-                let isT = m.estado === 'tengo'; let isC = m.estado === 'comprar';
-                let col = isT ? 'var(--green-v)' : isC ? 'var(--amber-v)' : 'var(--ink4)';
-                let ic  = isT ? 'fa-circle-check' : isC ? 'fa-cart-shopping' : 'fa-circle';
-                let textColor = isT ? 'var(--ink4)' : 'var(--ink)';
-                let textWeight = isT ? '500' : '600';
-                
-                return `
-                <div style="display:flex; align-items:flex-start; gap:0.6rem; padding:0.5rem 0; border-bottom:1px dashed var(--border2); position:relative;">
-                    <button onclick="event.stopPropagation(); cycleMaterial('${m.id}','${id}','${m.estado||'pendiente'}')" style="background:none; border:none; color:${col}; font-size:1.1rem; cursor:pointer; padding:0; margin-top:2px; flex-shrink:0; transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='none'">
-                        <i class="fas ${ic}"></i>
-                    </button>
-                    <div style="font-size:0.85rem; color:${textColor}; font-weight:${textWeight}; text-decoration:${isT?'line-through':'none'}; flex:1; line-height:1.4;" title="${m.texto}">${m.texto}</div>
-                    <div style="display:flex; gap:2px; flex-shrink:0; opacity:0.4; transition:opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.4">
-                        <button class="icon-btn edit" onclick="event.stopPropagation(); editMaterialText('${m.id}','${id}')" title="Editar" style="width:24px; height:24px; border:none; background:transparent;"><i class="fas fa-pen" style="font-size:0.7rem"></i></button>
-                        <button class="icon-btn del" onclick="event.stopPropagation(); delMaterial('${m.id}','${id}')" title="Eliminar" style="width:24px; height:24px; border:none; background:transparent; color:var(--red-v);"><i class="fas fa-times" style="font-size:0.7rem"></i></button>
-                    </div>
-                </div>`; 
-            }).join('');
-
-            // 3. Tarjeta Final y barra sutil de añadir ítem
-            const dColor = d ? d.color : '#0f766e';
-            const bgGradient = `linear-gradient(to bottom, ${hexLight(dColor, 0.04)}, var(--surf) 40%)`;
-            const borderColor = hexLight(dColor, 0.25);
+        const doneC = items.filter(i => i.estado === 'tengo').length; 
+        const pct = Math.round((doneC / items.length) * 100);
+        
+        // Render de los materiales internos (sin sorting, para que tampoco se muevan dentro)
+        const itemsHtml = items.map(m => { 
+            let isT = m.estado === 'tengo'; 
+            let isC = m.estado === 'comprar';
+            let col = isT ? 'var(--green-v)' : isC ? 'var(--amber-v)' : 'var(--ink4)';
+            let ic  = isT ? 'fa-circle-check' : isC ? 'fa-cart-shopping' : 'fa-circle';
             
             return `
-            <div style="background:${bgGradient}; border:1px solid ${borderColor}; border-radius:12px; padding:1.25rem; box-shadow:var(--sh-sm); display:flex; flex-direction:column; position:relative; overflow:hidden; transition:all 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 24px ${hexLight(dColor, 0.15)}'; this.style.borderColor='${hexLight(dColor, 0.5)}'" onmouseout="this.style.transform='none'; this.style.boxShadow='var(--sh-sm)'; this.style.borderColor='${borderColor}'">
-                <div style="position:absolute; top:0; left:0; right:0; height:4px; background:${dColor};"></div>
-                
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; margin-top:0.25rem;">
-                    <div style="font-size:0.95rem; font-weight:800; color:var(--ink); display:flex; align-items:center; gap:0.6rem;">
-                        <div style="width:34px; height:34px; border-radius:8px; background:${hexLight(dColor, 0.15)}; color:${dColor}; display:flex; align-items:center; justify-content:center; font-size:1rem; flex-shrink:0;">
-                            <i class="fas ${d ? d.icono : 'fa-box'}"></i>
-                        </div>
-                        <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${d ? d.nombre : '?'}</span>
-                    </div>
-                    <div style="font-size:0.7rem; font-weight:800; color:${pct===100?'var(--green-v)':dColor}; background:${pct===100?'var(--green-l)':hexLight(dColor, 0.1)}; padding:2px 8px; border-radius:99px; border:1px solid ${pct===100?'var(--green-m)':hexLight(dColor, 0.2)};">
-                        ${doneC}/${items.length}
-                    </div>
+            <div style="display:flex; align-items:flex-start; gap:0.6rem; padding:0.5rem 0; border-bottom:1px dashed var(--border2); position:relative;">
+                <button onclick="event.stopPropagation(); cycleMaterial('${m.id}','${id}','${m.estado||'pendiente'}')" style="background:none; border:none; color:${col}; font-size:1.1rem; cursor:pointer; padding:0; margin-top:2px; flex-shrink:0;">
+                    <i class="fas ${ic}"></i>
+                </button>
+                <div style="font-size:0.85rem; color:${isT?'var(--ink4)':'var(--ink)'}; font-weight:${isT?'500':'600'}; text-decoration:${isT?'line-through':'none'}; flex:1; line-height:1.4;">${m.texto}</div>
+                <div style="display:flex; gap:2px; flex-shrink:0; opacity:0.3;">
+                    <button class="icon-btn edit" onclick="event.stopPropagation(); editMaterialText('${m.id}','${id}')" style="width:24px; height:24px; border:none; background:transparent;"><i class="fas fa-pen" style="font-size:0.7rem"></i></button>
                 </div>
-                
-                <div style="width:100%; height:4px; background:var(--surf3); border-radius:99px; margin-bottom:1rem; overflow:hidden;">
-                    <div style="width:${pct}%; height:100%; background:${pct===100?'var(--green-v)':dColor}; border-radius:99px; transition:width 0.3s;"></div>
-                </div>
-                
-                <div style="flex:1; max-height:220px; overflow-y:auto; padding-right:5px; margin-bottom:0.5rem; margin-right:-5px;">
-                    ${itemsHtml}
-                </div>
-                
-                <div style="margin-top:auto; padding-top:0.5rem;">
-                    <div style="display:flex; background:var(--surf); border:1px solid var(--border); border-radius:8px; overflow:hidden; transition:border-color 0.2s;" onfocusin="this.style.borderColor='${dColor}'" onfocusout="this.style.borderColor='var(--border)'">
-                        <input id="new-item-${id}" placeholder="Añadir a ${d?d.nombre:'lista'}..." style="flex:1; border:none; background:transparent; padding:0.45rem 0.6rem; font-size:0.8rem; outline:none; color:var(--ink);" onkeypress="if(event.key==='Enter')addMaterialDashInline('${id}')">
-                        <button onclick="addMaterialDashInline('${id}')" style="background:transparent; border:none; color:${dColor}; padding:0 0.75rem; cursor:pointer; font-size:0.85rem; transition:transform 0.1s;" onmousedown="this.style.transform='scale(0.9)'" onmouseup="this.style.transform='none'" title="Añadir"><i class="fas fa-plus"></i></button>
-                    </div>
-                </div>
-            </div>`;
+            </div>`; 
         }).join('');
+
+        const dColor = d.color || '#0f766e';
+        const bgGradient = `linear-gradient(to bottom, ${hexLight(dColor, 0.04)}, var(--surf) 40%)`;
+        
+        return `
+        <div style="background:${bgGradient}; border:1px solid ${hexLight(dColor, 0.25)}; border-radius:12px; padding:1.25rem; box-shadow:var(--sh-sm); display:flex; flex-direction:column; position:relative; overflow:hidden;">
+            <div style="position:absolute; top:0; left:0; right:0; height:4px; background:${dColor};"></div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; margin-top:0.25rem;">
+                <div style="font-size:0.95rem; font-weight:800; color:var(--ink); display:flex; align-items:center; gap:0.6rem;">
+                    <div style="width:34px; height:34px; border-radius:8px; background:${hexLight(dColor, 0.15)}; color:${dColor}; display:flex; align-items:center; justify-content:center; font-size:1rem;"><i class="fas ${d.icono}"></i></div>
+                    <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${d.nombre}</span>
+                </div>
+                <div style="font-size:0.7rem; font-weight:800; color:${dColor}; background:${hexLight(dColor, 0.1)}; padding:2px 8px; border-radius:99px;">${doneC}/${items.length}</div>
+            </div>
+            <div style="width:100%; height:4px; background:var(--surf3); border-radius:99px; margin-bottom:1rem; overflow:hidden;">
+                <div style="width:${pct}%; height:100%; background:${pct===100?'var(--green-v)':dColor}; border-radius:99px; transition:width 0.3s;"></div>
+            </div>
+            <div style="flex:1; max-height:220px; overflow-y:auto; padding-right:5px; margin-bottom:0.5rem;">
+                ${itemsHtml}
+            </div>
+            <div style="margin-top:auto; padding-top:0.5rem;">
+                <div style="display:flex; background:var(--surf); border:1px solid var(--border); border-radius:8px; overflow:hidden;">
+                    <input id="new-item-${id}" placeholder="Añadir..." style="flex:1; border:none; background:transparent; padding:0.45rem 0.6rem; font-size:0.8rem; outline:none;" onkeypress="if(event.key==='Enter')addMaterialDashInline('${id}')">
+                    <button onclick="addMaterialDashInline('${id}')" style="background:transparent; border:none; color:${dColor}; padding:0 0.75rem; cursor:pointer;"><i class="fas fa-plus"></i></button>
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+
+    if (cardsHtml === '') {
+        mC.innerHTML = selectorGlobal + '<div class="empty" style="padding:1.5rem"><p>No hay tareas pendientes en ningún equipo.</p></div>';
+    } else {
         mC.innerHTML = selectorGlobal + '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.25rem;">' + cardsHtml + '</div>';
     }
     // ALABANZA DASH
@@ -2447,46 +2476,52 @@ function renderGruposCards() {
         const borderColor = hexLight(barColor, 0.25);
         const totalOcup = (g.miembros||[]).length + (g.portavoz_id ? 1 : 0);
 
+        // Función interna para renderizar el nombre con la etiqueta de 1 día si corresponde
+        const getNameWithTag = (id) => {
+            const person = D.personas.find(p => String(p.id) === String(id));
+            if(!person) return '—';
+            let tag = pBadges(id); 
+           
+            if(person.solo_un_dia) {
+                tag += `<span style="color:var(--amber-v); font-size:0.6rem; font-weight:800; margin-left:5px; background:var(--amber-l); padding:1px 4px; border-radius:4px; border:1px solid var(--amber-m);">SOLO 1 DÍA</span>`;
+            }
+            return person.nombre + tag;
+        };
+
         const port = g.portavoz_id ? `
             <div style="display:flex; align-items:center; gap:0.6rem; padding:0.4rem 0; position:relative;">
                 <div style="width:24px; height:24px; border-radius:50%; background:${barColor}; color:#fff; display:flex; align-items:center; justify-content:center; font-size:0.6rem; flex-shrink:0;"><i class="fas fa-bullhorn"></i></div>
-                <div style="font-size:0.85rem; font-weight:700; color:var(--ink); flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${pName(g.portavoz_id)} ${pBadges(g.portavoz_id)}</div>
+                <div style="font-size:0.85rem; font-weight:700; color:var(--ink); flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${getNameWithTag(g.portavoz_id)}</div>
             </div>` : '';
 
         const memHtml = (g.miembros||[]).map(id => `
             <div style="display:flex; align-items:center; gap:0.6rem; padding:0.4rem 0; position:relative;">
                 <div style="width:24px; height:24px; border-radius:50%; background:var(--surf3); color:var(--ink3); display:flex; align-items:center; justify-content:center; font-size:0.6rem; flex-shrink:0;"><i class="fas fa-user"></i></div>
-                <div style="font-size:0.85rem; font-weight:500; color:var(--ink); flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${pName(id)} ${pBadges(id)}</div>
+                <div style="font-size:0.85rem; font-weight:500; color:var(--ink); flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${getNameWithTag(id)}</div>
             </div>
         `).join('');
 
         const desc = g.descripcion ? `<div style="font-size:0.75rem; color:var(--ink3); margin-bottom:0.8rem; font-style:italic; line-height:1.4;">${g.descripcion}</div>` : '';
 
         return `
-        <div class="card" style="background:${bgGradient}; border:1px solid ${borderColor}; border-radius:12px; padding:1.25rem; box-shadow:var(--sh-sm); display:flex; flex-direction:column; position:relative; overflow:hidden; transition:all 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 24px ${hexLight(barColor, 0.15)}'; this.style.borderColor='${hexLight(barColor, 0.5)}'" onmouseout="this.style.transform='none'; this.style.boxShadow='var(--sh-sm)'; this.style.borderColor='${borderColor}'">
+        <div class="card" style="background:${bgGradient}; border:1px solid ${borderColor}; border-radius:12px; padding:1.25rem; box-shadow:var(--sh-sm); display:flex; flex-direction:column; position:relative; overflow:hidden; transition:all 0.2s;" onmouseover="this.style.transform='translateY(-2px)';" onmouseout="this.style.transform='none';">
             <div style="position:absolute; top:0; left:0; right:0; height:4px; background:${barColor};"></div>
-            
             <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:0.75rem; margin-bottom:1rem; margin-top:0.25rem;">
                 <div style="font-size:0.95rem; font-weight:800; color:var(--ink); display:flex; align-items:center; gap:0.6rem; flex:1; min-width:180px;">
-                    <div style="width:34px; height:34px; border-radius:8px; background:${hexLight(barColor, 0.15)}; color:${barColor}; display:flex; align-items:center; justify-content:center; font-size:1rem; flex-shrink:0;">
-                        <i class="fas fa-flag"></i>
-                    </div>
+                    <div style="width:34px; height:34px; border-radius:8px; background:${hexLight(barColor, 0.15)}; color:${barColor}; display:flex; align-items:center; justify-content:center; font-size:1rem; flex-shrink:0;"><i class="fas fa-flag"></i></div>
                     <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex:1;">${g.nombre}</span>
                 </div>
                 <div style="display:flex; align-items:center; gap:0.4rem;">
                     <div style="font-size:0.7rem; font-weight:800; color:${barColor}; background:${hexLight(barColor, 0.1)}; padding:3px 8px; border-radius:99px; border:1px solid ${hexLight(barColor, 0.2)};">
                         ${totalOcup} pers.
                     </div>
-                    <button class="icon-btn edit" style="width:28px;height:28px;border:none;background:var(--surf2);box-shadow:var(--sh-sm);" onclick="openModGrupoEdit('${g.id}')"><i class="fas fa-pen" style="font-size:0.7rem;"></i></button>
-                    <button class="icon-btn del" style="width:28px;height:28px;border:none;background:var(--red-l);color:var(--red-v);box-shadow:var(--sh-sm);" onclick="delGrupo('${g.id}')"><i class="fas fa-trash" style="font-size:0.7rem;"></i></button>
+                    <button class="icon-btn edit" onclick="openModGrupoEdit('${g.id}')"><i class="fas fa-pen"></i></button>
                 </div>
             </div>
-            
             ${desc}
-            
-            <div style="flex:1; max-height:220px; overflow-y:auto; padding-right:5px;">
+            <div style="flex:1; max-height:220px; overflow-y:auto;">
                 ${port}
-                ${memHtml || (totalOcup === 0 ? '<div style="font-size:0.8rem; color:var(--ink4); font-style:italic; padding-top:0.5rem;">Sin miembros</div>' : '')}
+                ${memHtml || '<div style="font-size:0.8rem; color:var(--ink4); font-style:italic;">Sin miembros</div>'}
             </div>
         </div>`;
     }).join('');
@@ -3271,75 +3306,126 @@ function generarPDFLimpio() {
   else { alert("Por favor, permite las ventanas emergentes (pop-ups) para generar el PDF."); }
 }
 /* ═══════════════════════════════════════
-   📜 DESCARGAR NORMAS DEL CAMPAMENTO
+   📜 DESCARGAR NORMAS (OPTIMIZADO 1 HOJA)
 ═══════════════════════════════════════ */
 function descargarNormasPDF() {
-  let html = `<!DOCTYPE html>
-  <html lang="es">
-  <head>
-  <meta charset="UTF-8">
-  <title>Normativas - Biserica Maranata</title>
-  <style>
-    body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #1e293b; padding: 40px; line-height: 1.6; background: #fff; max-width: 750px; margin: auto; }
-    .header { text-align: center; border-bottom: 3px solid #0f766e; padding-bottom: 25px; margin-bottom: 35px; }
-    .logo-text { font-size: 16px; color: #0f766e; text-transform: uppercase; letter-spacing: 3px; font-weight: 800; margin-bottom: 10px; }
-    h1 { color: #0f172a; font-size: 32px; margin: 0 0 10px 0; font-family: Georgia, serif; }
-    .subtitle { color: #64748b; font-size: 18px; margin: 0; font-style: italic; }
-    h2 { color: #b45309; margin-top: 30px; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; font-size: 20px; }
-    ul { margin-top: 15px; padding-left: 25px; }
-    li { margin-bottom: 10px; font-size: 15px; color: #334155; }
-    .footer { margin-top: 50px; text-align: center; font-size: 12px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 20px; }
-    @media print { body { padding: 20px; } }
-  </style>
-  </head>
-  <body>
+  if (!D.normas || !D.normas.length) { alert("No hay normativas registradas."); return; }
+  
+  let html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Normativas - Biserica Maranata</title><style>
+    @page { size: A4; margin: 1cm; }
+    body { 
+      font-family: 'Plus Jakarta Sans', helvetica, arial, sans-serif; 
+      color: #1e293b; 
+      line-height: 1.25; 
+      background: #fff; 
+      margin: 0; padding: 0;
+    }
+    .header { 
+      text-align: center; 
+      border-bottom: 2px solid #0f766e; 
+      padding-bottom: 10px; 
+      margin-bottom: 15px; 
+    }
+    .logo-text { font-size: 12px; color: #0f766e; text-transform: uppercase; letter-spacing: 2px; font-weight: 800; }
+    h1 { color: #0f172a; font-size: 22px; margin: 5px 0; font-family: Georgia, serif; }
+    
+    /* CONTENEDOR DE COLUMNAS */
+    .content-wrapper { 
+      column-count: 2; 
+      column-gap: 30px; 
+      column-rule: 1px dashed #e2e8f0;
+    }
+    
+    .norma-section { 
+      break-inside: avoid; 
+      margin-bottom: 15px; 
+    }
+    h2 { 
+      color: #b45309; 
+      font-size: 14px; 
+      text-transform: uppercase; 
+      border-bottom: 1px solid #fed7aa; 
+      padding-bottom: 3px; 
+      margin-top: 0; 
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .punto { 
+      display: flex; 
+      margin-bottom: 6px; 
+      font-size: 11.5px; 
+    }
+    .num { 
+      font-weight: 800; 
+      color: #0f766e; 
+      width: 18px; 
+      flex-shrink: 0; 
+    }
+    .sub-lista { 
+      margin-left: 18px; 
+      margin-top: 2px; 
+      border-left: 1px solid #e2e8f0; 
+      padding-left: 10px; 
+    }
+    .footer { 
+      position: fixed; bottom: 0; width: 100%;
+      text-align: center; font-size: 9px; color: #94a3b8; 
+      border-top: 1px solid #f1f5f9; padding-top: 5px; 
+    }
+    @media print { body { -webkit-print-color-adjust: exact; } }
+  </style></head><body>
     <div class="header">
       <div class="logo-text">🕊️ Biserica Maranata</div>
       <h1>Normativas del Campamento</h1>
-      <p class="subtitle">Reîntâlnire cu Tatăl</p>
+      <div style="font-size: 11px; color: #64748b; font-style: italic;">Reîntâlnire cu Tatăl</div>
     </div>
     
-    <h2>1. Respeto y Actitud</h2>
-    <ul>
-      <li>Mantener una actitud de respeto y amor fraternal hacia los líderes, monitores y compañeros.</li>
-      <li>Participar activamente y con reverencia en todos los cultos, tiempos de oración y devocionales.</li>
-      <li>Usar un vocabulario adecuado, edificante y constructivo en todo momento.</li>
-    </ul>
-
-    <h2>2. Horarios y Asistencia</h2>
-    <ul>
-      <li>Cumplir estrictamente con los horarios establecidos (levantarse, comidas, actividades y toque de queda).</li>
-      <li>La asistencia a los cultos, talleres y actividades generales es obligatoria para todos los acampados.</li>
-      <li>Respetar las horas de silencio y descanso nocturno para no molestar a los demás.</li>
-    </ul>
-
-    <h2>3. Uso de Instalaciones y Cabañas</h2>
-    <ul>
-      <li>Mantener el orden, la higiene y la limpieza en las cabañas, baños y todas las zonas comunes.</li>
-      <li><strong>Está estrictamente prohibido entrar en las cabañas o habitaciones del sexo opuesto.</strong></li>
-      <li>Cuidar el entorno natural, no dañar las instalaciones y depositar la basura en los contenedores correspondientes.</li>
-    </ul>
-
-    <h2>4. Dispositivos Móviles</h2>
-    <ul>
-      <li>El uso de teléfonos móviles estará restringido durante los cultos, charlas y dinámicas de grupo.</li>
-      <li>Animamos a desconectar de la tecnología para poder conectar de manera genuina con Dios y con los hermanos durante estos días.</li>
-    </ul>
+    <div class="content-wrapper">`;
     
-    <div class="footer">
-      Documento oficial generado desde el Panel de Gestión TML • Biserica Maranata
-    </div>
-  </body>
-  </html>`;
+  D.normas.forEach((n) => {
+      const lineas = n.contenido.split('\n').filter(x=>x.trim());
+      let puntosHtml = '';
+      let enSublista = false;
+
+      lineas.forEach(linea => {
+          let txt = linea.trim();
+          let matchSub = txt.match(/^([a-z])[\)\.]\s*(.*)/i);
+          
+          if (matchSub) {
+              if (!enSublista) { puntosHtml += `<div class="sub-lista">`; enSublista = true; }
+              puntosHtml += `<div class="punto" style="font-size:10.5px;"><span class="num" style="width:15px; color:#64748b;">${matchSub[1].toLowerCase()})</span><span>${matchSub[2]}</span></div>`;
+          } else {
+              if (enSublista) { puntosHtml += `</div>`; enSublista = false; }
+              let matchNum = txt.match(/^(\d+)[\)\.]\s*(.*)/);
+              if(matchNum) {
+                  puntosHtml += `<div class="punto"><span class="num">${matchNum[1]}.</span><span>${matchNum[2]}</span></div>`;
+              } else {
+                  puntosHtml += `<div class="punto"><span>${txt}</span></div>`;
+              }
+          }
+      });
+      if (enSublista) { puntosHtml += `</div>`; }
+
+      html += `
+      <div class="norma-section">
+        <h2>${n.titulo || 'Instrucciones'}</h2>
+        ${puntosHtml}
+      </div>`;
+  });
+  
+  html += `</div>
+    <div class="footer">Documento oficial TML • Por favor, mantén este documento contigo durante el campamento.</div>
+  </body></html>`;
   
   const printWin = window.open('', '_blank');
-  if (printWin) { 
-      printWin.document.open(); 
-      printWin.document.write(html); 
-      printWin.document.close(); 
-      setTimeout(() => { printWin.print(); }, 500); 
-  } else { 
-      alert("Por favor, permite las ventanas emergentes (pop-ups) en tu navegador para generar el documento."); 
+  if (printWin) {
+      printWin.document.open();
+      printWin.document.write(html);
+      printWin.document.close();
+      // Un pequeño delay para asegurar que los estilos carguen antes de imprimir
+      setTimeout(() => { printWin.print(); }, 400);
   }
 }
 /* ═══════════════════════════════════════
