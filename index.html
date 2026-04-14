@@ -3306,158 +3306,139 @@ function generarPDFLimpio() {
   else { alert("Por favor, permite las ventanas emergentes (pop-ups) para generar el PDF."); }
 }
 /* ═══════════════════════════════════════
-   📜 DESCARGAR NORMAS 
+   📜 DESCARGAR NORMAS (ULTRA COMPACTO - 1 HOJA - 2 COLUMNAS)
 ═══════════════════════════════════════ */
 function descargarNormasPDF() {
-  if (!D.normas || !D.normas.length) { alert("No hay normativas registradas."); return; }
+  if (!D.normas || !D.normas.length) { alert("No hay normativas registradas para exportar."); return; }
   
-  let html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Normativas</title><style>
-    /* TRUCO PARA OCULTAR FECHA Y HORA DEL NAVEGADOR */
+  let html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Normativas_Iglesia_Maranata</title><style>
+    /* MAGIA: Esto elimina la fecha, hora, 'about:blank' y paginación del navegador */
     @page { 
-        size: A4; 
-        margin: 0; /* Al poner margen 0, el navegador suele quitar la fecha/hora automáticamente */
+      size: A4; 
+      margin: 0mm; 
     }
     
     body { 
-      font-family: 'Plus Jakarta Sans', helvetica, arial, sans-serif; 
-      color: #1e293b; 
+      font-family: 'Plus Jakarta Sans', Helvetica, Arial, sans-serif; 
+      color: #0f172a; 
       line-height: 1.2; 
       background: #fff; 
       margin: 0; 
-      padding: 1.5cm; /* El margen real lo damos aquí */
+      /* Le damos el margen directamente al body para que el navegador no se meta */
+      padding: 12mm 15mm; 
+      box-sizing: border-box;
     }
 
+    /* ENCABEZADO SUPER COMPACTO */
     .header { 
-      text-align: center; 
-      margin-bottom: 15px; 
-      padding-bottom: 8px;
-      border-bottom: 1px solid #0f766e;
-    }
-
-    .logo-text { 
-      font-size: 10px; 
-      color: #0f766e; 
-      text-transform: uppercase; 
-      letter-spacing: 3px; 
-      font-weight: 800; 
-      display: block;
-    }
-
-    h1 { 
-      color: #0f172a; 
-      font-size: 18px; 
-      margin: 2px 0; 
-      font-family: Georgia, serif; 
-      text-transform: uppercase;
-    }
-
-    .intro-text {
-      font-size: 10px;
-      color: #64748b;
-      font-style: italic;
-      margin-bottom: 5px;
-    }
-    
-    /* DISEÑO EN 2 COLUMNAS MUY COMPACTO */
-    .content-wrapper { 
-      column-count: 2; 
-      column-gap: 25px; 
-      column-rule: 1px solid #f1f5f9;
-    }
-    
-    .norma-section { 
-      break-inside: avoid; 
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      border-bottom: 2px solid #0f766e; 
+      padding-bottom: 5px; 
       margin-bottom: 12px; 
     }
 
-    h2 { 
-      color: #b45309; 
-      font-size: 12px; 
+    h1 { 
+      color: #0f766e; 
+      font-size: 17px; 
+      margin: 0; 
       text-transform: uppercase; 
-      background: #fff7ed;
-      padding: 3px 6px;
-      border-radius: 4px;
-      margin-top: 0; 
-      margin-bottom: 6px;
-      border-left: 3px solid #f97316;
+      font-weight: 900; 
+      letter-spacing: 0.5px;
     }
 
-    .punto { 
-      display: flex; 
-      margin-bottom: 4px; 
-      font-size: 10.5px; 
+    .subtitle { 
+      color: #64748b; 
+      font-size: 11px; 
+      margin: 0; 
+      font-style: italic; 
+      font-weight: 600;
+    }
+    
+    /* DOS COLUMNAS PARA APROVECHAR AL MÁXIMO EL PAPEL */
+    .rules-container {
+      column-count: 2;
+      column-gap: 25px;
+      column-rule: 1px dashed #cbd5e1;
+    }
+    
+    /* BLOQUE DE REGLA INDIVIDUAL (Evita que se corte a la mitad) */
+    .rule-block {
+      break-inside: avoid-column; 
+      margin-bottom: 8px;
+      font-size: 10.5px;
       text-align: justify;
     }
-
-    .num { 
-      font-weight: 800; 
-      color: #0f766e; 
-      width: 15px; 
-      flex-shrink: 0; 
+    
+    .rule-header { display: flex; }
+    .rule-num { font-weight: 800; color: #0f766e; width: 22px; flex-shrink: 0; }
+    
+    .sub-rule {
+      display: flex;
+      margin-top: 4px;
+      margin-left: 22px;
+      font-size: 10px;
+      color: #334155;
     }
-
-    .sub-lista { 
-      margin-left: 15px; 
-      border-left: 1px dashed #cbd5e1; 
-      padding-left: 8px; 
-      margin-bottom: 5px;
-    }
-
-    .footer-note { 
-      margin-top: 20px;
-      text-align: center; 
-      font-size: 9px; 
-      color: #94a3b8; 
-      border-top: 1px solid #f1f5f9; 
-      padding-top: 10px;
-      clear: both;
+    .sub-num { font-weight: 700; color: #64748b; width: 16px; flex-shrink: 0; }
+    
+    .footer {
+      text-align: center;
+      font-size: 9px;
+      color: #94a3b8;
+      border-top: 1px solid #f1f5f9;
+      padding-top: 5px;
+      margin-top: 15px;
+      width: 100%;
+      column-span: all;
     }
 
     @media print {
       body { -webkit-print-color-adjust: exact; }
     }
   </style></head><body>
+    
     <div class="header">
-      <span class="logo-text">Biserica Maranata</span>
-      <h1>Normas del Campamento</h1>
-      <p class="intro-text">Reîntâlnire cu Tatăl 2026</p>
+      <h1>Normativas Iglesia Maranata</h1>
+      <span class="subtitle">Reîntâlnire cu Tatăl</span>
     </div>
     
-    <div class="content-wrapper">`;
+    <div class="rules-container">`;
     
   D.normas.forEach((n) => {
-      const lineas = n.contenido.split('\n').filter(x=>x.trim());
-      let puntosHtml = '';
-      let enSublista = false;
+      // Si pusiste algún título extra en la norma, lo ponemos pequeño
+      if(n.titulo) {
+          html += `<div style="font-size:11px; font-weight:900; color:#b45309; margin-bottom:6px; margin-top:6px; text-transform:uppercase; break-after: avoid;">${n.titulo}</div>`;
+      }
 
+      const lineas = n.contenido.split('\n').filter(x=>x.trim());
+      let isFirstRule = true;
+
+      // PARSEO INTELIGENTE PARA COLUMNAS
       lineas.forEach(linea => {
           let txt = linea.trim();
-          let matchSub = txt.match(/^([a-z])[\)\.]\s*(.*)/i);
+          let matchSub = txt.match(/^([a-z])[\)\.]\s*(.*)/i); // Detecta a) b) c)
+          let matchNum = txt.match(/^(\d+)[\)\.]\s*(.*)/);    // Detecta 1. 2. 3.
           
-          if (matchSub) {
-              if (!enSublista) { puntosHtml += `<div class="sub-lista">`; enSublista = true; }
-              puntosHtml += `<div class="punto" style="font-size:9.5px; color:#475569;"><span class="num" style="width:12px;">${matchSub[1].toLowerCase()})</span><span>${matchSub[2]}</span></div>`;
+          if (matchNum) {
+              // Cierra el bloque anterior si existe
+              if (!isFirstRule) html += `</div>`;
+              html += `<div class="rule-block"><div class="rule-header"><span class="rule-num">${matchNum[1]}.</span><span style="flex:1;">${matchNum[2]}</span></div>`;
+              isFirstRule = false;
+          } else if (matchSub) {
+              if (isFirstRule) { html += `<div class="rule-block">`; isFirstRule = false; }
+              html += `<div class="sub-rule"><span class="sub-num">${matchSub[1].toLowerCase()})</span><span style="flex:1;">${matchSub[2]}</span></div>`;
           } else {
-              if (enSublista) { puntosHtml += `</div>`; enSublista = false; }
-              let matchNum = txt.match(/^(\d+)[\)\.]\s*(.*)/);
-              if(matchNum) {
-                  puntosHtml += `<div class="punto"><span class="num">${matchNum[1]}.</span><span>${matchNum[2]}</span></div>`;
-              } else {
-                  puntosHtml += `<div class="punto"><span>${txt}</span></div>`;
-              }
+               if (isFirstRule) { html += `<div class="rule-block">`; isFirstRule = false; }
+               html += `<div style="margin-top:2px; margin-left:22px; font-size:10px; color:#475569;">${txt}</div>`;
           }
       });
-      if (enSublista) { puntosHtml += `</div>`; }
-
-      html += `
-      <div class="norma-section">
-        <h2>${n.titulo || 'Instrucciones'}</h2>
-        ${puntosHtml}
-      </div>`;
+      if (!isFirstRule) html += `</div>`; 
   });
   
   html += `</div>
-    <div class="footer-note">Documento informativo para el acampado. Mantengamos un ambiente de respeto y bendición.</div>
+    <div class="footer">Por favor, mantén este documento contigo durante el campamento. Bendiciones.</div>
   </body></html>`;
   
   const printWin = window.open('', '_blank');
@@ -3465,7 +3446,7 @@ function descargarNormasPDF() {
       printWin.document.open();
       printWin.document.write(html);
       printWin.document.close();
-      printWin.document.title = "Normativas Campamento";
+      printWin.document.title = "Normativas_Campamento"; 
 
       setTimeout(() => { 
           printWin.print(); 
