@@ -335,8 +335,11 @@ nav{flex:1;overflow-y:auto;padding:1rem .875rem;}
     <h1>Reîntâlnire cu Tatăl</h1>
     <p>TML</p>
     <label class="flbl" style="text-align:left;letter-spacing:.05em;text-transform:uppercase;font-size:.7rem">Contraseña de acceso</label>
-    <input class="finput" type="password" id="pwIn" placeholder="Introduce la contraseña…" autocomplete="off">
-    <button class="lbtn" onclick="login()"><i class="fas fa-sign-in-alt"></i> Entrar al Panel</button>
+    
+    <input class="finput" type="password" id="pwIn" placeholder="Introduce la contraseña…" autocomplete="off" onkeydown="if(event.key==='Enter') login(event)">
+    
+    <button class="lbtn" onclick="login(event)"><i class="fas fa-sign-in-alt"></i> Entrar al Panel</button>
+    
     <div class="lerr" id="lerr"><i class="fas fa-circle-exclamation"></i> Contraseña incorrecta.</div>
   </div>
 </div>
@@ -1005,18 +1008,16 @@ let currentGrupoTab = 'grupos';
 let lastUsedDate = '';
 
 /* ═══════════════════════════════════════
-   🔐 AUTH E INICIO
+   🔐 AUTH E INICIO (Corregido)
 ═══════════════════════════════════════ */
-document.addEventListener('DOMContentLoaded', () => {
-  const pwEl = document.getElementById('pwIn');
-  if(pwEl) pwEl.addEventListener('keypress', e => { if(e.key==='Enter') login(); });
-  if(isLoggedIn()) showApp();
-});
-
-function login() {
+function login(event) {
+  // Evita que el navegador recargue la página si intercepta el "Enter"
+  if(event) event.preventDefault(); 
+  
   if(document.getElementById('pwIn').value === PW) {
     localStorage.setItem('ca_exp', Date.now() + 12 * 60 * 60 * 1000);
-    const s = document.getElementById('loginScreen'); s.style.opacity = '0';
+    const s = document.getElementById('loginScreen'); 
+    s.style.opacity = '0';
     setTimeout(() => { s.style.display='none'; showApp(); }, 400);
   } else {
     document.getElementById('lerr').style.display = 'block';
