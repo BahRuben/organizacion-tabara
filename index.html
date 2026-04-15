@@ -1803,24 +1803,49 @@ function renderPersonas() {
   if(!p.length){g.innerHTML='';e.style.display='block';return;} e.style.display='none';
   
   g.innerHTML=p.map(x=>{
-    const dp=D.departamentos.filter(d=>(d.miembros||[]).includes(x.id)||d.responsable===x.id).map(d=>`<span class="pill" style="background:${hexLight(d.color,.1)};color:${d.color};border:1px solid ${hexLight(d.color,.2)}"><i class="fas ${d.icono}" style="font-size:.65rem"></i>${d.nombre}</span>`).join('');
+    // Píldoras de departamento con diseño premium
+    const dp=D.departamentos.filter(d=>(d.miembros||[]).includes(x.id)||d.responsable===x.id).map(d=>`<span style="background:${hexLight(d.color,.1)}; color:${d.color}; border:1px solid ${hexLight(d.color,.2)}; padding: 3px 8px; border-radius: 6px; font-size: 0.65rem; font-weight: 800; display: inline-flex; align-items: center; gap: 4px;"><i class="fas ${d.icono}"></i> ${d.nombre}</span>`).join('');
     
+    // Etiqueta de pagado en verde (la única que va arriba a la derecha)
     let badges = '';
-    if(x.ha_pagado) badges += `<div class="guest-badge" style="position:relative; top:0; right:0; margin-bottom:4px; background:var(--green-v); color:#ffffff; box-shadow: 0 4px 8px rgba(16, 185, 129, 0.25); display:inline-flex;"><i class="fas fa-check"></i> Pagado</div>`;
-    if(x.otra_iglesia) badges += `<div class="guest-badge" style="position:relative; top:0; right:0; margin-bottom:4px; background:var(--rose-v); color:#ffffff; box-shadow: 0 4px 8px rgba(225, 29, 72, 0.25); display:inline-flex;"><i class="fas fa-church"></i> Invitado</div>`;
-    if(x.es_menor) badges += `<div class="guest-badge" style="position:relative; top:0; right:0; margin-bottom:4px; background:var(--sky); color:#ffffff; box-shadow: 0 4px 8px rgba(3, 105, 161, 0.25); display:inline-flex;"><i class="fas fa-child"></i> Menor</div>`;
-    if(x.solo_un_dia) badges += `<div class="guest-badge" style="position:relative; top:0; right:0; margin-bottom:4px; background:var(--amber-v); color:#ffffff; box-shadow: 0 4px 8px rgba(245, 158, 11, 0.25); display:inline-flex;"><i class="fas fa-calendar-day"></i> 1 Día</div>`;
+    if(x.ha_pagado) badges += `<div style="background:var(--green-v); color:#ffffff; padding: 3px 8px; border-radius: 6px; font-size: 0.6rem; font-weight: 800; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);"><i class="fas fa-check"></i> Pagado</div>`;
 
-    let borderClass = ''; let bgGradient = '';
-    if(x.es_menor) { borderClass = 'border: 1px solid var(--sky-m);'; bgGradient = 'background: linear-gradient(to bottom right, var(--surf), var(--sky-l));'; } 
-    else if(x.otra_iglesia) { borderClass = 'border: 1px solid var(--rose-m);'; bgGradient = 'background: linear-gradient(to bottom right, var(--surf), var(--rose-l));'; }
+    // Color de la línea superior según estado
+    let topColor = x.color;
+    if (x.es_menor) topColor = 'var(--sky-d)';
+    if (x.otra_iglesia) topColor = 'var(--rose-v)';
 
-    return `<div class="pcard" style="${borderClass} ${bgGradient}">
-              <div class="pcard-acts" style="z-index:10;"><button class="icon-btn edit" onclick="openModPersonaEdit('${x.id}')"><i class="fas fa-pen"></i></button><button class="icon-btn del" onclick="delPersona('${x.id}')"><i class="fas fa-trash"></i></button></div>
-              <div style="position:absolute; top:-10px; right:15px; display:flex; flex-direction:column; align-items:flex-end; z-index:5;">${badges}</div>
-              <div class="pcard-top"><div class="av av-lg" style="background:${x.color}">${ini(x.nombre)}</div><div class="pcard-info"><h3>${x.nombre}</h3><p>${x.rol}</p></div></div>
-              <div class="pcard-depts">${dp||'<span style="font-size:.72rem;color:var(--ink4);font-style:italic">Sin departamento</span>'}</div>
-            </div>`;
+    return `
+    <div class="card" style="background:var(--surf); border:1px solid var(--border); border-top:4px solid ${topColor}; border-radius:12px; box-shadow:var(--sh-sm); display:flex; flex-direction:column; position:relative; overflow:hidden; transition:all 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='var(--sh-lg)';" onmouseout="this.style.transform='none'; this.style.boxShadow='var(--sh-sm)';">
+      
+      <div style="padding:1.25rem; display:flex; flex-direction:column; gap:1rem; flex:1;">
+          
+          <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+              <div style="display:flex; align-items:center; gap:0.8rem; flex:1;">
+                  <div class="av av-lg" style="background:${x.color}; flex-shrink:0; box-shadow:0 4px 10px rgba(0,0,0,0.1);">${ini(x.nombre)}</div>
+                  <div>
+                      <h3 style="font-weight:800; font-size:1.05rem; color:var(--ink); margin:0; display:flex; align-items:center; flex-wrap:wrap; gap:4px;">
+                        ${x.nombre} ${pBadges(x.id)}
+                      </h3>
+                      <p style="font-size:0.7rem; color:var(--ink3); font-weight:700; margin-top:3px; text-transform:uppercase; letter-spacing:0.05em;">${x.rol}</p>
+                  </div>
+              </div>
+              <div style="display:flex; flex-direction:column; align-items:flex-end;">
+                  ${badges}
+              </div>
+          </div>
+          
+          <div style="padding-top:0.8rem; border-top:1px dashed var(--border2); display:flex; flex-wrap:wrap; gap:0.4rem; flex:1; align-content: flex-start;">
+              ${dp || '<span style="font-size:0.75rem; color:var(--ink4); font-style:italic;">Sin departamento asignado</span>'}
+          </div>
+
+          <div style="display:flex; justify-content:flex-end; gap:0.4rem; margin-top:0.5rem;">
+              <button class="icon-btn edit" style="width:28px; height:28px; border:none; background:var(--surf2);" onclick="openModPersonaEdit('${x.id}')"><i class="fas fa-pen" style="font-size:0.7rem;"></i></button>
+              <button class="icon-btn del" style="width:28px; height:28px; border:none; background:var(--red-l); color:var(--red-v);" onclick="delPersona('${x.id}')"><i class="fas fa-trash" style="font-size:0.7rem;"></i></button>
+          </div>
+
+      </div>
+    </div>`;
   }).join('');
 }
 
@@ -1828,7 +1853,46 @@ function renderPersonas() {
    🏢 DEPARTAMENTOS
 ═══════════════════════════════════════ */
 function renderDepts() {
-  document.getElementById('dept-grid').innerHTML=D.departamentos.map(d=>`<div class="dcard" onclick="openDeptDetail('${d.id}')"><div class="dcard-stripe" style="background:${d.color}"></div><div class="dcard-body"><div class="dcard-hd"><div class="dcard-ico" style="background:${hexLight(d.color,.15)};color:${d.color}"><i class="fas ${d.icono}"></i></div><div><div class="dcard-nm">${d.nombre}</div><div class="dcard-resp"><i class="fas fa-user" style="font-size:.6rem"></i> ${d.responsable?pName(d.responsable):'Sin responsable'}</div></div></div>${d.desc?`<div style="font-size:.8rem;color:var(--ink3);margin-bottom:.75rem">${d.desc}</div>`:''}<div class="dcard-ft"><div style="display:flex;align-items:center;gap:.5rem"><div class="av-stack">${(d.responsable?[d.responsable]:[]).concat(d.miembros||[]).slice(0,4).map(id=>`<div class="av av-sm" style="background:${pColor(id)};border:2px solid #fff">${ini(pName(id))}</div>`).join('')}</div><span style="font-size:.75rem;color:var(--ink3);font-weight:600">${(d.miembros||[]).length+(d.responsable?1:0)} pers.</span></div><div style="display:flex;gap:.3rem"><button class="icon-btn edit" onclick="event.stopPropagation();openModDeptEdit('${d.id}')"><i class="fas fa-pen"></i></button><button class="icon-btn del" onclick="event.stopPropagation();delDepto('${d.id}')"><i class="fas fa-trash"></i></button></div></div></div></div>`).join('');
+  document.getElementById('dept-grid').innerHTML=D.departamentos.map(d=>{
+      const count = (d.miembros||[]).length + (d.responsable ? 1 : 0);
+      
+      return `
+      <div class="card" onclick="openDeptDetail('${d.id}')" style="background:var(--surf); border:1px solid var(--border); border-top:4px solid ${d.color}; border-radius:12px; box-shadow:var(--sh-sm); display:flex; flex-direction:column; position:relative; overflow:hidden; transition:all 0.2s; cursor:pointer;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='var(--sh-lg)';" onmouseout="this.style.transform='none'; this.style.boxShadow='var(--sh-sm)';">
+          
+          <div style="padding:1.25rem; display:flex; flex-direction:column; flex:1;">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1rem;">
+                  <div style="font-size:1.05rem; font-weight:800; color:var(--ink); display:flex; align-items:center; gap:0.8rem;">
+                      <div style="width:42px; height:42px; border-radius:10px; background:${hexLight(d.color, 0.15)}; color:${d.color}; display:flex; align-items:center; justify-content:center; font-size:1.2rem; flex-shrink:0;">
+                          <i class="fas ${d.icono}"></i>
+                      </div>
+                      <div>
+                          <div style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:160px;">${d.nombre}</div>
+                          <div style="font-size:0.7rem; color:var(--ink3); font-weight:600; margin-top:2px;"><i class="fas fa-user" style="font-size:0.6rem"></i> ${d.responsable?pName(d.responsable).split(' ')[0]:'Sin responsable'}</div>
+                      </div>
+                  </div>
+                  
+                  <div style="display:flex; align-items:center;">
+                      <div style="font-size:0.7rem; font-weight:800; color:${d.color}; background:${hexLight(d.color, 0.1)}; padding:3px 8px; border-radius:99px; border:1px solid ${hexLight(d.color, 0.2)};">
+                          ${count} pers.
+                      </div>
+                  </div>
+              </div>
+              
+              ${d.desc ? `<div style="font-size:0.8rem; color:var(--ink3); line-height:1.4; margin-bottom:1rem; flex:1;">${d.desc}</div>` : '<div style="flex:1;"></div>'}
+              
+              <div style="display:flex; align-items:center; justify-content:space-between; padding-top:1rem; border-top:1px solid var(--border);">
+                  <div class="av-stack" style="display:flex;">
+                      ${(d.responsable?[d.responsable]:[]).concat(d.miembros||[]).slice(0,4).map((id, i)=>`<div class="av av-sm" style="background:${pColor(id)}; border:2px solid var(--surf); width:26px; height:26px; font-size:0.6rem; margin-left:${i>0?'-8px':'0'}; z-index:${10-i};">${ini(pName(id))}</div>`).join('')}
+                  </div>
+                  <div style="display:flex; gap:0.4rem;">
+                      <button class="icon-btn edit" style="width:28px; height:28px; border:none; background:var(--surf2);" onclick="event.stopPropagation(); openModDeptEdit('${d.id}')"><i class="fas fa-pen" style="font-size:0.7rem;"></i></button>
+                      <button class="icon-btn del" style="width:28px; height:28px; border:none; background:var(--red-l); color:var(--red-v);" onclick="event.stopPropagation(); delDepto('${d.id}')"><i class="fas fa-trash" style="font-size:0.7rem;"></i></button>
+                  </div>
+              </div>
+          </div>
+      </div>
+      `;
+  }).join('');
 }
 
 function openDeptDetail(id) {
