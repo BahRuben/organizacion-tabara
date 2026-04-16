@@ -207,6 +207,10 @@ nav{flex:1;overflow-y:auto;padding:1rem .875rem;}
 .prog-card-pro:hover { transform: translateX(6px); box-shadow: var(--sh); border-color: var(--item-color); }
 .prog-card-pro::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: var(--item-color); }
 .prog-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.6rem; }
+.drag-handle { cursor: grab; color: var(--border2); margin-right: 10px; transition: color 0.2s; }
+.drag-handle:hover { color: var(--ink3); }
+.sortable-ghost { opacity: 0.4; }
+
 .prog-type-badge { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; padding: 0.3rem 0.8rem; border-radius: 8px; background: var(--item-bg); color: var(--item-color); border: 1px solid rgba(0,0,0,0.05); letter-spacing: 0.05em; }
 .prog-title-pro { font-family: 'Lora', serif; font-size: 1.4rem; font-weight: 700; color: var(--ink); margin-bottom: 0.4rem; line-height: 1.2; }
 .prog-resource-tag { display: inline-flex; align-items: flex-start; gap: 0.5rem; background: #fffbeb; color: #b45309; padding: 0.5rem 0.8rem; border-radius: 8px; font-size: 0.8rem; font-weight: 600; border: 1px dashed #fcd34d; margin-top: 0.6rem; width: 100%; }
@@ -284,6 +288,7 @@ nav{flex:1;overflow-y:auto;padding:1rem .875rem;}
 .tab{padding:.5rem 1.25rem;border-radius:8px;font-size:.85rem;font-weight:600;cursor:pointer; transition:all .2s;color:var(--ink3);border:1px solid var(--border);background:var(--surf);}
 .tab.active{background:var(--primary-l);color:var(--primary-d);border-color:var(--primary-m);}
 
+/* === MEDIA QUERIES === */
 @media(max-width:960px){
   .song-layout,.prog-wrap,.dept-2col,.juegos-layout{grid-template-columns:1fr;}
   .prog-side,.ranking-side{position:static;}
@@ -309,9 +314,6 @@ nav{flex:1;overflow-y:auto;padding:1rem .875rem;}
   .tabs { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 5px; }
   .tab { white-space: nowrap; flex-shrink: 0; }
   input.fctl, select.fctl, textarea.fctl, .finput { font-size: 16px !important; }
-  
-  /* NUEVO RESPONSIVE MÓVIL (Fuerza 1 columna en todo) */
-  div[style*="display:grid"], div[style*="display: grid"] { grid-template-columns: 1fr !important; }
   
   /* ARREGLO DEL PROGRAMA EN MÓVIL */
   .prog-item-pro { flex-direction: column; gap: 0.5rem; margin-bottom: 2rem; }
@@ -417,47 +419,76 @@ nav{flex:1;overflow-y:auto;padding:1rem .875rem;}
       <div id="d-alert"></div>
       <div id="d-stats"></div>
       
-      <div class="card" style="margin-bottom:2rem">
-          <div class="card-hd"><div class="card-title"><i class="fas fa-calendar-days"></i> Horario del Campamento</div><button class="btn btn-ghost btn-sm" onclick="go(document.querySelector('[data-p=horario]'),'horario')">Ir a Editar Horario</button></div>
-          <div class="card-body" id="d-horario-preview" style="max-height:400px; overflow-y:auto; padding:1.25rem;"></div>
+      <div class="card" style="margin-bottom:2rem; border-top:4px solid var(--primary); border-radius:12px;">
+          <div style="padding:1.25rem 1.25rem 0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+              <div style="font-size:1.05rem; font-weight:800; color:var(--ink); display:flex; align-items:center; gap:0.6rem;">
+                  <div style="width:34px; height:34px; border-radius:8px; background:var(--primary-l); color:var(--primary); display:flex; align-items:center; justify-content:center; font-size:1rem;"><i class="fas fa-calendar-days"></i></div>
+                  Horario del Campamento
+              </div>
+              <button class="btn btn-ghost btn-sm" onclick="go(document.querySelector('[data-p=horario]'),'horario')">Ir a Editar</button>
+          </div>
+          <div id="d-horario-preview" style="max-height:400px; overflow-y:auto; padding:1.25rem;"></div>
       </div>
 
-      <div class="card" style="margin-bottom:2rem">
-        <div class="card-hd"><div class="card-title"><i class="fas fa-box-open"></i> Control de Materiales a Comprar/Preparar</div></div>
-        <div class="card-body" id="d-mats" style="overflow-x:auto; padding:0;"></div>
+      <div class="card" style="margin-bottom:2rem; border-top:4px solid var(--primary-d); border-radius:12px;">
+        <div style="padding:1.25rem 1.25rem 0; display:flex; align-items:center; gap:0.6rem;">
+            <div style="font-size:1.05rem; font-weight:800; color:var(--ink); display:flex; align-items:center; gap:0.6rem;">
+                <div style="width:34px; height:34px; border-radius:8px; background:var(--primary-l); color:var(--primary-d); display:flex; align-items:center; justify-content:center; font-size:1rem;"><i class="fas fa-box-open"></i></div>
+                Control de Materiales a Comprar/Preparar
+            </div>
+        </div>
+        <div id="d-mats" style="overflow-x:auto; padding:0;"></div>
       </div>
 
       <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));gap:1.5rem;margin-bottom:2rem">
-        <div class="card">
-          <div class="card-hd">
-            <div class="card-title"><i class="fas fa-music"></i> Repertorio</div>
+        <div class="card" style="border-top:4px solid var(--amber-v); border-radius:12px;">
+          <div style="padding:1.25rem 1.25rem 0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+            <div style="font-size:1.05rem; font-weight:800; color:var(--ink); display:flex; align-items:center; gap:0.6rem;">
+                <div style="width:34px; height:34px; border-radius:8px; background:var(--amber-l); color:var(--amber-v); display:flex; align-items:center; justify-content:center; font-size:1rem;"><i class="fas fa-music"></i></div>
+                Repertorio
+            </div>
             <div style="display:flex; gap:0.5rem;">
               <button class="btn btn-primary btn-sm" onclick="openModSong()" title="Añadir Canción"><i class="fas fa-plus"></i></button>
               <button class="btn btn-ghost btn-sm" onclick="go(document.querySelector('[data-p=alabanza]'),'alabanza')">Ver todo</button>
             </div>
           </div>
-          <div class="card-body" id="d-songs"></div>
+          <div id="d-songs" style="padding:1.25rem;"></div>
         </div>
-        <div class="card">
-          <div class="card-hd">
-            <div class="card-title"><i class="fas fa-sitemap"></i> Equipos</div>
+        
+        <div class="card" style="border-top:4px solid var(--primary-m); border-radius:12px;">
+          <div style="padding:1.25rem 1.25rem 0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+            <div style="font-size:1.05rem; font-weight:800; color:var(--ink); display:flex; align-items:center; gap:0.6rem;">
+                <div style="width:34px; height:34px; border-radius:8px; background:var(--primary-l); color:var(--primary-m); display:flex; align-items:center; justify-content:center; font-size:1rem;"><i class="fas fa-sitemap"></i></div>
+                Equipos
+            </div>
             <div style="display:flex; gap:0.5rem;">
               <button class="btn btn-primary btn-sm" onclick="openModDepto()" title="Nuevo Equipo"><i class="fas fa-plus"></i></button>
               <button class="btn btn-ghost btn-sm" onclick="go(document.querySelector('[data-p=departamentos]'),'departamentos')">Ver todo</button>
             </div>
           </div>
-          <div class="card-body" id="d-depts"></div>
+          <div id="d-depts" style="padding:1.25rem;"></div>
         </div>
       </div>
       
       <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));gap:1.5rem;margin-bottom:2rem;">
-        <div class="card" style="border-top: 4px solid var(--orange);">
-          <div class="card-hd"><div class="card-title"><i class="fas fa-fire-flame-curved" style="color:var(--orange)"></i> Top Carga de Trabajo</div></div>
-          <div class="card-body" id="d-workload" style="max-height:400px; overflow-y:auto; padding:1.5rem;"></div>
+        <div class="card" style="border-top: 4px solid var(--orange); border-radius:12px;">
+          <div style="padding:1.25rem 1.25rem 0; display:flex; align-items:center; gap:0.6rem;">
+              <div style="font-size:1.05rem; font-weight:800; color:var(--ink); display:flex; align-items:center; gap:0.6rem;">
+                  <div style="width:34px; height:34px; border-radius:8px; background:var(--orange-l); color:var(--orange); display:flex; align-items:center; justify-content:center; font-size:1rem;"><i class="fas fa-fire-flame-curved"></i></div>
+                  Top Carga de Trabajo
+              </div>
+          </div>
+          <div id="d-workload" style="max-height:400px; overflow-y:auto; padding:1.5rem;"></div>
         </div>
-        <div class="card" style="border-top: 4px solid var(--indigo);">
-          <div class="card-hd"><div class="card-title"><i class="fas fa-user-astronaut" style="color:var(--indigo)"></i> Talento Disponible</div></div>
-          <div class="card-body" id="d-sin-depto" style="max-height:400px; overflow-y:auto; padding:1.5rem; background:var(--surf2)"></div>
+        
+        <div class="card" style="border-top: 4px solid var(--indigo); border-radius:12px;">
+          <div style="padding:1.25rem 1.25rem 0; display:flex; align-items:center; gap:0.6rem;">
+              <div style="font-size:1.05rem; font-weight:800; color:var(--ink); display:flex; align-items:center; gap:0.6rem;">
+                  <div style="width:34px; height:34px; border-radius:8px; background:var(--indigo-l); color:var(--indigo); display:flex; align-items:center; justify-content:center; font-size:1rem;"><i class="fas fa-user-astronaut"></i></div>
+                  Talento Disponible
+              </div>
+          </div>
+          <div id="d-sin-depto" style="max-height:400px; overflow-y:auto; padding:1.5rem; background:var(--surf2); border-radius:0 0 12px 12px; margin-top:1rem;"></div>
         </div>
       </div>
     </div>
@@ -1128,7 +1159,12 @@ async function loadAll() {
     D.cabanas = (cab||[]).map(c => ({...c, asignados: (ca||[]).filter(x=>x.cabana_id===c.id).map(x=>x.persona_id)}));
     D.coches = (coc||[]).map(c => ({...c, pasajeros: (cp||[]).filter(x=>x.coche_id===c.id).map(x=>x.persona_id)}));
     D.servicios = (ser||[]).map(s => ({...s, prog: (itm||[]).filter(i=>i.servicio_id===s.id).sort((a,b)=>a.posicion-b.posicion).map(i=>({...i, dur: i.duracion, asignados: (pa||[]).filter(x=>x.item_id===i.id).map(x=>x.persona_id)}))}));
-    D.materiales = {}; (mat||[]).forEach(m => { if(!D.materiales[m.departamento_id]) D.materiales[m.departamento_id]=[]; D.materiales[m.departamento_id].push(m); D.normas = nrm || [];});
+    D.materiales = {}; 
+    (mat||[]).forEach(m => { 
+        if(!D.materiales[m.departamento_id]) D.materiales[m.departamento_id]=[]; 
+        D.materiales[m.departamento_id].push(m); 
+    });
+    D.normas = nrm || [];
   }  catch(e) { console.error(e); }
 }
 
@@ -1333,49 +1369,50 @@ function openModWorkload(id) {
 function renderDash() {
     const un = D.personas.filter(p => !D.departamentos.some(d => (d.miembros||[]).includes(p.id) || d.responsable===p.id));
     
-    // ESTADÍSTICAS COMPACTAS
+    // ESTADÍSTICAS COMPACTAS (AHORA CON BORDER-TOP PREMIUM)
     const menoresCount = D.personas.filter(p => p.es_menor).length;
     const pagadosCount = D.personas.filter(p => p.ha_pagado).length;
     const invitadosCount = D.personas.filter(p => p.otra_iglesia).length;
 
     document.getElementById('d-stats').className = 'stats-row-pro';
     document.getElementById('d-stats').innerHTML = `
-        <div class="stat-card-pro" style="border-bottom: 4px solid var(--primary)">
+        <div class="stat-card-pro" style="border-top: 4px solid var(--primary)">
             <i class="fas fa-users stat-bg-icon" style="color:var(--primary)"></i>
             <div class="stat-icon-wrap" style="background:var(--primary-l); color:var(--primary)"><i class="fas fa-users"></i></div>
             <div class="stat-info-pro"><div class="stat-val-pro">${D.personas.length}</div><div class="stat-lbl-pro">Personas</div></div>
         </div>
-        <div class="stat-card-pro" style="border-bottom: 4px solid var(--green-v)">
+        <div class="stat-card-pro" style="border-top: 4px solid var(--green-v)">
             <i class="fas fa-check stat-bg-icon" style="color:var(--green-v)"></i>
             <div class="stat-icon-wrap" style="background:var(--green-l); color:var(--green-v)"><i class="fas fa-check"></i></div>
             <div class="stat-info-pro"><div class="stat-val-pro">${pagadosCount}</div><div class="stat-lbl-pro">Pagados</div></div>
         </div>
-        <div class="stat-card-pro" style="border-bottom: 4px solid var(--rose-v)">
+        <div class="stat-card-pro" style="border-top: 4px solid var(--rose-v)">
             <i class="fas fa-church stat-bg-icon" style="color:var(--rose-v)"></i>
             <div class="stat-icon-wrap" style="background:var(--rose-l); color:var(--rose-v)"><i class="fas fa-church"></i></div>
             <div class="stat-info-pro"><div class="stat-val-pro">${invitadosCount}</div><div class="stat-lbl-pro">Invitados</div></div>
         </div>
-        <div class="stat-card-pro" style="border-bottom: 4px solid var(--sky)">
+        <div class="stat-card-pro" style="border-top: 4px solid var(--sky)">
             <i class="fas fa-child stat-bg-icon" style="color:var(--sky)"></i>
             <div class="stat-icon-wrap" style="background:var(--sky-l); color:var(--sky)"><i class="fas fa-child"></i></div>
             <div class="stat-info-pro"><div class="stat-val-pro">${menoresCount}</div><div class="stat-lbl-pro">Menores</div></div>
         </div>
-        <div class="stat-card-pro" style="border-bottom: 4px solid var(--amber-v)">
+        <div class="stat-card-pro" style="border-top: 4px solid var(--amber-v)">
             <i class="fas fa-flag stat-bg-icon" style="color:var(--amber-v)"></i>
             <div class="stat-icon-wrap" style="background:var(--amber-l); color:var(--amber-v)"><i class="fas fa-flag"></i></div>
             <div class="stat-info-pro"><div class="stat-val-pro">${D.grupos.length}</div><div class="stat-lbl-pro">Grupos</div></div>
         </div>
-        <div class="stat-card-pro" style="border-bottom: 4px solid var(--indigo-d)">
+        <div class="stat-card-pro" style="border-top: 4px solid var(--indigo-d)">
             <i class="fas fa-car stat-bg-icon" style="color:var(--indigo-d)"></i>
             <div class="stat-icon-wrap" style="background:var(--indigo-l); color:var(--indigo-d)"><i class="fas fa-car"></i></div>
             <div class="stat-info-pro"><div class="stat-val-pro">${D.coches.length}</div><div class="stat-lbl-pro">Coches</div></div>
         </div>
-        <div class="stat-card-pro" style="border-bottom: 4px solid var(--green-v)">
+        <div class="stat-card-pro" style="border-top: 4px solid var(--green-v)">
             <i class="fas fa-bed stat-bg-icon" style="color:var(--green-v)"></i>
             <div class="stat-icon-wrap" style="background:var(--green-l); color:var(--green-v)"><i class="fas fa-bed"></i></div>
             <div class="stat-info-pro"><div class="stat-val-pro">${D.cabanas.reduce((s,c)=>s+(c.capacidad||0),0)}</div><div class="stat-lbl-pro">Camas</div></div>
         </div>`;
-    // 5. TALENTO DISPONIBLE (DISEÑO LISTA ELEGANTE CON INVITADOS RESALTADOS)
+    
+    // 5. TALENTO DISPONIBLE
     const sinDeptoContainer = document.getElementById('d-sin-depto');
     if (!un.length) {
         sinDeptoContainer.innerHTML = `<div style="text-align:center; padding:3rem 1rem; opacity:0.6;"><div style="font-size:3rem; margin-bottom:1rem;">🎉</div><div style="font-weight:700; color:var(--green-v); font-size:1.1rem;">¡Equipo 100% asignado!</div><div style="font-size:0.8rem; margin-top:0.3rem;">Todos tienen su función.</div></div>`;
@@ -1386,7 +1423,7 @@ function renderDash() {
             const borderClass = isGuest ? 'var(--rose-m)' : 'var(--border)';
             const borderStyle = isGuest ? 'dashed' : 'solid';
             const nameColor = isGuest ? 'var(--rose-v)' : 'var(--ink)';
-           const guestPrefix = isGuest ? `<span style="font-size:0.55rem; font-weight:800; background:var(--rose-v); color:#fff; padding:1px 4px; border-radius:4px; margin-right:4px; vertical-align:middle; letter-spacing:0;">INV ⛪</span>` : '';
+            const guestPrefix = isGuest ? `<span style="font-size:0.55rem; font-weight:800; background:var(--rose-v); color:#fff; padding:1px 4px; border-radius:4px; margin-right:4px; vertical-align:middle; letter-spacing:0;">INV ⛪</span>` : '';
             
             return `
             <div style="display:flex; align-items:center; gap:1rem; background:${bgClass}; padding:0.75rem 1rem; border-radius:12px; border:1px ${borderStyle} ${borderClass}; box-shadow:var(--sh-sm); transition:all 0.2s;" onmouseover="this.style.transform='translateX(5px)';this.style.borderColor='${isGuest ? 'var(--rose-v)' : 'var(--indigo-m)'}';" onmouseout="this.style.transform='none';this.style.borderColor='${borderClass}';">
@@ -1400,7 +1437,7 @@ function renderDash() {
         }).join('') + `</div>`;
     }
 
-    // 6. CARGA DE TRABAJO (BARRAS, DETALLES DE TAREAS Y BOTÓN DE EDITAR)
+    // 6. CARGA DE TRABAJO
     const workloadContainer = document.getElementById('d-workload');
     const allSorted = [...D.personas].sort((a,b) => workload(b.id).score - workload(a.id).score).slice(0, 8);
     if (!allSorted.length) {
@@ -1412,7 +1449,6 @@ function renderDash() {
             let stateColor = w.level === 'high' ? 'var(--red-v)' : w.level === 'med' ? 'var(--amber-v)' : 'var(--green-v)';
             let stateBg = w.level === 'high' ? 'var(--red-l)' : w.level === 'med' ? 'var(--amber-l)' : 'var(--green-l)';
             
-            // Construimos el resumen de dónde está metida esta persona
             let details = [];
             if(w.depts > 0) details.push(`${w.depts} Equipos`);
             if(w.canciones > 0) details.push(`${w.canciones} Canc.`);
@@ -1445,21 +1481,17 @@ function renderDash() {
         }).join('') + `</div>`;
     }
 
-    // HORARIO PREVIEW (DISEÑO PREMIUM CON EDICIÓN DIRECTA)
+    // HORARIO PREVIEW 
     const containerHorario = document.getElementById('d-horario-preview');
     if(!D.horario.length) {
         containerHorario.innerHTML = `<div class="empty">Organiza el horario en su pestaña</div>`;
     } else {
         const g = {}; D.horario.forEach(h => { if(!g[h.fecha]) g[h.fecha]=[]; g[h.fecha].push(h); });
-        
-        // Grid optimizado: 1 columna en móvil, varias en desktop
         let gridHtml = '<div class="timeline-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1.5rem; align-items:start;">';
-        
         Object.keys(g).sort().forEach((f) => {
             const dateObj = new Date(f + "T00:00:00");
             const dayName = window.innerWidth < 600 ? dateObj.toLocaleDateString('es-ES', { weekday: 'short' }) : dateObj.toLocaleDateString('es-ES', { weekday: 'long' });
             const dayShort = dateObj.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
-            
             gridHtml += `
             <div class="timeline-day-column" style="position:relative;">
                 <div class="day-big-number" style="position:absolute; right:0; top:-10px; font-size:3.5rem; font-weight:900; color:var(--ink); opacity:0.03; pointer-events:none;">${dateObj.getDate()}</div>
@@ -1471,7 +1503,6 @@ function renderDash() {
                 g[f].map(h => {
                     const cfg = HORARIO_CFG[h.tipo] || HORARIO_CFG['Otro'];
                     const lightCol = hexLight(cfg.c, 0.12);
-                    
                     return `
                     <div class="event-card-pro" style="--ev-color: ${cfg.c}; background: var(--surf); border: 1px solid var(--border); border-left: 4px solid ${cfg.c}; border-radius: 12px; padding: 1rem; margin-bottom: 1rem; box-shadow: var(--sh-sm); position: relative; transition: all 0.2s ease;" 
                          onmouseover="this.style.transform='translateX(4px)'; this.style.boxShadow='var(--sh)';" 
@@ -1511,7 +1542,6 @@ function renderDash() {
     
     const deptOptions = D.departamentos.map(d => `<option value="${d.id}">${d.nombre}</option>`).join('');
     
-    // 1. Barra superior de añadir tarea (Diseño Unificado)
     let selectorGlobal = `
       <div style="background:var(--surf2); padding:0.75rem 1rem; border-radius:var(--r); margin-bottom:1.5rem; border:1px solid var(--border); display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap; box-shadow:inset 0 1px 3px rgba(0,0,0,0.02);">
           <div style="font-weight:700; color:var(--ink2); font-size:.85rem; display:flex; align-items:center; gap:0.4rem;"><i class="fas fa-clipboard-list" style="color:var(--primary)"></i> Asignar tarea:</div>
@@ -1524,18 +1554,14 @@ function renderDash() {
           <button class="btn btn-primary" onclick="addMaterialFromDash()" style="padding:0.6rem 1rem;"><i class="fas fa-plus"></i> Añadir</button>
       </div>`;
 
-    // --- SOLUCIÓN: Iteramos sobre D.departamentos para que el orden de las tarjetas sea SIEMPRE el mismo ---
     let cardsHtml = D.departamentos.map(d => { 
         const id = d.id;
         const items = D.materiales[id] || [];
-        
-        // Si este departamento no tiene materiales, no pintamos su tarjeta
         if (items.length === 0) return '';
 
         const doneC = items.filter(i => i.estado === 'tengo').length; 
         const pct = Math.round((doneC / items.length) * 100);
         
-        // Render de los materiales internos (sin sorting, para que tampoco se muevan dentro)
         const itemsHtml = items.map(m => { 
             let isT = m.estado === 'tengo'; 
             let isC = m.estado === 'comprar';
@@ -1587,13 +1613,14 @@ function renderDash() {
     } else {
         mC.innerHTML = selectorGlobal + '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.25rem;">' + cardsHtml + '</div>';
     }
-    // ALABANZA DASH
+    
+    // ALABANZA DASH (AHORA CON BORDER-TOP PREMIUM)
     const musicContainer = document.getElementById('d-songs');
     if (!D.canciones.length) {
         musicContainer.innerHTML = `<div class="empty">No hay canciones</div>`;
     } else {
         musicContainer.innerHTML = '<div class="music-grid-dash">' + D.canciones.slice(0, 8).map(c => `
-            <div class="music-card-pro" style="cursor:pointer;" onclick="openModSongEdit('${c.id}')" title="Editar Canción">
+            <div class="music-card-pro" style="cursor:pointer; border-top: 4px solid var(--amber-v);" onclick="openModSongEdit('${c.id}')" title="Editar Canción">
                 <div class="music-header-row">
                     <div class="music-title-container" style="padding-right:15px;">
                         <div style="font-weight:800; font-size:0.9rem; color:var(--ink); line-height:1.2; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${c.titulo}</div>
@@ -1611,7 +1638,6 @@ function renderDash() {
             </div>`).join('') + '</div>';
     }
 
-    // DEPARTAMENTOS DASH
     const deptContainer = document.getElementById('d-depts');
     if (!D.departamentos.length) {
         deptContainer.innerHTML = `<div class="empty">Sin departamentos creados</div>`;
@@ -1626,8 +1652,6 @@ function renderDash() {
                 <div style="width:42px;height:42px;border-radius:12px;background:${hexLight(d.color,.15)};color:${d.color};display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0"><i class="fas ${d.icono}"></i></div>
                 <div style="flex:1; min-width:0;"><div style="font-weight:800;font-size:.95rem;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${d.nombre}</div>${respHtml}</div>
                 <span class="pill pill-gray" style="font-size:0.7rem;">${count} <i class="fas fa-user" style="font-size:0.6rem;margin-left:2px"></i></span>
-                
-                <!-- Botón de edición rápida -->
                 <button class="icon-btn edit" style="margin-left:0.5rem; width:30px; height:30px;" onclick="event.stopPropagation(); openModDeptEdit('${d.id}')" title="Editar Equipo"><i class="fas fa-pen" style="font-size:0.75rem;"></i></button>
             </div>`;
         }).join('');
@@ -1818,47 +1842,38 @@ function renderPersonas() {
   if(!p.length){g.innerHTML='';e.style.display='block';return;} e.style.display='none';
   
   g.innerHTML=p.map(x=>{
-    // Píldoras de departamento con diseño premium
-    const dp=D.departamentos.filter(d=>(d.miembros||[]).includes(x.id)||d.responsable===x.id).map(d=>`<span style="background:${hexLight(d.color,.1)}; color:${d.color}; border:1px solid ${hexLight(d.color,.2)}; padding: 3px 8px; border-radius: 6px; font-size: 0.65rem; font-weight: 800; display: inline-flex; align-items: center; gap: 4px;"><i class="fas ${d.icono}"></i> ${d.nombre}</span>`).join('');
+    const dp=D.departamentos.filter(d=>(d.miembros||[]).includes(x.id)||d.responsable===x.id).map(d=>`<span style="background:${hexLight(d.color,.1)};color:${d.color};border:1px solid ${hexLight(d.color,.2)}; padding: 2px 6px; border-radius: 6px; font-size: 0.65rem;"><i class="fas ${d.icono}" style="font-size:.65rem"></i> ${d.nombre}</span>`).join('');
     
-   let badges = '';
-    if(x.ha_pagado) badges += `<div style="background:var(--green-v); color:#ffffff; padding: 3px 8px; border-radius: 6px; font-size: 0.6rem; font-weight: 800; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2); margin-bottom:4px;"><i class="fas fa-check"></i> Pagado</div>`;
-    if(x.es_menor) badges += `<div style="background:var(--sky); color:#ffffff; padding: 3px 8px; border-radius: 6px; font-size: 0.6rem; font-weight: 800; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 2px 4px rgba(3, 105, 161, 0.2);"><i class="fas fa-child"></i> Menor</div>`;
-    // Color de la línea superior según estado
-    let topColor = x.color;
-    if (x.es_menor) topColor = 'var(--sky-d)';
-    if (x.otra_iglesia) topColor = 'var(--rose-v)';
+    let badges = '';
+    if(x.ha_pagado) badges += `<div class="guest-badge" style="position:relative; top:0; right:0; margin-bottom:4px; background:var(--green-v); color:#ffffff; box-shadow: 0 4px 8px rgba(16, 185, 129, 0.25); display:inline-flex; padding: 2px 6px; border-radius: 99px; font-size: 0.65rem; font-weight: 700; gap: 4px;"><i class="fas fa-check"></i> Pagado</div>`;
+    if(x.otra_iglesia) badges += `<div class="guest-badge" style="position:relative; top:0; right:0; margin-bottom:4px; background:var(--rose-v); color:#ffffff; box-shadow: 0 4px 8px rgba(225, 29, 72, 0.25); display:inline-flex; padding: 2px 6px; border-radius: 99px; font-size: 0.65rem; font-weight: 700; gap: 4px;"><i class="fas fa-church"></i> Invitado</div>`;
+    if(x.es_menor) badges += `<div class="guest-badge" style="position:relative; top:0; right:0; margin-bottom:4px; background:var(--sky); color:#ffffff; box-shadow: 0 4px 8px rgba(3, 105, 161, 0.25); display:inline-flex; padding: 2px 6px; border-radius: 99px; font-size: 0.65rem; font-weight: 700; gap: 4px;"><i class="fas fa-child"></i> Menor</div>`;
+    if(x.solo_un_dia) badges += `<div class="guest-badge" style="position:relative; top:0; right:0; margin-bottom:4px; background:var(--amber-v); color:#ffffff; box-shadow: 0 4px 8px rgba(245, 158, 11, 0.25); display:inline-flex; padding: 2px 6px; border-radius: 99px; font-size: 0.65rem; font-weight: 700; gap: 4px;"><i class="fas fa-calendar-day"></i> 1 Día</div>`;
+
+    let topColor = x.color || 'var(--primary)';
+    if(x.es_menor) topColor = 'var(--sky)'; 
+    if(x.otra_iglesia) topColor = 'var(--rose-v)';
 
     return `
     <div class="card" style="background:var(--surf); border:1px solid var(--border); border-top:4px solid ${topColor}; border-radius:12px; box-shadow:var(--sh-sm); display:flex; flex-direction:column; position:relative; overflow:hidden; transition:all 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='var(--sh-lg)';" onmouseout="this.style.transform='none'; this.style.boxShadow='var(--sh-sm)';">
-      
-      <div style="padding:1.25rem; display:flex; flex-direction:column; gap:1rem; flex:1;">
-          
-          <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-              <div style="display:flex; align-items:center; gap:0.8rem; flex:1;">
-                  <div class="av av-lg" style="background:${x.color}; flex-shrink:0; box-shadow:0 4px 10px rgba(0,0,0,0.1);">${ini(x.nombre)}</div>
-                  <div>
-                      <h3 style="font-weight:800; font-size:1.05rem; color:var(--ink); margin:0; display:flex; align-items:center; flex-wrap:wrap; gap:4px;">
-                        ${x.nombre} ${pBadges(x.id)}
-                      </h3>
-                      <p style="font-size:0.7rem; color:var(--ink3); font-weight:700; margin-top:3px; text-transform:uppercase; letter-spacing:0.05em;">${x.rol}</p>
-                  </div>
-              </div>
-              <div style="display:flex; flex-direction:column; align-items:flex-end;">
-                  ${badges}
-              </div>
-          </div>
-          
-          <div style="padding-top:0.8rem; border-top:1px dashed var(--border2); display:flex; flex-wrap:wrap; gap:0.4rem; flex:1; align-content: flex-start;">
-              ${dp || '<span style="font-size:0.75rem; color:var(--ink4); font-style:italic;">Sin departamento asignado</span>'}
-          </div>
+        
+        <div style="position:absolute; top:12px; right:12px; display:flex; flex-direction:column; align-items:flex-end; z-index:5;">${badges}</div>
+        
+        <div style="padding:1.25rem; display:flex; flex-direction:column; flex:1; padding-right: 60px;">
+            <div class="pcard-top" style="display:flex; align-items:center; gap:.875rem; margin-bottom:1rem;">
+                <div class="av av-lg" style="background:${x.color}; flex-shrink:0;">${ini(x.nombre)}</div>
+                <div class="pcard-info">
+                    <h3 style="font-weight:700; font-size:.95rem; line-height:1.2; color:var(--ink); margin:0; display:flex; align-items:center; flex-wrap:wrap; gap:4px;">${x.nombre}</h3>
+                    <p style="font-size:.75rem; color:var(--ink3); margin-top:.15rem; margin-bottom:0;">${x.rol}</p>
+                </div>
+            </div>
+            <div class="pcard-depts" style="display:flex; flex-wrap:wrap; gap:.3rem;">${dp||'<span style="font-size:.72rem;color:var(--ink4);font-style:italic">Sin departamento</span>'}</div>
+        </div>
 
-          <div style="display:flex; justify-content:flex-end; gap:0.4rem; margin-top:0.5rem;">
-              <button class="icon-btn edit" style="width:28px; height:28px; border:none; background:var(--surf2);" onclick="openModPersonaEdit('${x.id}')"><i class="fas fa-pen" style="font-size:0.7rem;"></i></button>
-              <button class="icon-btn del" style="width:28px; height:28px; border:none; background:var(--red-l); color:var(--red-v);" onclick="delPersona('${x.id}')"><i class="fas fa-trash" style="font-size:0.7rem;"></i></button>
-          </div>
-
-      </div>
+        <div style="padding:0.75rem 1.25rem; background:var(--surf2); border-top:1px solid var(--border); display:flex; justify-content:flex-end; align-items:center; gap:0.5rem;">
+            <button class="icon-btn edit" onclick="openModPersonaEdit('${x.id}')" style="width:28px; height:28px; border:none; background:var(--surf); box-shadow:var(--sh-sm);"><i class="fas fa-pen" style="font-size:0.7rem;"></i></button>
+            <button class="icon-btn del" onclick="delPersona('${x.id}')" style="width:28px; height:28px; border:none; background:var(--red-l); color:var(--red-v); box-shadow:var(--sh-sm);"><i class="fas fa-trash" style="font-size:0.7rem;"></i></button>
+        </div>
     </div>`;
   }).join('');
 }
@@ -1869,43 +1884,31 @@ function renderPersonas() {
 function renderDepts() {
   document.getElementById('dept-grid').innerHTML=D.departamentos.map(d=>{
       const count = (d.miembros||[]).length + (d.responsable ? 1 : 0);
-      
       return `
       <div class="card" onclick="openDeptDetail('${d.id}')" style="background:var(--surf); border:1px solid var(--border); border-top:4px solid ${d.color}; border-radius:12px; box-shadow:var(--sh-sm); display:flex; flex-direction:column; position:relative; overflow:hidden; transition:all 0.2s; cursor:pointer;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='var(--sh-lg)';" onmouseout="this.style.transform='none'; this.style.boxShadow='var(--sh-sm)';">
           
           <div style="padding:1.25rem; display:flex; flex-direction:column; flex:1;">
-              <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1rem;">
-                  <div style="font-size:1.05rem; font-weight:800; color:var(--ink); display:flex; align-items:center; gap:0.8rem;">
-                      <div style="width:42px; height:42px; border-radius:10px; background:${hexLight(d.color, 0.15)}; color:${d.color}; display:flex; align-items:center; justify-content:center; font-size:1.2rem; flex-shrink:0;">
-                          <i class="fas ${d.icono}"></i>
-                      </div>
-                      <div>
-                          <div style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:160px;">${d.nombre}</div>
-                          <div style="font-size:0.7rem; color:var(--ink3); font-weight:600; margin-top:2px;"><i class="fas fa-user" style="font-size:0.6rem"></i> ${d.responsable?pName(d.responsable).split(' ')[0]:'Sin responsable'}</div>
-                      </div>
-                  </div>
-                  
-                  <div style="display:flex; align-items:center;">
-                      <div style="font-size:0.7rem; font-weight:800; color:${d.color}; background:${hexLight(d.color, 0.1)}; padding:3px 8px; border-radius:99px; border:1px solid ${hexLight(d.color, 0.2)};">
-                          ${count} pers.
-                      </div>
+              <div style="display:flex; align-items:center; gap:.75rem; margin-bottom:.875rem;">
+                  <div style="width:42px;height:42px;border-radius:10px;background:${hexLight(d.color,.15)};color:${d.color};display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0"><i class="fas ${d.icono}"></i></div>
+                  <div>
+                      <div style="font-weight:700;font-size:1rem;color:var(--ink);">${d.nombre}</div>
+                      <div style="font-size:.75rem;color:var(--ink2);"><i class="fas fa-user" style="font-size:.6rem"></i> ${d.responsable?pName(d.responsable):'Sin responsable'}</div>
                   </div>
               </div>
-              
-              ${d.desc ? `<div style="font-size:0.8rem; color:var(--ink3); line-height:1.4; margin-bottom:1rem; flex:1;">${d.desc}</div>` : '<div style="flex:1;"></div>'}
-              
-              <div style="display:flex; align-items:center; justify-content:space-between; padding-top:1rem; border-top:1px solid var(--border);">
-                  <div class="av-stack" style="display:flex;">
-                      ${(d.responsable?[d.responsable]:[]).concat(d.miembros||[]).slice(0,4).map((id, i)=>`<div class="av av-sm" style="background:${pColor(id)}; border:2px solid var(--surf); width:26px; height:26px; font-size:0.6rem; margin-left:${i>0?'-8px':'0'}; z-index:${10-i};">${ini(pName(id))}</div>`).join('')}
-                  </div>
-                  <div style="display:flex; gap:0.4rem;">
-                      <button class="icon-btn edit" style="width:28px; height:28px; border:none; background:var(--surf2);" onclick="event.stopPropagation(); openModDeptEdit('${d.id}')"><i class="fas fa-pen" style="font-size:0.7rem;"></i></button>
-                      <button class="icon-btn del" style="width:28px; height:28px; border:none; background:var(--red-l); color:var(--red-v);" onclick="event.stopPropagation(); delDepto('${d.id}')"><i class="fas fa-trash" style="font-size:0.7rem;"></i></button>
-                  </div>
+              ${d.desc?`<div style="font-size:.8rem;color:var(--ink3);margin-bottom:.75rem;">${d.desc}</div>`:''}
+          </div>
+
+          <div style="padding:0.75rem 1.25rem; background:var(--surf2); border-top:1px solid var(--border); display:flex; align-items:center; justify-content:space-between;">
+              <div style="display:flex;align-items:center;gap:.5rem">
+                  <div class="av-stack" style="display:flex;">${(d.responsable?[d.responsable]:[]).concat(d.miembros||[]).slice(0,4).map((id, i)=>`<div class="av av-sm" style="background:${pColor(id)};border:2px solid var(--surf2); z-index:${10-i}; margin-left:${i>0?'-8px':'0'}">${ini(pName(id))}</div>`).join('')}</div>
+                  <span style="font-size:.75rem;color:var(--ink3);font-weight:600">${count} pers.</span>
+              </div>
+              <div style="display:flex;gap:.3rem">
+                  <button class="icon-btn edit" onclick="event.stopPropagation();openModDeptEdit('${d.id}')" style="width:28px; height:28px; border:none; background:var(--surf); box-shadow:var(--sh-sm);"><i class="fas fa-pen" style="font-size:0.7rem;"></i></button>
+                  <button class="icon-btn del" onclick="event.stopPropagation();delDepto('${d.id}')" style="width:28px; height:28px; border:none; background:var(--red-l); color:var(--red-v); box-shadow:var(--sh-sm);"><i class="fas fa-trash" style="font-size:0.7rem;"></i></button>
               </div>
           </div>
-      </div>
-      `;
+      </div>`;
   }).join('');
 }
 
@@ -2306,30 +2309,28 @@ async function delSong(id) {
 }
 
 /* ═══════════════════════════════════════
-   📖 PROGRAMA DEL CULTO (CORREGIDO)
+   📖 PROGRAMA DEL CULTO (CORREGIDO Y RESPONSIVE)
 ═══════════════════════════════════════ */
 function selectSvc(id) { 
-    currentSvcId = id; 
+    currentSvcId = String(id); 
     const btn = document.getElementById('btnAddItem');
     if(btn) btn.disabled = false;
     renderProg(); 
 }
 
 function renderProg() {
-  if (D.servicios.length > 0 && !currentSvcId) currentSvcId = D.servicios[0].id;
+  if (D.servicios.length > 0 && !currentSvcId) currentSvcId = String(D.servicios[0].id);
 
   const btnAdd = document.getElementById('btnAddItem');
   if(btnAdd) btnAdd.disabled = !currentSvcId;
 
   const selContainer = document.getElementById('custom-svc-selector');
-  
-  // --- ESTE ES EL BLOQUE QUE FALTABA PARA DIBUJAR LOS BOTONES DE LOS CULTOS ---
   if (selContainer) {
     if (!D.servicios.length) {
       selContainer.innerHTML = '';
     } else {
       selContainer.innerHTML = D.servicios.map(s => {
-        const isAct = s.id === currentSvcId ? 'active' : '';
+        const isAct = String(s.id) === String(currentSvcId) ? 'active' : '';
         const f = s.fecha ? s.fecha.split('-').reverse().join('/') : '';
         return `
         <div class="svc-card ${isAct}" onclick="selectSvc('${s.id}')">
@@ -2339,7 +2340,6 @@ function renderProg() {
       }).join('');
     }
   }
-  // --------------------------------------------------------------------------
 
   const btnDel = document.getElementById('btnDelSvc');
   const tl = document.getElementById('prog-timeline');
@@ -2352,8 +2352,22 @@ function renderProg() {
     return; 
   }
   
-  if(btnDel) btnDel.style.display = 'inline-flex';
-  const svc = D.servicios.find(x => x.id === currentSvcId); 
+  if(btnDel) {
+      btnDel.style.display = 'inline-flex';
+      const actionsContainer = btnDel.parentElement;
+      const oldEditBtn = document.getElementById('btnEditSvc');
+      if (oldEditBtn) oldEditBtn.remove();
+      const editBtn = document.createElement('button');
+      editBtn.id = 'btnEditSvc';
+      editBtn.className = 'icon-btn';
+      editBtn.style.cssText = 'color: var(--primary-d); border-color: var(--primary-m); background: var(--primary-l); width: 32px; height: 32px; border-radius: 7px; margin-right: 0.5rem;';
+      editBtn.title = 'Editar Culto Actual';
+      editBtn.innerHTML = '<i class="fas fa-pen"></i>';
+      editBtn.onclick = () => openModSvcEdit(currentSvcId);
+      actionsContainer.insertBefore(editBtn, btnDel);
+  }
+
+  const svc = D.servicios.find(x => String(x.id) === String(currentSvcId)); 
   if(!svc) return; 
   
   const p = svc.prog || [];
@@ -2362,28 +2376,55 @@ function renderProg() {
   } else { 
     let [hh,mm] = (svc.hora||'00:00').split(':').map(Number); 
     let currentMins = hh * 60 + mm; 
-    tl.innerHTML = '<div class="prog-timeline-container">' + p.map(i => { 
+    
+    tl.innerHTML = '<div class="prog-timeline-container" id="prog-sortable-list">' + p.map(i => { 
       const c = TC[i.tipo] || TC.anuncio;
       let displayH = Math.floor(currentMins / 60) % 24; 
       let displayM = currentMins % 60;
       const ts = String(displayH).padStart(2, '0') + ':' + String(displayM).padStart(2, '0');
       currentMins += parseInt(i.dur) || 0; 
-      const avatars = (i.asignados||[]).map((id, index) => `<div class="av av-sm" style="background:${pColor(id)}; border: 2px solid var(--surf); margin-left: ${index > 0 ? '-10px' : '0'}; z-index:${10-index};">${ini(pName(id))}</div>`).join('');
+      
+      let asignadosHtml = '';
+      if (i.asignados && i.asignados.length > 0) {
+          if (i.asignados.length <= 3) {
+              asignadosHtml = '<div style="display:flex; flex-wrap:wrap; gap:0.4rem;">' + i.asignados.map(id => `<span style="display:inline-flex; align-items:center; gap:6px; background:var(--surf); padding:3px 8px; border-radius:6px; border:1px solid var(--border); font-size:0.75rem; font-weight:600; color:var(--ink);"><div class="av" style="width:16px;height:16px;font-size:0.45rem;background:${pColor(id)}">${ini(pName(id))}</div> ${pName(id)}</span>`).join('') + '</div>';
+          } else {
+              asignadosHtml = `<div class="av-stack" style="display:flex; flex-wrap:wrap; gap:2px;">` + i.asignados.map((id, index) => `<div class="av av-sm" style="background:${pColor(id)}; border: 2px solid var(--surf2); margin-left: ${index > 0 ? '-8px' : '0'}; z-index:${20-index};" title="${pName(id)}">${ini(pName(id))}</div>`).join('') + `</div>`;
+          }
+      } else {
+          asignadosHtml = '<span style="font-size:0.75rem; color:var(--ink4); font-style:italic;">Sin asignar</span>';
+      }
+
       return `
-      <div class="prog-item-pro">
+      <div class="prog-item-pro" data-id="${i.id}">
         <div class="prog-time-pro"><div class="prog-time-main">${ts}</div><div class="prog-time-dur">${i.dur} min</div></div>
         <div class="prog-dot-pro" style="border-color: ${c.c}"></div>
-        <div class="prog-card-pro" style="--item-color: ${c.c}; --item-bg: ${c.bg}">
-          <div class="prog-card-header"><div class="prog-type-badge"><i class="fas ${c.i}"></i> ${c.l}</div>
-            <div style="display:flex; gap:.4rem; opacity: 0.4; transition: opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.4">
-              <button class="icon-btn edit" onclick="openModItemEdit('${i.id}','${currentSvcId}')"><i class="fas fa-pen"></i></button>
-              <button class="icon-btn del" onclick="delItem('${i.id}','${currentSvcId}')"><i class="fas fa-trash"></i></button>
+        
+        <div class="prog-card-pro" style="background:var(--surf); border:1px solid var(--border); border-left:4px solid ${c.c}; border-radius:12px; box-shadow:var(--sh-sm); display:flex; flex-direction:column; overflow:hidden; padding:0; transition:all 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='var(--sh-lg)';" onmouseout="this.style.transform='none'; this.style.boxShadow='var(--sh-sm)';">
+            
+            <div style="padding:1rem 1.25rem;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.6rem; gap:1rem; flex-wrap:wrap;">
+                    <div style="display:flex; align-items:center; gap:0.5rem;">
+                        <i class="fas fa-grip-vertical drag-handle" style="color:var(--border2); cursor:grab; font-size:1rem; padding-right:5px;" title="Arrastrar para ordenar"></i>
+                        <span style="background:${hexLight(c.c, 0.1)}; color:${c.c}; padding:3px 10px; border-radius:99px; font-size:0.65rem; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; border:1px solid ${hexLight(c.c, 0.2)}; display:inline-flex; align-items:center; gap:4px;">
+                            <i class="fas ${c.i}"></i> ${c.l}
+                        </span>
+                    </div>
+                </div>
+                <div style="font-family:'Lora', serif; font-size:1.3rem; font-weight:700; color:var(--ink); margin-bottom:0.5rem; line-height:1.2;">${i.titulo||'—'}</div>
+                ${i.notas ? `<div style="font-size:0.85rem; color:var(--ink3); margin-bottom:0.5rem; line-height:1.4;">${i.notas}</div>` : ''}
+                ${i.recursos ? `<div style="font-size:0.8rem; background:var(--amber-l); color:var(--amber-v); padding:0.5rem 0.8rem; border-radius:8px; border:1px dashed var(--amber-m); font-weight:600; margin-top:0.5rem; display:inline-block;"><i class="fas fa-box-open"></i> Logística: ${i.recursos}</div>` : ''}
             </div>
-          </div>
-          <div class="prog-title-pro">${i.titulo||'—'}</div>
-          ${i.notas ? `<div class="prog-notes-pro"><span>${i.notas}</span></div>` : ''}
-          ${i.recursos ? `<div class="prog-resource-tag"><span><strong>Logística:</strong> ${i.recursos}</span></div>` : ''}
-          <div class="prog-footer-pro">${avatars || '<span style="font-size:0.75rem; color:var(--ink4); font-style:italic;">Sin asignar</span>'}</div>
+
+            <div style="padding:0.75rem 1.25rem; background:var(--surf2); border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; gap:1rem; flex-wrap:wrap;">
+                <div style="display:flex; flex-wrap:wrap; flex:1; min-width:150px;">
+                    ${asignadosHtml}
+                </div>
+                <div style="display:flex; gap:0.5rem; flex-shrink:0;">
+                    <button class="icon-btn edit" onclick="openModItemEdit('${i.id}','${currentSvcId}')" style="width:28px;height:28px;border:none;background:var(--surf);box-shadow:var(--sh-sm);"><i class="fas fa-pen" style="font-size:0.7rem;"></i></button>
+                    <button class="icon-btn del" onclick="delItem('${i.id}','${currentSvcId}')" style="width:28px;height:28px;border:none;background:var(--red-l);color:var(--red-v);box-shadow:var(--sh-sm);"><i class="fas fa-trash" style="font-size:0.7rem;"></i></button>
+                </div>
+            </div>
         </div>
       </div>`; 
     }).join('') + '</div>'; 
@@ -2393,28 +2434,108 @@ function renderProg() {
   const tot=Object.values(td).reduce((a,v)=>a+v,0); 
   document.getElementById('prog-timebar').innerHTML=Object.keys(td).sort((a,b)=>td[b]-td[a]).map(t=>`<div style="display:flex;justify-content:space-between;font-size:.8rem;margin-bottom:.6rem; align-items:center;"><span style="color:var(--ink3); display:flex; align-items:center; gap:8px;"><span style="width:26px; height:26px; border-radius:8px; background:${TC[t].bg}; color:${TC[t].c}; display:flex; align-items:center; justify-content:center;"><i class="fas ${TC[t].i}" style="font-size:.8rem;"></i></span> ${TC[t].l}</span><strong style="color:var(--ink)">${td[t]} min</strong></div>`).join('')+`<div style="border-top:1px dashed var(--border2);margin-top:1rem;padding-top:1rem;display:flex;justify-content:space-between;font-size:1.1rem;font-family:'Lora',serif;font-weight:700"><span>Total</span><span style="color:var(--primary)">${tot} min</span></div>`;
   const pc={}; p.forEach(i=>{(i.asignados||[]).forEach(id=>{if(!pc[id])pc[id]=0;pc[id]++;});}); 
- document.getElementById('prog-side-panel').innerHTML=Object.keys(pc).sort((a,b)=>pc[b]-pc[a]).map(id=>`<div style="display:flex;align-items:center;gap:.75rem;padding:.6rem 0;border-bottom:1px solid var(--border)"><div class="av av-sm" style="background:${pColor(id)}">${ini(pName(id))}</div><div style="flex:1;font-size:.85rem;font-weight:600">${pName(id).split(' ')[0]} ${pBadges(id)}</div><div style="font-weight:700;color:var(--primary);background:var(--primary-l);padding:.1rem .5rem;border-radius:99px;font-size:.7rem">${pc[id]}</div></div>`).join('');
+  document.getElementById('prog-side-panel').innerHTML=Object.keys(pc).sort((a,b)=>pc[b]-pc[a]).map(id=>`<div style="display:flex;align-items:center;gap:.75rem;padding:.6rem 0;border-bottom:1px solid var(--border)"><div class="av av-sm" style="background:${pColor(id)}">${ini(pName(id))}</div><div style="flex:1;font-size:.85rem;font-weight:600">${pName(id).split(' ')[0]} ${pBadges(id)}</div><div style="font-weight:700;color:var(--primary);background:var(--primary-l);padding:.1rem .5rem;border-radius:99px;font-size:.7rem">${pc[id]}</div></div>`).join('');
+
+  setTimeout(() => initDragAndDropProg('prog-sortable-list', currentSvcId), 100);
+}
+function initDragAndDropProg(containerId, svcId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    Sortable.create(container, {
+        animation: 150,
+        handle: '.drag-handle',
+        ghostClass: 'sortable-ghost',
+        onEnd: async function () {
+            const tarjetas = container.querySelectorAll('.prog-item-pro');
+            const svc = D.servicios.find(x => String(x.id) === String(svcId));
+            if (!svc) return;
+
+            const actualizaciones = [];
+            tarjetas.forEach((tarjeta, index) => {
+                const id = tarjeta.getAttribute('data-id');
+                actualizaciones.push({ id: id, posicion: index });
+                const itemLocal = svc.prog.find(x => String(x.id) === String(id));
+                if(itemLocal) itemLocal.posicion = index;
+            });
+
+            svc.prog.sort((a, b) => (a.posicion || 0) - (b.posicion || 0));
+            renderProg(); 
+
+            try {
+                await Promise.all(
+                    actualizaciones.map(u => {
+                        const dbId = isNaN(u.id) ? u.id : Number(u.id);
+                        return sb.from('programa_items').update({ posicion: u.posicion }).eq('id', dbId);
+                    })
+                );
+                toast('Orden actualizado', 'ok');
+            } catch (e) {
+                console.error(e);
+                toast('Error al guardar el orden', 'err');
+            }
+        }
+    });
 }
 
 function openModSvc() { 
+  let inputId = document.getElementById('svId');
+  if(!inputId) {
+      inputId = document.createElement('input');
+      inputId.type = 'hidden';
+      inputId.id = 'svId';
+      document.getElementById('modSvc').querySelector('.mbox').appendChild(inputId);
+  }
+  inputId.value = ''; 
   ['svNom'].forEach(id=>document.getElementById(id).value=''); 
   document.getElementById('svHor').value='10:00'; 
   document.getElementById('svFec').value=new Date().toISOString().split('T')[0]; 
+  document.querySelector('#modSvc .mhd h3').textContent = 'Nuevo Culto';
+  document.querySelector('#modSvc .btn-primary').textContent = 'Crear';
+  om('modSvc'); 
+}
+function openModSvcEdit(id) { 
+  const svc = D.servicios.find(x => String(x.id) === String(id));
+  if(!svc) return;
+  
+  let inputId = document.getElementById('svId');
+  if(!inputId) {
+      inputId = document.createElement('input');
+      inputId.type = 'hidden';
+      inputId.id = 'svId';
+      document.getElementById('modSvc').querySelector('.mbox').appendChild(inputId);
+  }
+  inputId.value = svc.id; 
+  
+  document.getElementById('svNom').value = svc.nombre; 
+  document.getElementById('svHor').value = svc.hora || '10:00'; 
+  document.getElementById('svFec').value = svc.fecha || new Date().toISOString().split('T')[0]; 
+  document.querySelector('#modSvc .mhd h3').textContent = 'Editar Culto';
+  document.querySelector('#modSvc .btn-primary').textContent = 'Guardar Cambios';
   om('modSvc'); 
 }
 
 async function saveSvc() { 
   const n=document.getElementById('svNom').value.trim(); if(!n)return; 
+  const eid = document.getElementById('svId') ? document.getElementById('svId').value : '';
+  const obj = { nombre: n, fecha: document.getElementById('svFec').value, hora: document.getElementById('svHor').value };
+
   try{
-    const{data,error}=await sb.from('servicios').insert({nombre:n,fecha:document.getElementById('svFec').value,hora:document.getElementById('svHor').value}).select().single();
-    if(error)throw error;
-    D.servicios.push({...data,prog:[]});
+    if(eid) {
+        const {error} = await sb.from('servicios').update(obj).eq('id', eid);
+        if(error) throw error;
+        Object.assign(D.servicios.find(x => String(x.id) === String(eid)), obj);
+        toast('Culto actualizado','ok');
+    } else {
+        const{data,error}=await sb.from('servicios').insert(obj).select().single();
+        if(error)throw error;
+        D.servicios.push({...data,prog:[]});
+        currentSvcId = String(data.id);
+        toast('Culto creado','ok');
+    }
     cm('modSvc');
-    currentSvcId = data.id;
     renderProg();
-    toast('Culto creado','ok');
-  }catch(e){ console.error(e); toast('Error al guardar','err'); }
-}
+  } catch(e) { console.error(e); toast('Error al guardar', 'err'); } }
 
 async function delSvc() {
   if(!currentSvcId) return;
@@ -3814,6 +3935,13 @@ function descargarNormasPDF() {
   } else { 
       alert("Por favor, permite las ventanas emergentes (pop-ups)."); 
   }
+}
+// Al cargar la página, comprobar si ya está logueado
+window.onload = () => {
+    if(isLoggedIn()) {
+        document.getElementById('loginScreen').style.display = 'none';
+        showApp();
+    }
 }
 
 </script>
