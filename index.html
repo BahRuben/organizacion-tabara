@@ -833,9 +833,21 @@ nav{flex:1;overflow-y:auto;padding:1rem .875rem;}
         <input type="checkbox" id="pPagado" style="width:18px;height:18px;accent-color:var(--green-v)">
         <i class="fas fa-euro-sign"></i> Ha pagado
       </label>
+      
       <label style="display:flex;align-items:center;gap:0.6rem;cursor:pointer;font-weight:600;color:var(--amber-v)">
         <input type="checkbox" id="pUnDia" style="width:18px;height:18px;accent-color:var(--amber-v)">
         <i class="fas fa-calendar-day"></i> Solo 1 día
+      </label>
+      
+      <div style="width:100%; height:1px; background:var(--border); margin:4px 0;"></div>
+      
+      <label style="display:flex;align-items:center;gap:0.6rem;cursor:pointer;font-weight:600;color:var(--primary)">
+        <input type="checkbox" id="pCama" checked style="width:18px;height:18px;accent-color:var(--primary)">
+        <i class="fas fa-bed"></i> Necesita Cama
+      </label>
+      <label style="display:flex;align-items:center;gap:0.6rem;cursor:pointer;font-weight:600;color:var(--indigo)">
+        <input type="checkbox" id="pCoche" checked style="width:18px;height:18px;accent-color:var(--indigo)">
+        <i class="fas fa-car"></i> Necesita Coche
       </label>
     </div>
     <div class="frow">
@@ -1746,7 +1758,7 @@ function renderCabanas() {
     const ocupadas = D.cabanas.reduce((a,c)=>a+(c.asignados||[]).length,0);
     const libres = totalCamas - ocupadas;
     const porcentaje = Math.round((ocupadas/totalCamas)*100) || 0;
-    const sin = D.personas.filter(p=>!D.cabanas.some(c=>(c.asignados||[]).includes(p.id)));
+    const sin = D.personas.filter(p => p.necesita_cama !== false && !D.cabanas.some(c=>(c.asignados||[]).includes(p.id)));
 
     // BARRA DE ESTADÍSTICAS SUPERIOR
     const statsHtml = `
@@ -1839,6 +1851,8 @@ function renderCoches() {
     const pasajeros = D.coches.reduce((a,c)=>a+(c.pasajeros||[]).length + (c.conductor?1:0),0);
     const libres = totalPlazas - pasajeros;
     const porcentaje = Math.round((pasajeros/totalPlazas)*100) || 0;
+    // No cuenta a los de otra iglesia, ni a los que no necesitan coche, ni a los ya asignados
+    const localesSinCoche = D.personas.filter(p => !p.otra_iglesia && p.necesita_coche !== false && !p.solo_un_dia && !asigIds.has(String(p.id))).length;
 
     // ESTADÍSTICAS COCHES 
     const statsHtml = `
@@ -2173,11 +2187,13 @@ function openModPersona() {
   document.getElementById('pMenor').checked=false; 
   document.getElementById('pPagado').checked=false; 
   document.getElementById('pUnDia').checked=false; 
+  document.getElementById('pCama').checked = true;
+  document.getElementById('pCoche').checked = true;
   om('modPersona'); 
 }
 
 function openModPersonaEdit(id) { 
-  const p=D.personas.find(x=>x.id===id); if(!p)return; 
+  const p=D.personas.find(x=>String(x.id)===String(id)); if(!p)return; 
   document.getElementById('pId').value=p.id; 
   document.getElementById('pNom').value=p.nombre; 
   document.getElementById('pRol').value=p.rol; 
@@ -2187,7 +2203,9 @@ function openModPersonaEdit(id) {
   document.getElementById('pOtraIglesia').checked=p.otra_iglesia||false; 
   document.getElementById('pMenor').checked=p.es_menor||false; 
   document.getElementById('pPagado').checked=p.ha_pagado||false; 
-  document.getElementById('pUnDia').checked=p.solo_un_dia||false; 
+  document.getElementById('pUnDia').checked=p.solo_un_dia||false;
+  document.getElementById('pCama').checked = p.necesita_cama !== false;
+  document.getElementById('pCoche').checked = p.necesita_coche !== false; 
   om('modPersona'); 
 }
 
@@ -2202,7 +2220,9 @@ async function savePersona() {
     otra_iglesia: document.getElementById('pOtraIglesia').checked,
     es_menor: document.getElementById('pMenor').checked,
     ha_pagado: document.getElementById('pPagado').checked,
-    solo_un_dia: document.getElementById('pUnDia').checked
+    solo_un_dia: document.getElementById('pUnDia').checked,
+    necesita_cama: document.getElementById('pCama').checked,
+    necesita_coche: document.getElementById('pCoche').checked
   };
   const eid=document.getElementById('pId').value;
   try {
@@ -2245,6 +2265,8 @@ function renderPersonas() {
     if(x.otra_iglesia) badges += `<div class="guest-badge" style="position:relative; top:0; right:0; margin-bottom:4px; background:var(--rose-v); color:#ffffff; box-shadow: 0 4px 8px rgba(225, 29, 72, 0.25); display:inline-flex; padding: 2px 6px; border-radius: 99px; font-size: 0.65rem; font-weight: 700; gap: 4px;"><i class="fas fa-church"></i> Invitado</div>`;
     if(x.es_menor) badges += `<div class="guest-badge" style="position:relative; top:0; right:0; margin-bottom:4px; background:var(--sky); color:#ffffff; box-shadow: 0 4px 8px rgba(3, 105, 161, 0.25); display:inline-flex; padding: 2px 6px; border-radius: 99px; font-size: 0.65rem; font-weight: 700; gap: 4px;"><i class="fas fa-child"></i> Menor</div>`;
     if(x.solo_un_dia) badges += `<div class="guest-badge" style="position:relative; top:0; right:0; margin-bottom:4px; background:var(--amber-v); color:#ffffff; box-shadow: 0 4px 8px rgba(245, 158, 11, 0.25); display:inline-flex; padding: 2px 6px; border-radius: 99px; font-size: 0.65rem; font-weight: 700; gap: 4px;"><i class="fas fa-calendar-day"></i> 1 Día</div>`;
+    if(x.necesita_cama === false) badges += `<div class="guest-badge" style="position:relative; top:0; right:0; margin-bottom:4px; background:var(--ink3); color:#ffffff; box-shadow: 0 4px 8px rgba(0,0,0, 0.15); display:inline-flex; padding: 2px 6px; border-radius: 99px; font-size: 0.65rem; font-weight: 700; gap: 4px;"><i class="fas fa-bed" style="opacity:0.5;"></i> Sin cama</div>`;
+    if(x.necesita_coche === false) badges += `<div class="guest-badge" style="position:relative; top:0; right:0; margin-bottom:4px; background:var(--ink3); color:#ffffff; box-shadow: 0 4px 8px rgba(0,0,0, 0.15); display:inline-flex; padding: 2px 6px; border-radius: 99px; font-size: 0.65rem; font-weight: 700; gap: 4px;"><i class="fas fa-car" style="opacity:0.5;"></i> Sin coche</div>`;
 
     let topColor = x.color || 'var(--primary)';
     if(x.es_menor) topColor = 'var(--sky)'; 
@@ -3334,7 +3356,7 @@ function renderCabanas() {
     const ocupadas = D.cabanas.reduce((a,c)=>a+(c.asignados||[]).length,0);
     const libres = totalCamas - ocupadas;
     const porcentaje = Math.round((ocupadas/totalCamas)*100) || 0;
-    const sin = D.personas.filter(p=>!D.cabanas.some(c=>(c.asignados||[]).includes(p.id)));
+    const sin = D.personas.filter(p => p.necesita_cama !== false && !p.solo_un_dia && !D.cabanas.some(c=>(c.asignados||[]).includes(p.id)));
 
     const statsHtml = `
         <div class="logistics-stats-bar">
@@ -3536,7 +3558,7 @@ function openModCabana() {
   document.getElementById('cabCap').value='8'; 
   let ocupados = new Set();
   D.cabanas.forEach(cb => (cb.asignados||[]).forEach(pid => ocupados.add(String(pid))));
-  let disponibles = D.personas.filter(p => !ocupados.has(String(p.id)));
+  let disponibles = D.personas.filter(p => !ocupados.has(String(p.id)) && p.necesita_cama !== false && !p.solo_un_dia);
   buildPicker('cabPick', [], disponibles); 
   om('modCabana'); 
 }
@@ -3549,7 +3571,7 @@ function openModCabanaEdit(id) {
   
   let ocupados = new Set();
   D.cabanas.forEach(cb => { if(cb.id !== id) (cb.asignados||[]).forEach(pid => ocupados.add(String(pid))) });
-  let disponibles = D.personas.filter(p => !ocupados.has(String(p.id)));
+  let disponibles = D.personas.filter(p => (!ocupados.has(String(p.id)) && p.necesita_cama !== false && !p.solo_un_dia) || (c.asignados||[]).includes(p.id));
 
   buildPicker('cabPick', c.asignados||[], disponibles); 
   om('modCabana'); 
@@ -3592,7 +3614,7 @@ function openModCoche() {
   let ocupados = new Set();
   D.coches.forEach(cb => { if(cb.conductor) ocupados.add(String(cb.conductor)); (cb.pasajeros||[]).forEach(pid => ocupados.add(String(pid))); });
   
-  let disponiblesPasajeros = D.personas.filter(p => !ocupados.has(String(p.id)));
+  let disponiblesPasajeros = D.personas.filter(p => !ocupados.has(String(p.id)) && p.necesita_coche !== false && !p.solo_un_dia);
   let disponiblesConductor = disponiblesPasajeros.filter(p => !p.otra_iglesia);
 
   document.getElementById('cocheConductor').innerHTML='<option value="">-- Ninguno --</option>'+disponiblesConductor.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join(''); 
@@ -3610,10 +3632,10 @@ function openModCocheEdit(id) {
   let ocupados = new Set();
   D.coches.forEach(cb => { if(String(cb.id) !== String(id)) { if(cb.conductor) ocupados.add(String(cb.conductor)); (cb.pasajeros||[]).forEach(pid => ocupados.add(String(pid))); } });
   
-  let disponiblesPasajeros = D.personas.filter(p => !ocupados.has(String(p.id)) || (c.pasajeros||[]).includes(p.id) || String(c.conductor) === String(p.id));
+  let disponiblesPasajeros = D.personas.filter(p => (!ocupados.has(String(p.id)) && p.necesita_coche !== false && !p.solo_un_dia) || (c.pasajeros||[]).includes(p.id) || String(c.conductor) === String(p.id));
   let disponiblesConductor = disponiblesPasajeros.filter(p => !p.otra_iglesia);
-  
   let pickerPasajeros = disponiblesPasajeros.filter(p => String(p.id) !== String(c.conductor));
+  
 
   document.getElementById('cocheConductor').innerHTML='<option value="">-- Ninguno --</option>'+disponiblesConductor.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join(''); 
   document.getElementById('cocheConductor').value=c.conductor||''; 
@@ -3822,167 +3844,6 @@ function generarPDFLimpio() {
   else { alert("Por favor, permite las ventanas emergentes (pop-ups) para generar el PDF."); }
 }
 
-/* ═══════════════════════════════════════
-   📜 DESCARGAR NORMAS (1 COLUMNA - AJUSTADO A 1 HOJA)
-═══════════════════════════════════════ */
-function descargarNormasPDF() {
-  if (!D.normas || !D.normas.length) { alert("No hay normativas registradas para exportar."); return; }
-  
-  let html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Normativas_Iglesia_Maranata</title><style>
-    /* Configuramos la hoja A4 sin márgenes del navegador para aprovechar todo el espacio */
-    @page { 
-      size: A4; 
-      margin: 10mm 15mm; /* Márgenes físicos ajustados */
-    }
-    
-    body { 
-      font-family: 'Plus Jakarta Sans', Helvetica, Arial, sans-serif; 
-      color: #0f172a; 
-      line-height: 1.35; 
-      background: #fff; 
-      margin: 0; 
-      padding: 0; 
-      box-sizing: border-box;
-      font-size: 12px; /* Tamaño base calculado para que quepa en una hoja */
-    }
-
-    /* ENCABEZADO LIMPIO Y COMPACTO */
-    .header { 
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-      border-bottom: 2px solid #0f766e; 
-      padding-bottom: 6px; 
-      margin-bottom: 15px; 
-    }
-
-    h1 { 
-      color: #0f766e; 
-      font-size: 20px; 
-      margin: 0; 
-      text-transform: uppercase; 
-      font-weight: 900; 
-      letter-spacing: 0.5px;
-    }
-
-    .subtitle { 
-      color: #64748b; 
-      font-size: 12px; 
-      margin: 0; 
-      font-style: italic; 
-      font-weight: 600;
-    }
-    
-    /* CONTENEDOR A 1 COLUMNA ENTERA */
-    .rules-container {
-      display: block;
-      width: 100%;
-    }
-    
-    /* BLOQUE DE REGLA INDIVIDUAL */
-    .rule-block {
-      margin-bottom: 8px;
-      text-align: justify;
-    }
-    
-    .rule-header { 
-      display: flex; 
-      margin-bottom: 2px;
-    }
-    
-    .rule-num { 
-      font-weight: 800; 
-      color: #0f766e; 
-      width: 25px; 
-      flex-shrink: 0; 
-    }
-    
-    .sub-rule {
-      display: flex;
-      margin-top: 5px;
-      margin-left: 25px;
-      font-size: 11px;
-      color: #334155;
-    }
-    .sub-num { 
-      font-weight: 700; 
-      color: #64748b; 
-      width: 20px; 
-      flex-shrink: 0; 
-    }
-    
-    .footer {
-      text-align: center;
-      font-size: 10px;
-      color: #94a3b8;
-      border-top: 1px solid #f1f5f9;
-      padding-top: 8px;
-      margin-top: 20px;
-      width: 100%;
-    }
-
-    @media print {
-      body { -webkit-print-color-adjust: exact; }
-    }
-  </style></head><body>
-    
-    <div class="header">
-      <h1>Normativas Iglesia Maranata</h1>
-      <span class="subtitle">Reîntâlnire cu Tatăl</span>
-    </div>
-    
-    <div class="rules-container">`;
-    
-  D.normas.forEach((n) => {
-      // Título de cada sección de normas (Ej: 1. Respeto y Actitud)
-      if(n.titulo) {
-          html += `<div style="font-size:13px; font-weight:900; color:#b45309; margin-bottom:8px; margin-top:12px; text-transform:uppercase;">${n.titulo}</div>`;
-      }
-
-      const lineas = n.contenido.split('\n').filter(x=>x.trim());
-      let isFirstRule = true;
-
-      // PARSEO INTELIGENTE PARA 1 COLUMNA
-      lineas.forEach(linea => {
-          let txt = linea.trim();
-          let matchSub = txt.match(/^([a-z])[\)\.]\s*(.*)/i); // Detecta a) b) c)
-          let matchNum = txt.match(/^(\d+)[\)\.]\s*(.*)/);    // Detecta 1. 2. 3.
-          
-          if (matchNum) {
-              if (!isFirstRule) html += `</div>`;
-              html += `<div class="rule-block"><div class="rule-header"><span class="rule-num">${matchNum[1]}.</span><span style="flex:1;">${matchNum[2]}</span></div>`;
-              isFirstRule = false;
-          } else if (matchSub) {
-              if (isFirstRule) { html += `<div class="rule-block">`; isFirstRule = false; }
-              html += `<div class="sub-rule"><span class="sub-num">${matchSub[1].toLowerCase()})</span><span style="flex:1;">${matchSub[2]}</span></div>`;
-          } else {
-               if (isFirstRule) { html += `<div class="rule-block">`; isFirstRule = false; }
-               html += `<div style="margin-top:3px; margin-left:25px; font-size:11px; color:#475569;">${txt}</div>`;
-          }
-      });
-      if (!isFirstRule) html += `</div>`; 
-  });
-  
-  html += `</div>
-    <div class="footer">Por favor, mantén este documento contigo durante el campamento. Bendiciones.</div>
-  </body></html>`;
-  
-  const printWin = window.open('', '_blank');
-  if (printWin) {
-      printWin.document.open();
-      printWin.document.write(html);
-      printWin.document.close();
-      
-      // Nombre bonito al guardar el PDF
-      printWin.document.title = "Normativas_Campamento"; 
-
-      setTimeout(() => { 
-          printWin.print(); 
-      }, 500);
-  } else { 
-      alert("Por favor, permite las ventanas emergentes (pop-ups)."); 
-  }
-}
 /* ═══════════════════════════════════════
    📜 GESTIÓN DE NORMAS
 ═══════════════════════════════════════ */
