@@ -426,7 +426,11 @@ nav{flex:1;overflow-y:auto;padding:1rem .875rem;}
     
     <input class="finput" type="password" id="pwIn" placeholder="Introduce la contraseña…" autocomplete="off" onkeydown="if(event.key==='Enter') login(event)">
     
-    <button class="lbtn" onclick="login(event)"><i class="fas fa-sign-in-alt"></i> Entrar al Panel</button>
+    <button type="button" class="lbtn" onclick="login(event)"><i class="fas fa-sign-in-alt"></i> Entrar al Panel (Monitor)</button>
+    
+    <button type="button" class="btn btn-ghost" style="width:100%; margin-top:10px; justify-content:center; border: 1px solid var(--border);" onclick="loginPublico()">
+      <i class="fas fa-trophy"></i> Ver Ranking de Equipos
+    </button>
     
     <div class="lerr" id="lerr"><i class="fas fa-circle-exclamation"></i> Contraseña incorrecta.</div>
   </div>
@@ -1147,30 +1151,107 @@ let currentGrupoTab = 'grupos';
 let lastUsedDate = '';
 
 /* ═══════════════════════════════════════
-   🔐 AUTH E INICIO (Corregido)
+   🔐 AUTH E INICIO 
 ═══════════════════════════════════════ */
+async function loginPublico() {
+    const s = document.getElementById('loginScreen'); 
+    s.style.opacity = '0';
+    
+    setTimeout(async () => { 
+        s.style.display = 'none'; 
+        document.getElementById('app').style.display = 'block'; 
+        
+        // 1. Ocultamos el menú lateral 
+        document.getElementById('sidebar').style.display = 'none';
+        document.querySelector('.main').style.marginLeft = '0';
+        const mobTog = document.querySelector('.mob-tog');
+        if(mobTog) mobTog.style.display = 'none';
+        
+        showLoading(true);
+        await loadAll(); 
+        showLoading(false);
+        
+        // 2. Llevamos al usuario a la pestaña Ranking General
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById('page-grupos').classList.add('active');
+        grupoTab('ranking', document.getElementById('tab-ranking'));
+        
+        // 3. Bloqueamos la edición visualmente
+        let style = document.getElementById('css-bloqueo-visor');
+        if(!style) {
+            style = document.createElement('style');
+            style.id = 'css-bloqueo-visor';
+            document.head.appendChild(style);
+        }
+        style.innerHTML = `
+            .gt-header button, 
+            .tabs button:not(#tab-ranking),
+            .icon-btn,
+            .ph-actions { display: none !important; }
+        `;
+
+        // 4. Creamos el botón "Secreto" para los monitores pequeños
+        let btnMonitor = document.getElementById('btn-pequeno-monitor');
+        if(!btnMonitor) {
+            btnMonitor = document.createElement('button');
+            btnMonitor.id = 'btn-pequeno-monitor';
+            btnMonitor.innerHTML = '<i class="fas fa-unlock"></i> Desbloquear Puntuaciones';
+            btnMonitor.className = 'btn btn-danger';
+            btnMonitor.style.cssText = 'position:fixed; bottom:20px; right:20px; z-index:9999; box-shadow:var(--sh-lg); border-radius:99px;';
+            document.body.appendChild(btnMonitor);
+        }
+        btnMonitor.style.display = 'flex';
+        
+        // 5. Acción al pulsar el botón
+        btnMonitor.onclick = () => {
+            const pw = prompt('Introduce la contraseña (admin) para editar puntos:');
+            if(pw === 'admin') {
+                document.getElementById('css-bloqueo-visor').remove();
+                btnMonitor.style.display = 'none';
+                grupoTab('juegos', document.getElementById('tab-juegos'));
+                toast('Modo edición activado. Ya puedes sumar o restar puntos.', 'ok');
+            } else if(pw) {
+                toast('Contraseña incorrecta', 'err');
+            }
+        };
+    }, 400);
+}
+
 function login(event) {
-  // Evita que el navegador recargue la página si intercepta el "Enter"
   if(event) event.preventDefault(); 
   
   if(document.getElementById('pwIn').value === PW) {
-    localStorage.setItem('ca_exp', Date.now() + 12 * 60 * 60 * 1000);
     const s = document.getElementById('loginScreen'); 
     s.style.opacity = '0';
-    setTimeout(() => { s.style.display='none'; showApp(); }, 400);
+    
+    setTimeout(() => { 
+        s.style.display = 'none'; 
+        
+        // Nos aseguramos de que el menú lateral vuelva a verse
+        document.getElementById('sidebar').style.display = 'flex';
+        if (window.innerWidth > 768) {
+            document.querySelector('.main').style.marginLeft = 'var(--sb)';
+        }
+        const mobTog = document.querySelector('.mob-tog');
+        if(mobTog) mobTog.style.display = 'flex';
+        
+        // Destruimos el bloqueo de edición si existiera
+        const cssBloqueo = document.getElementById('css-bloqueo-visor');
+        if(cssBloqueo) cssBloqueo.remove();
+
+        // Ocultamos el boton del monitor pequeño
+        const btnPequeno = document.getElementById('btn-pequeno-monitor');
+        if(btnPequeno) btnPequeno.style.display = 'none';
+
+        showApp(); 
+    }, 400);
   } else {
     document.getElementById('lerr').style.display = 'block';
     setTimeout(() => document.getElementById('lerr').style.display='none', 3000);
   }
 }
 
-function isLoggedIn() {
-  const exp = localStorage.getItem('ca_exp');
-  if(!exp || Date.now() > parseInt(exp)) return false;
-  return true;
-}
-
-function logout() { localStorage.removeItem('ca_exp'); location.reload(); }
+function logout() { location.reload(); }
 
 async function showApp() { 
   document.getElementById('app').style.display = 'block'; 
@@ -1180,16 +1261,10 @@ async function showApp() {
   renderAll();
   setTimeout(setupCSVDrop, 300); 
 
-  //  SINCRONIZACIÓN EN TIEMPO REAL 
   sb.channel('sincronizacion-en-vivo')
     .on('postgres_changes', { event: '*', schema: 'public' }, async (payload) => {
-        // 1. Si tú tienes una ventana abierta editando, ignoramos el aviso para no borrarte lo que escribes
         if (document.querySelector('.mov.open')) return; 
-        
-        // 2. Si no estás editando nada, descargamos los datos nuevos en segundo plano (sin molestar)
         await loadAll();
-        
-        // 3. Volvemos a pintar de forma invisible solo la pestaña que estés mirando en ese momento
         const pestanaActual = document.querySelector('.ni.active');
         if(pestanaActual) {
            const pg = pestanaActual.dataset.p;
@@ -1252,10 +1327,10 @@ async function loadAll() {
     D.cabanas = (cab||[]).map(c => ({...c, asignados: (ca||[]).filter(x=>x.cabana_id===c.id).map(x=>x.persona_id)}));
     D.coches = (coc||[]).map(c => ({...c, pasajeros: (cp||[]).filter(x=>x.coche_id===c.id).map(x=>x.persona_id)}));
     D.servicios = (ser||[]).map(s => ({...s, prog: (itm||[]).filter(i=>i.servicio_id===s.id).sort((a,b)=>a.posicion-b.posicion).map(i=>({...i, dur: i.duracion, asignados: (pa||[]).filter(x=>x.item_id===i.id).map(x=>x.persona_id)}))}));
-    D.materiales = {}; 
-    (mat||[]).forEach(m => { 
-        if(!D.materiales[m.departamento_id]) D.materiales[m.departamento_id]=[]; 
-        D.materiales[m.departamento_id].push(m); 
+    D.materiales = {}; 
+    (mat||[]).forEach(m => { 
+        if(!D.materiales[m.departamento_id]) D.materiales[m.departamento_id]=[]; 
+        D.materiales[m.departamento_id].push(m); 
     });
     D.normas = nrm || [];
   }  catch(e) { console.error(e); }
@@ -1319,7 +1394,6 @@ function buildPicker(cId, sel=[], fil='') {
         btnStyle += `border: 1.5px dashed var(--amber-v); background: var(--amber-l); color: var(--amber-v);`;
     }
 
-    
     let prefix = '';
     if(isGuest) prefix += `<span style="font-size:0.55rem; font-weight:800; background:var(--rose-v); color:#fff; padding:1px 3px; border-radius:4px; margin-right:3px; vertical-align:middle; border:none; line-height:1;">INV</span>`;
     if(isOneDay) prefix += `<span style="font-size:0.55rem; font-weight:800; background:var(--amber-v); color:#fff; padding:1px 3px; border-radius:4px; margin-right:3px; vertical-align:middle; border:none; line-height:1;"><i class="fas fa-calendar-day"></i> 1D</span>`;
@@ -1355,7 +1429,6 @@ function initDragAndDrop(containerId, tablaDB, arrayDatos) {
         if(itemLocal) itemLocal.posicion = index;
       });
 
-      
       arrayDatos.sort((a, b) => (a.posicion || 0) - (b.posicion || 0));
 
       try {
@@ -1787,7 +1860,7 @@ function renderCabanas() {
     const ocupadas = D.cabanas.reduce((a,c)=>a+(c.asignados||[]).length,0);
     const libres = totalCamas - ocupadas;
     const porcentaje = Math.round((ocupadas/totalCamas)*100) || 0;
-    const sin = D.personas.filter(p => p.necesita_cama !== false && !D.cabanas.some(c=>(c.asignados||[]).includes(p.id)));
+    const sin = D.personas.filter(p => p.necesita_cama !== false && !p.solo_un_dia && !D.cabanas.some(c=>(c.asignados||[]).includes(p.id)));
 
     // BARRA DE ESTADÍSTICAS SUPERIOR
     const statsHtml = `
@@ -1847,10 +1920,10 @@ function renderCabanas() {
         `).join('');
 
         return `
-        <div class="card" data-id="${c.id}" style="background:var(--surf); border-radius:12px; display:flex; flex-direction:column; height:100%; transition:transform 0.2s; ${borderStyle}">
+        <div class="card log-card-fixed" data-id="${c.id}" style="${borderStyle}">
             ${isFull ? `<div style="position:absolute; top:-10px; right:-10px; background:var(--red-v); color:white; font-size:0.65rem; font-weight:900; padding:4px 10px; border-radius:99px; border:2px solid white; z-index:10; box-shadow: 0 4px 8px rgba(239,68,68,0.4);">¡COMPLETA!</div>` : ''}
             
-            <div style="padding:1rem; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); gap:0.5rem; background:${headerBg};">
+            <div style="padding:1rem; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); gap:0.5rem; background:${headerBg}; border-radius: 10px 10px 0 0;">
                 <div style="display:flex; align-items:flex-start; gap:0.6rem; flex:1; min-width:0;">
                     <i class="fas fa-grip-vertical drag-handle" style="color:var(--ink4); cursor:grab; font-size:1rem; margin-top:6px; flex-shrink:0;"></i>
                     <div style="width:32px; height:32px; border-radius:8px; background:${iconBg}; color:${iconColor}; display:flex; align-items:center; justify-content:center; font-size:0.9rem; flex-shrink:0; margin-top:2px; box-shadow:var(--sh-sm);"><i class="fas fa-house"></i></div>
@@ -1865,7 +1938,7 @@ function renderCabanas() {
                 </div>
             </div>
             
-            <div style="padding:0 1rem 1rem; flex:1; overflow-y:auto; max-height:280px; scrollbar-width: thin;">
+            <div class="log-card-body">
                 ${slotsHtml}
             </div>
         </div>`;
@@ -1875,6 +1948,1479 @@ function renderCabanas() {
     setTimeout(() => initDragAndDrop('cabanas-grid', 'cabanas', D.cabanas), 100);
 }
 
+function renderCoches() {
+    const totalPlazas = D.coches.reduce((a,c)=>a+(c.plazas||0),0);
+    const pasajeros = D.coches.reduce((a,c)=>a+(c.pasajeros||[]).length + (c.conductor?1:0),0);
+    const libres = totalPlazas - pasajeros;
+    const porcentaje = totalPlazas > 0 ? Math.round((pasajeros/totalPlazas)*100) : 0;
+
+    // ESTADÍSTICAS COCHES
+    const statsHtml = `
+        <div class="logistics-stats-bar">
+            <div class="log-stat-item">
+                <span class="log-stat-label">Total Plazas</span>
+                <span class="log-stat-val">${totalPlazas} <small style="font-size:0.8rem; color:var(--ink4); font-weight:600; margin-left:4px;">Asientos</small></span>
+            </div>
+            <div class="log-stat-item">
+                <span class="log-stat-label">Ocupación Vehículos</span>
+                <span class="log-stat-val">${pasajeros} <small style="font-size:0.8rem; color:var(--ink4); font-weight:600; margin-left:4px;">Viajando</small></span>
+                <div class="log-progress-bg"><div class="log-progress-fill" style="width:${porcentaje}%; background:var(--indigo-d)"></div></div>
+            </div>
+            <div class="log-stat-item">
+                <span class="log-stat-label">Asientos Libres</span>
+                <span class="log-stat-val" style="color:var(--sky-d)">${libres} <small style="font-size:0.8rem; color:var(--ink4); font-weight:600; margin-left:4px;">Libres</small></span>
+            </div>
+        </div>
+    `;
+    const cocheStatsContainer = document.getElementById('coche-stats');
+    if (cocheStatsContainer) cocheStatsContainer.innerHTML = statsHtml;
+
+    const asigIds = new Set();
+    D.coches.forEach(c => { 
+        if(c.conductor) asigIds.add(String(c.conductor)); 
+        (c.pasajeros||[]).forEach(pid => asigIds.add(String(pid))); 
+    });
+    
+    const cg = document.getElementById('coches-grid'); 
+    if(!D.coches.length){ cg.innerHTML='<div class="empty"><p>Añade el primer coche</p></div>'; return; }
+    
+    const paletteCoches = ['#0369a1', '#6d28d9', '#0f766e', '#c2410c', '#be185d', '#b45309', '#047857'];
+
+    cg.innerHTML = D.coches.map((c, index) => { 
+        const p = c.pasajeros || [], cond = c.conductor, l = (c.plazas || 5) - (p.length + (cond ? 1 : 0)); 
+        const totalOcup = p.length + (cond ? 1 : 0);
+        const isFull = l <= 0;
+        const baseColor = paletteCoches[index % paletteCoches.length];
+        
+        const borderStyle = isFull 
+            ? 'border: 2px solid var(--red-v); box-shadow: 0 6px 16px rgba(239, 68, 68, 0.2);' 
+            : `border: 1px solid var(--border); border-top: 4px solid ${baseColor}; box-shadow: var(--sh-sm);`;
+            
+        const headerBg = isFull ? 'var(--red-l)' : hexLight(baseColor, 0.08);
+        const titleColor = isFull ? 'var(--red-d)' : 'var(--ink)';
+        const iconBg = isFull ? 'var(--red-v)' : baseColor;
+        const iconColor = '#fff';
+        
+        let condHtml = cond ? `
+            <div style="display:flex; align-items:center; gap:0.6rem; padding:0.5rem 0; border-bottom:1px dashed var(--border2);">
+                <div class="av" style="width:24px; height:24px; border-radius:50%; background:${isFull ? 'var(--red-v)' : baseColor}; color:#fff; display:flex; align-items:center; justify-content:center; font-size:0.65rem; flex-shrink:0;"><i class="fas fa-steering-wheel"></i></div>
+                <div style="flex:1; min-width:0;">
+                    <div style="font-size:0.85rem; font-weight:800; color:${isFull ? 'var(--red-d)' : baseColor}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1;">${pName(cond)} ${pBadges(cond)}</div>
+                    <div style="font-size:0.6rem; color:var(--ink4); font-weight:700; text-transform:uppercase; letter-spacing:0.05em; margin-top:2px;">Conductor</div>
+                </div>
+            </div>` : `
+            <div style="display:flex; align-items:center; gap:0.6rem; padding:0.5rem 0; border-bottom:1px dashed var(--border2); opacity:0.6;">
+                <div style="width:24px; height:24px; border-radius:50%; border:1px dashed ${baseColor}; color:${baseColor}; display:flex; align-items:center; justify-content:center; font-size:0.65rem; flex-shrink:0;"><i class="fas fa-steering-wheel"></i></div>
+                <div style="font-size:0.85rem; font-weight:600; color:var(--ink3); flex:1;">Falta conductor</div>
+            </div>`;
+
+        const pasHtml = p.map(id => `
+            <div style="display:flex; align-items:center; gap:0.6rem; padding:0.5rem 0; border-bottom:1px dashed var(--border2);">
+                <div class="av" style="width:24px; height:24px; border-radius:50%; background:var(--surf3); color:var(--ink3); display:flex; align-items:center; justify-content:center; font-size:0.65rem; flex-shrink:0;"><i class="fas fa-user"></i></div>
+                <div style="font-size:0.85rem; font-weight:600; color:var(--ink); flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${pName(id)} ${pBadges(id)}</div>
+            </div>
+        `).join('') + Array(Math.max(0,l)).fill(`
+            <div style="display:flex; align-items:center; gap:0.6rem; padding:0.5rem 0; border-bottom:1px dashed var(--border2); opacity:0.5;">
+                <div style="width:24px; height:24px; border-radius:50%; border:1px dashed var(--ink4); display:flex; align-items:center; justify-content:center; font-size:0.65rem; flex-shrink:0;"><i class="fas fa-plus"></i></div>
+                <div style="font-size:0.85rem; font-weight:500; color:var(--ink3); flex:1;">Asiento libre</div>
+            </div>
+        `).join('');
+
+        return `
+        <div class="card log-card-fixed" data-id="${c.id}" style="${borderStyle}">
+          ${isFull ? `<div style="position:absolute; top:-10px; right:-10px; background:var(--red-v); color:white; font-size:0.65rem; font-weight:900; padding:4px 10px; border-radius:99px; border:2px solid white; z-index:10; box-shadow: 0 4px 8px rgba(239,68,68,0.4);">¡COMPLETO!</div>` : ''}
+          
+          <div style="padding:1rem; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); gap:0.5rem; background:${headerBg}; border-radius: 10px 10px 0 0;">
+            <div style="display:flex; align-items:flex-start; gap:0.4rem; flex:1; min-width:0;">
+              <i class="fas fa-grip-lines drag-handle" style="color:var(--ink4); cursor:grab; font-size:0.85rem; margin-top:5px; flex-shrink:0;"></i>
+              <div style="width:32px; height:32px; border-radius:8px; background:${iconBg}; color:${iconColor}; display:flex; align-items:center; justify-content:center; font-size:0.9rem; flex-shrink:0; margin-top:2px; box-shadow:var(--sh-sm);"><i class="fas fa-car"></i></div>
+              <div style="font-weight:800; font-size:1rem; color:${titleColor}; white-space:normal; word-break:break-word; line-height:1.2; margin-top:2px;">${c.nombre}</div>
+            </div>
+            
+            <div style="display:flex; align-items:center; gap:0.4rem; flex-shrink:0;">
+                <span style="font-size:0.8rem; font-weight:800; color:${isFull ? '#fff' : baseColor}; background:${isFull ? 'var(--red-v)' : hexLight(baseColor, 0.15)}; padding:2px 8px; border-radius:99px;">${totalOcup}/${c.plazas||5}</span>
+                <div style="display:flex; flex-direction:column; gap:2px; opacity:0.6; transition:opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.6">
+                    <button class="icon-btn edit" style="width:24px;height:24px;min-height:24px;border:none;background:transparent;color:var(--ink4);" onclick="openModCocheEdit('${c.id}')"><i class="fas fa-pen" style="font-size:0.7rem;"></i></button>
+                    <button class="icon-btn del" style="width:24px;height:24px;min-height:24px;border:none;background:transparent;color:var(--red-m);" onclick="delCoche('${c.id}')"><i class="fas fa-trash" style="font-size:0.7rem;"></i></button>
+                </div>
+            </div>
+          </div>
+          
+          <div class="log-card-body">
+            ${c.ruta?`<div style="font-size:0.75rem; color:var(--ink3); font-weight:600; margin-bottom:0.8rem; margin-top:0.5rem; display:flex; align-items:center; gap:0.5rem; background:var(--surf2); padding:0.5rem 0.8rem; border-radius:8px; border:1px solid var(--border);"><i class="fas fa-route" style="color:${baseColor}"></i> <span style="white-space:normal; word-break:break-word; line-height:1.3;">${c.ruta}</span></div>`:''}
+            <div style="display:flex; flex-direction:column;">
+                ${condHtml}
+                ${pasHtml}
+            </div>
+          </div>
+        </div>`; 
+    }).join('');
+    setTimeout(() => initDragAndDrop('coches-grid', 'coches', D.coches), 100);
+}
+
+
+/* ═══════════════════════════════════════
+   📅 HORARIO GENERAL
+═══════════════════════════════════════ */
+function renderHorario() {
+  const tl = document.getElementById('horario-timeline');
+  let evs = D.horario; 
+  if(!evs.length) { tl.innerHTML = '<div class="empty" style="grid-column:1/-1"><i class="fas fa-calendar-times"></i><p>No hay eventos programados en el campamento.</p></div>'; return; }
+  const g = {}; evs.forEach(h => { if(!g[h.fecha]) g[h.fecha]=[]; g[h.fecha].push(h); });
+  
+  // Contenedor principal de la cuadrícula
+  let html = '<div class="timeline-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(340px, 1fr)); gap:2.5rem; align-items:start;">';
+  
+  Object.keys(g).sort().forEach((f) => {
+      const dateObj = new Date(f + "T00:00:00");
+      const dayName = window.innerWidth < 600 ? dateObj.toLocaleDateString('es-ES', { weekday: 'short' }) : dateObj.toLocaleDateString('es-ES', { weekday: 'long' });
+      const dayShort = dateObj.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+      
+      html += `
+      <div class="timeline-day-column" style="position:relative;">
+          <div class="day-big-number" style="position:absolute; right:10px; top:-20px; font-size:4.5rem; font-weight:900; color:var(--ink); opacity:0.04; line-height:1; pointer-events:none; z-index:1;">${dateObj.getDate()}</div>
+          
+          <div class="timeline-day-header" style="position:relative; margin-bottom:2rem; padding-left:1.2rem; border-left:3px solid var(--primary); z-index:2;">
+              <span class="day-full-date" style="font-size:0.7rem; text-transform:uppercase; color:var(--primary); font-weight:700; letter-spacing:1px;">${dayShort}</span>
+              <span class="day-name" style="font-family:'Lora',serif; font-size:1.6rem; font-weight:700; color:var(--ink); display:block;">${dayName.toUpperCase()}</span>
+          </div>
+          
+          <div class="timeline-events" style="position:relative; border-left:1.5px solid var(--border); padding-left:1.5rem; margin-left:0.4rem; z-index:2;">` + 
+          g[f].map(h => {
+              const cfg = HORARIO_CFG[h.tipo] || HORARIO_CFG['Otro'];
+              
+              // Sección del responsable rediseñada
+              const respHtml = h.responsable_id ? `
+                <div style="display:flex; align-items:center; gap:8px; margin-top:0.8rem; padding-top:0.8rem; border-top:1px solid var(--border); background:var(--surf2); margin-left:-1rem; margin-right:-1rem; padding-left:1rem; padding-right:1rem; margin-bottom:-1rem; padding-bottom:1rem; border-radius:0 0 16px 16px;">
+                    <div class="av" style="width:24px;height:24px;font-size:0.6rem;background:${pColor(h.responsable_id)};box-shadow:var(--sh-sm);">${ini(pName(h.responsable_id))}</div>
+                    <span style="font-size:0.75rem; color:var(--ink3); font-weight:600;">Resp: <strong>${pName(h.responsable_id).split(' ')[0]}</strong></span>
+                </div>` : '';
+              
+              return `
+              <div style="position:relative; margin-bottom:1.8rem;">
+                  <div class="tl-node" style="position:absolute; left:-1.5rem; transform:translateX(-50%); top:20px; width:12px; height:12px; border-radius:50%; background:${cfg.c}; border:3px solid #fff; box-shadow:0 0 0 2px ${hexLight(cfg.c, 0.2)}, var(--sh-sm); z-index:3;"></div>
+                  
+                  <div class="event-card-pro" style="background:var(--surf); border-radius:16px; padding:1.2rem 1.4rem; border:1px solid var(--border); border-left:4px solid ${cfg.c}; box-shadow:var(--sh-sm); transition:transform 0.2s cubic-bezier(0.165, 0.84, 0.44, 1), box-shadow 0.2s cubic-bezier(0.165, 0.84, 0.44, 1); position:relative;" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='var(--sh-lg)';" onmouseout="this.style.transform='none'; this.style.boxShadow='var(--sh-sm)';">
+                      
+                      <div class="event-icon-box" style="position:absolute; top:1.2rem; right:1.2rem; font-size:1.1rem; color:${cfg.c}; opacity:0.15;"><i class="fas ${cfg.i}"></i></div>
+                      
+                      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.7rem;">
+                          <div class="event-time-badge" style="display:inline-flex; align-items:center; gap:5px; background:${hexLight(cfg.c, 0.1)}; color:${cfg.c}; padding:3px 10px; border-radius:8px; font-size:0.7rem; font-weight:800;"><i class="far fa-clock"></i> ${h.hora_inicio.substring(0,5)}${h.hora_fin ? ' - ' + h.hora_fin.substring(0,5) : ''}</div>
+                          <div style="display:flex; gap:0.3rem; margin-top:-6px; margin-right:-6px;">
+                              <button class="icon-btn edit" onclick="openModHorarioEdit('${h.id}')" style="width:26px;height:26px;border:none;background:transparent;box-shadow:none; color:var(--ink4);"><i class="fas fa-pen" style="font-size:0.7rem"></i></button>
+                              <button class="icon-btn del" onclick="delHorario('${h.id}')" style="width:26px;height:26px;border:none;background:transparent;box-shadow:none; color:var(--red-v);"><i class="fas fa-trash" style="font-size:0.7rem"></i></button>
+                          </div>
+                      </div>
+                      
+                      <div class="event-title-pro" style="font-family:'Lora',serif; font-size:1.15rem; font-weight:700; color:var(--ink); line-height:1.2; margin-bottom:0.3rem; padding-right:2rem;">${h.titulo} <span style="font-family:'Plus Jakarta Sans',sans-serif;font-size:0.65rem; background:var(--surf3); color:var(--ink3); padding:2px 6px; border-radius:6px; font-weight:600; margin-left:6px; vertical-align:middle;">${h.tipo}</span></div>
+                      ${h.ubicacion ? `<div class="event-location-pro" style="display:flex; align-items:center; gap:6px; font-size:0.75rem; color:var(--primary); font-weight:600;"><i class="fas fa-location-dot" style="opacity:0.7;"></i> <span>${h.ubicacion}</span></div>` : ''}
+                      ${h.descripcion ? `<div style="font-size:0.8rem; color:var(--ink3); margin-top:0.6rem; line-height:1.5; padding:0.7rem; background:var(--surf2); border-radius:8px;">${h.descripcion}</div>` : ''}
+                      
+                      ${respHtml}
+                  </div>
+              </div>`;
+          }).join('') + `</div></div>`;
+  });
+  tl.innerHTML = html + '</div>'; // Cerramos timeline-grid
+}
+
+function openModHorario() { 
+  document.getElementById('mHorarioT').textContent='Añadir Evento'; 
+  document.getElementById('hId').value=''; 
+  ['hTit','hUbi','hIni','hFin','hDesc'].forEach(id=>document.getElementById(id).value=''); 
+  let defaultDate = lastUsedDate;
+  if (!defaultDate) { if (D.horario && D.horario.length > 0) { const fechas = D.horario.map(h => h.fecha).sort(); defaultDate = fechas[fechas.length - 1]; } else { defaultDate = new Date().toISOString().split('T')[0]; } }
+  document.getElementById('hFec').value = defaultDate; 
+  document.getElementById('hResp').innerHTML='<option value="">-- Ninguno --</option>'+D.personas.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join(''); 
+  om('modHorario'); 
+}
+
+function openModHorarioEdit(id) { 
+  const h=D.horario.find(x=>x.id===id); if(!h) return; 
+  document.getElementById('mHorarioT').textContent='Editar Evento'; 
+  document.getElementById('hId').value=h.id; document.getElementById('hTit').value=h.titulo; 
+  document.getElementById('hFec').value=h.fecha; document.getElementById('hTipo').value=h.tipo; 
+  document.getElementById('hIni').value=h.hora_inicio; document.getElementById('hFin').value=h.hora_fin||''; 
+  document.getElementById('hUbi').value=h.ubicacion||''; document.getElementById('hDesc').value=h.descripcion||''; 
+  document.getElementById('hResp').innerHTML='<option value="">-- Ninguno --</option>'+D.personas.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join(''); 
+  document.getElementById('hResp').value=h.responsable_id||''; 
+  om('modHorario'); 
+}
+
+async function saveHorario() {
+  const obj = { titulo: document.getElementById('hTit').value.trim(), fecha: document.getElementById('hFec').value, hora_inicio: document.getElementById('hIni').value, hora_fin: document.getElementById('hFin').value||null, tipo: document.getElementById('hTipo').value, ubicacion: document.getElementById('hUbi').value, descripcion: document.getElementById('hDesc').value, responsable_id: document.getElementById('hResp').value||null };
+  if(!obj.titulo || !obj.fecha || !obj.hora_inicio) { toast('Título, Fecha y Hora Inicio son obligatorios','err'); return; }
+  lastUsedDate = obj.fecha;
+  const eid = document.getElementById('hId').value;
+  try {
+      if(eid) { await sb.from('horario_general').update(obj).eq('id', eid); Object.assign(D.horario.find(h=>h.id===eid), obj); } 
+      else { const {data,error}=await sb.from('horario_general').insert(obj).select().single(); if(error)throw error; D.horario.push(data); }
+      D.horario.sort((a,b)=> a.fecha.localeCompare(b.fecha)||a.hora_inicio.localeCompare(b.hora_inicio)); 
+      cm('modHorario'); renderHorario(); renderDash(); toast('Guardado','ok');
+  } catch(e) { toast('Error: '+e.message,'err'); }
+}
+
+async function delHorario(id) { 
+  if(!confirm('¿Borrar este evento?')) return; 
+  try { await sb.from('horario_general').delete().eq('id',id); D.horario=D.horario.filter(h=>h.id!==id); renderHorario(); renderDash(); toast('Borrado','info'); } catch(e){} 
+}
+
+/* ═══════════════════════════════════════
+   👥 PERSONAS Y DIRECTORIO
+═══════════════════════════════════════ */
+function openModPersona() { 
+  document.getElementById('pId').value=''; 
+  ['pNom','pTel','pNotas'].forEach(id=>document.getElementById(id).value=''); 
+  document.getElementById('pRol').value='Voluntario/a'; 
+  document.getElementById('pColor').value='#0f766e'; 
+  document.getElementById('pOtraIglesia').checked=false; 
+  document.getElementById('pMenor').checked=false; 
+  document.getElementById('pPagado').checked=false; 
+  document.getElementById('pUnDia').checked=false; 
+  document.getElementById('pCama').checked = true;
+  document.getElementById('pCoche').checked = true;
+  document.getElementById('pJuegos').checked = true;
+  om('modPersona'); 
+}
+
+function openModPersonaEdit(id) { 
+  const p=D.personas.find(x=>String(x.id)===String(id)); if(!p)return; 
+  document.getElementById('pId').value=p.id; 
+  document.getElementById('pNom').value=p.nombre; 
+  document.getElementById('pRol').value=p.rol; 
+  document.getElementById('pTel').value=p.telefono||''; 
+  document.getElementById('pNotas').value=p.notas||''; 
+  document.getElementById('pColor').value=p.color; 
+  document.getElementById('pOtraIglesia').checked=p.otra_iglesia||false; 
+  document.getElementById('pMenor').checked=p.es_menor||false; 
+  document.getElementById('pPagado').checked=p.ha_pagado||false; 
+  document.getElementById('pUnDia').checked=p.solo_un_dia||false;
+  document.getElementById('pCama').checked = p.necesita_cama !== false;
+  document.getElementById('pCoche').checked = p.necesita_coche !== false;
+  document.getElementById('pJuegos').checked = p.participa_juegos !== false; 
+  om('modPersona'); 
+}
+
+async function savePersona() {
+  const nom=document.getElementById('pNom').value.trim(); if(!nom){toast('Nombre obligatorio','err');return;}
+  const obj={ 
+    nombre:nom, 
+    rol:document.getElementById('pRol').value || 'Voluntario/a', 
+    telefono:document.getElementById('pTel').value, 
+    notas:document.getElementById('pNotas').value, 
+    color:document.getElementById('pColor').value, 
+    otra_iglesia: document.getElementById('pOtraIglesia').checked,
+    es_menor: document.getElementById('pMenor').checked,
+    ha_pagado: document.getElementById('pPagado').checked,
+    solo_un_dia: document.getElementById('pUnDia').checked,
+    necesita_cama: document.getElementById('pCama').checked,
+    necesita_coche: document.getElementById('pCoche').checked,
+    participa_juegos: document.getElementById('pJuegos').checked
+  };
+  const eid=document.getElementById('pId').value;
+  try {
+    if(eid){ await sb.from('personas').update(obj).eq('id',eid); Object.assign(D.personas.find(p=>p.id===eid), obj); } 
+    else { const {data,error}=await sb.from('personas').insert(obj).select().single(); if(error)throw error; D.personas.push(data); }
+    cm('modPersona'); renderPersonas(); renderDash(); toast(eid?'Actualizada':'Añadida','ok');
+  } catch(e){ console.error(e); toast('Error al guardar. Verifica columnas en DB.','err'); }
+}
+
+async function delPersona(id) { 
+  if(!confirm('¿Eliminar persona definitivamente de todo el sistema?')) return; 
+  try { 
+    await sb.from('personas').delete().eq('id',id); 
+    
+    showLoading(true); 
+    await loadAll(); 
+    renderAll(); 
+    showLoading(false);
+    
+    toast('Persona eliminada por completo','info'); 
+  } catch(e) { 
+    console.error(e); 
+    toast('Error al eliminar', 'err');
+  } 
+}
+
+function renderPersonas() {
+  const sel=document.getElementById('pFilter'); const cur=sel.value;
+  sel.innerHTML='<option value="">Todos los departamentos</option>'+D.departamentos.map(d=>`<option value="${d.id}">${d.nombre}</option>`).join(''); if(cur) sel.value=cur;
+  const search=(document.getElementById('pSearch').value||'').toLowerCase(), fD=document.getElementById('pFilter').value;
+  let p=D.personas.filter(x=>{ if(search&&!x.nombre.toLowerCase().includes(search))return false; if(fD){ const d=D.departamentos.find(y=>y.id===fD); if(!d)return false; if(!(d.miembros||[]).includes(x.id)&&d.responsable!==x.id)return false; } return true; });
+  const g=document.getElementById('p-grid'), e=document.getElementById('p-empty');
+  if(!p.length){g.innerHTML='';e.style.display='block';return;} e.style.display='none';
+  
+  g.innerHTML=p.map(x=>{
+    const dp=D.departamentos.filter(d=>(d.miembros||[]).includes(x.id)||d.responsable===x.id).map(d=>`<span style="background:${hexLight(d.color,.1)};color:${d.color};border:1px solid ${hexLight(d.color,.2)}; padding: 2px 6px; border-radius: 6px; font-size: 0.65rem;"><i class="fas ${d.icono}" style="font-size:.65rem"></i> ${d.nombre}</span>`).join('');
+    
+    let badges = '';
+    if(x.ha_pagado) badges += `<div class="guest-badge" style="position:relative; top:0; right:0; margin-bottom:4px; background:var(--green-v); color:#ffffff; box-shadow: 0 4px 8px rgba(16, 185, 129, 0.25); display:inline-flex; padding: 2px 6px; border-radius: 99px; font-size: 0.65rem; font-weight: 700; gap: 4px;"><i class="fas fa-check"></i> Pagado</div>`;
+    if(x.otra_iglesia) badges += `<div class="guest-badge" style="position:relative; top:0; right:0; margin-bottom:4px; background:var(--rose-v); color:#ffffff; box-shadow: 0 4px 8px rgba(225, 29, 72, 0.25); display:inline-flex; padding: 2px 6px; border-radius: 99px; font-size: 0.65rem; font-weight: 700; gap: 4px;"><i class="fas fa-church"></i> Invitado</div>`;
+    if(x.es_menor) badges += `<div class="guest-badge" style="position:relative; top:0; right:0; margin-bottom:4px; background:var(--sky); color:#ffffff; box-shadow: 0 4px 8px rgba(3, 105, 161, 0.25); display:inline-flex; padding: 2px 6px; border-radius: 99px; font-size: 0.65rem; font-weight: 700; gap: 4px;"><i class="fas fa-child"></i> Menor</div>`;
+    if(x.solo_un_dia) badges += `<div class="guest-badge" style="position:relative; top:0; right:0; margin-bottom:4px; background:var(--amber-v); color:#ffffff; box-shadow: 0 4px 8px rgba(245, 158, 11, 0.25); display:inline-flex; padding: 2px 6px; border-radius: 99px; font-size: 0.65rem; font-weight: 700; gap: 4px;"><i class="fas fa-calendar-day"></i> 1 Día</div>`;
+    if(x.necesita_cama === false) badges += `<div class="guest-badge" style="position:relative; top:0; right:0; margin-bottom:4px; background:var(--ink3); color:#ffffff; box-shadow: 0 4px 8px rgba(0,0,0, 0.15); display:inline-flex; padding: 2px 6px; border-radius: 99px; font-size: 0.65rem; font-weight: 700; gap: 4px;"><i class="fas fa-bed" style="opacity:0.5;"></i> Sin cama</div>`;
+    if(x.necesita_coche === false) badges += `<div class="guest-badge" style="position:relative; top:0; right:0; margin-bottom:4px; background:var(--ink3); color:#ffffff; box-shadow: 0 4px 8px rgba(0,0,0, 0.15); display:inline-flex; padding: 2px 6px; border-radius: 99px; font-size: 0.65rem; font-weight: 700; gap: 4px;"><i class="fas fa-car" style="opacity:0.5;"></i> Sin coche</div>`;
+    if(x.participa_juegos === false) badges += `<div class="guest-badge" style="position:relative; top:0; right:0; margin-bottom:4px; background:var(--ink3); color:#ffffff; box-shadow: 0 4px 8px rgba(0,0,0, 0.15); display:inline-flex; padding: 2px 6px; border-radius: 99px; font-size: 0.65rem; font-weight: 700; gap: 4px;"><i class="fas fa-gamepad" style="opacity:0.5;"></i> Sin juegos</div>`;
+
+    let topColor = x.color || 'var(--primary)';
+    if(x.es_menor) topColor = 'var(--sky)'; 
+    if(x.otra_iglesia) topColor = 'var(--rose-v)';
+
+    return `
+    <div class="card" style="background:var(--surf); border:1px solid var(--border); border-top:4px solid ${topColor}; border-radius:12px; box-shadow:var(--sh-sm); display:flex; flex-direction:column; position:relative; overflow:hidden; transition:all 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='var(--sh-lg)';" onmouseout="this.style.transform='none'; this.style.boxShadow='var(--sh-sm)';">
+        
+        <div style="position:absolute; top:12px; right:12px; display:flex; flex-direction:column; align-items:flex-end; z-index:5;">${badges}</div>
+        
+        <div style="padding:1.25rem; display:flex; flex-direction:column; flex:1; padding-right: 60px;">
+            <div class="pcard-top" style="display:flex; align-items:center; gap:.875rem; margin-bottom:1rem;">
+                <div class="av av-lg" style="background:${x.color}; flex-shrink:0;">${ini(x.nombre)}</div>
+                <div class="pcard-info">
+                    <h3 style="font-weight:700; font-size:.95rem; line-height:1.2; color:var(--ink); margin:0; display:flex; align-items:center; flex-wrap:wrap; gap:4px;">${x.nombre}</h3>
+                    <p style="font-size:.75rem; color:var(--ink3); margin-top:.15rem; margin-bottom:0;">${x.rol}</p>
+                </div>
+            </div>
+            <div class="pcard-depts" style="display:flex; flex-wrap:wrap; gap:.3rem;">${dp||'<span style="font-size:.72rem;color:var(--ink4);font-style:italic">Sin departamento</span>'}</div>
+        </div>
+
+        <div style="padding:0.75rem 1.25rem; background:var(--surf2); border-top:1px solid var(--border); display:flex; justify-content:flex-end; align-items:center; gap:0.5rem;">
+            <button class="icon-btn edit" onclick="openModPersonaEdit('${x.id}')" style="width:28px; height:28px; border:none; background:var(--surf); box-shadow:var(--sh-sm);"><i class="fas fa-pen" style="font-size:0.7rem;"></i></button>
+            <button class="icon-btn del" onclick="delPersona('${x.id}')" style="width:28px; height:28px; border:none; background:var(--red-l); color:var(--red-v); box-shadow:var(--sh-sm);"><i class="fas fa-trash" style="font-size:0.7rem;"></i></button>
+        </div>
+    </div>`;
+  }).join('');
+}
+
+/* ═══════════════════════════════════════
+   🏢 DEPARTAMENTOS
+═══════════════════════════════════════ */
+function renderDepts() {
+  document.getElementById('dept-grid').innerHTML=D.departamentos.map(d=>{
+      const count = (d.miembros||[]).length + (d.responsable ? 1 : 0);
+      return `
+      <div class="card" onclick="openDeptDetail('${d.id}')" style="background:var(--surf); border:1px solid var(--border); border-top:4px solid ${d.color}; border-radius:12px; box-shadow:var(--sh-sm); display:flex; flex-direction:column; position:relative; overflow:hidden; transition:all 0.2s; cursor:pointer;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='var(--sh-lg)';" onmouseout="this.style.transform='none'; this.style.boxShadow='var(--sh-sm)';">
+          
+          <div style="padding:1.25rem; display:flex; flex-direction:column; flex:1;">
+              <div style="display:flex; align-items:center; gap:.75rem; margin-bottom:.875rem;">
+                  <div style="width:42px;height:42px;border-radius:10px;background:${hexLight(d.color,.15)};color:${d.color};display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0"><i class="fas ${d.icono}"></i></div>
+                  <div>
+                      <div style="font-weight:700;font-size:1rem;color:var(--ink);">${d.nombre}</div>
+                      <div style="font-size:.75rem;color:var(--ink2);"><i class="fas fa-user" style="font-size:.6rem"></i> ${d.responsable?pName(d.responsable):'Sin responsable'}</div>
+                  </div>
+              </div>
+              ${d.desc?`<div style="font-size:.8rem;color:var(--ink3);margin-bottom:.75rem;">${d.desc}</div>`:''}
+          </div>
+
+          <div style="padding:0.75rem 1.25rem; background:var(--surf2); border-top:1px solid var(--border); display:flex; align-items:center; justify-content:space-between;">
+              <div style="display:flex;align-items:center;gap:.5rem">
+                  <div class="av-stack" style="display:flex;">${(d.responsable?[d.responsable]:[]).concat(d.miembros||[]).slice(0,4).map((id, i)=>`<div class="av av-sm" style="background:${pColor(id)};border:2px solid var(--surf2); z-index:${10-i}; margin-left:${i>0?'-8px':'0'}">${ini(pName(id))}</div>`).join('')}</div>
+                  <span style="font-size:.75rem;color:var(--ink3);font-weight:600">${count} pers.</span>
+              </div>
+              <div style="display:flex;gap:.3rem">
+                  <button class="icon-btn edit" onclick="event.stopPropagation();openModDeptEdit('${d.id}')" style="width:28px; height:28px; border:none; background:var(--surf); box-shadow:var(--sh-sm);"><i class="fas fa-pen" style="font-size:0.7rem;"></i></button>
+                  <button class="icon-btn del" onclick="event.stopPropagation();delDepto('${d.id}')" style="width:28px; height:28px; border:none; background:var(--red-l); color:var(--red-v); box-shadow:var(--sh-sm);"><i class="fas fa-trash" style="font-size:0.7rem;"></i></button>
+              </div>
+          </div>
+      </div>`;
+  }).join('');
+}
+
+function openDeptDetail(id) {
+  currentDept=id; const d=D.departamentos.find(x=>x.id===id); if(!d)return; 
+  document.getElementById('dept-list').style.display='none'; 
+  document.getElementById('dept-detail').style.display='block';
+  document.getElementById('dd-ico').style.cssText=`background:${hexLight(d.color,.15)};color:${d.color}`; 
+  document.getElementById('dd-ico').innerHTML=`<i class="fas ${d.icono}"></i>`; 
+  document.getElementById('dd-nm').textContent=d.nombre; 
+  document.getElementById('dd-sub').textContent=d.desc||'';
+  let mHTML = ''; 
+  if(d.responsable) mHTML+=`<div style="padding:.75rem;background:var(--surf2);border-radius:8px;border:1px solid var(--border);margin-bottom:1rem;"><div style="font-size:.7rem;color:var(--primary);font-weight:700;text-transform:uppercase;margin-bottom:.5rem">⭐ Responsable</div><div style="display:flex;align-items:center;gap:1rem;"><div class="av av-lg" style="background:${pColor(d.responsable)}">${ini(pName(d.responsable))}</div><div><div style="font-weight:700;font-size:1.1rem">${pName(d.responsable)}</div></div></div></div>`;
+  mHTML+=`<div class="people-grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr))">${(d.miembros||[]).map(mid=>`<div class="pcard" style="padding:1rem;"><div class="pcard-top" style="margin-bottom:0"><div class="av" style="background:${pColor(mid)}">${ini(pName(mid))}</div><div class="pcard-info"><h3>${pName(mid)} ${pBadges(mid)}</h3><p>${pRol(mid)}</p></div></div></div>`).join('')}</div>`;
+  document.getElementById('dd-resp-members').innerHTML=mHTML; 
+  renderMateriales(id);
+  const aI=[...(d.responsable?[d.responsable]:[]),...(d.miembros||[])]; 
+ document.getElementById('dd-stats').innerHTML=`<div style="display:flex;justify-content:space-between;margin-bottom:.5rem"><span style="color:var(--ink3)">Equipo</span><strong>${aI.length}</strong></div><div style="display:flex;justify-content:space-between;margin-bottom:1rem"><span style="color:var(--ink3)">Materiales</span><strong>${(D.materiales[id]||[]).length}</strong></div><div style="font-size:.75rem;font-weight:700;color:var(--ink4);text-transform:uppercase;margin-bottom:.5rem;border-top:1px solid var(--border);padding-top:1rem;">Miembros</div>${aI.map(mid=>`<div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.4rem"><div class="av av-sm" style="background:${pColor(mid)}">${ini(pName(mid))}</div><span style="font-size:.8rem; display:flex; align-items:center; flex-wrap:wrap;">${pName(mid).split(' ')[0]} ${pBadges(mid)}</span></div>`).join('')}`;
+}
+
+function backDept() { 
+  document.getElementById('dept-list').style.display='block'; 
+  document.getElementById('dept-detail').style.display='none'; 
+  currentDept=null; 
+  renderDepts(); 
+}
+
+function openModDepto() { 
+  document.getElementById('dId').value=''; 
+  ['dNom','dIco','dDesc'].forEach(id=>document.getElementById(id).value=''); 
+  document.getElementById('dColor').value='#0f766e'; 
+  document.getElementById('dResp').innerHTML='<option value="">— Sin asignar —</option>'+D.personas.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join(''); 
+  buildPicker('dMiembrosPick',[]); 
+  om('modDepto'); 
+}
+
+function openModDeptEdit(id) { 
+  const d=D.departamentos.find(x=>x.id===id); if(!d)return; 
+  document.getElementById('dId').value=d.id; 
+  document.getElementById('dNom').value=d.nombre; 
+  document.getElementById('dIco').value=d.icono; 
+  document.getElementById('dColor').value=d.color; 
+  document.getElementById('dDesc').value=d.desc||''; 
+  document.getElementById('dResp').innerHTML='<option value="">— Sin asignar —</option>'+D.personas.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join(''); 
+  document.getElementById('dResp').value=d.responsable||''; 
+  buildPicker('dMiembrosPick',d.miembros||[]); 
+  om('modDepto'); 
+}
+
+async function saveDepto() {
+  const nom=document.getElementById('dNom').value.trim(); if(!nom){toast('Obligatorio','err');return;}
+  const eid=document.getElementById('dId').value; 
+  const obj={nombre:nom,icono:document.getElementById('dIco').value||'fa-circle',color:document.getElementById('dColor').value,responsable:document.getElementById('dResp').value||null,descripcion:document.getElementById('dDesc').value}; 
+  const m=getSelected('dMiembrosPick');
+  try{ 
+    let did=eid; 
+    if(eid){
+      await sb.from('departamentos').update(obj).eq('id',eid);
+    } else {
+      const{data,error}=await sb.from('departamentos').insert(obj).select().single();
+      if(error)throw error;
+      did=data.id;
+    } 
+    await sb.from('departamento_miembros').delete().eq('departamento_id',did); 
+    if(m.length)await sb.from('departamento_miembros').insert(m.map(pid=>({departamento_id:did,persona_id:pid}))); 
+    if(eid){
+      Object.assign(D.departamentos.find(x=>x.id===eid),{...obj,desc:obj.descripcion,miembros:m});
+    }else{
+      D.departamentos.push({id:did,...obj,desc:obj.descripcion,miembros:m});
+    } 
+    cm('modDepto');
+    renderDepts();
+    renderDash();
+    if(currentDept) openDeptDetail(currentDept);
+    toast('Guardado','ok'); 
+  }catch(e){ console.error(e); }
+}
+
+async function delDepto(id) { 
+  if(!confirm('¿Borrar departamento?')) return; 
+  try{ 
+    await sb.from('departamentos').delete().eq('id',id); 
+    D.departamentos=D.departamentos.filter(d=>d.id!==id); 
+    renderDepts(); 
+    renderDash(); 
+    toast('Borrado','info'); 
+  }catch(e){ console.error(e); } 
+}
+
+/* ═══════════════════════════════════════
+   🛠 MATERIALES (LOGÍSTICA)
+═══════════════════════════════════════ */
+function renderMateriales(dId) {
+  const l=D.materiales[dId]||[], c=document.getElementById('dd-materiales'), p=document.getElementById('dd-mat-progress');
+  if(p){ const d=l.filter(m=>m.estado==='tengo').length; p.innerHTML=l.length?`<span style="font-weight:700;color:var(--primary)">${d}/${l.length}</span> listos`: ''; }
+  if(!l.length){ c.innerHTML='<div class="empty" style="padding:1rem"><p>No hay materiales</p></div>'; return; }
+  
+  const sortedItems = [...l].sort((a,b) => (a.posicion||0) - (b.posicion||0));
+  
+  c.innerHTML=sortedItems.map(m=>{
+    const est = {'pendiente':{c:'var(--ink3)',bg:'var(--surf2)',i:'fa-clock',t:'Pendiente'},'comprar':{c:'var(--amber-v)',bg:'var(--amber-l)',i:'fa-cart-shopping',t:'Comprar'},'tengo':{c:'var(--green-v)',bg:'var(--green-l)',i:'fa-check-circle',t:'Lo tengo'}}[m.estado||'pendiente'];
+    return `<div data-id="${m.id}" style="display:flex;align-items:center;padding:.5rem 0;border-bottom:1px solid var(--border);gap:.75rem; background:var(--surf);">
+      <i class="fas fa-grip-vertical drag-handle" style="color:var(--ink4); cursor:grab; font-size:0.9rem;" title="Arrastrar para ordenar"></i>
+      <button onclick="cycleMaterial('${m.id}','${dId}','${m.estado||'pendiente'}')" style="border:none;background:${est.bg};color:${est.c};padding:.3rem .6rem;border-radius:6px;font-size:.7rem;font-weight:700;cursor:pointer;min-width:85px;text-align:center;box-shadow:var(--sh-sm)"><i class="fas ${est.i}"></i> ${est.t}</button>
+      <span style="flex:1;font-size:.9rem;font-weight:500;color:${m.estado==='tengo'?'var(--ink4)':'var(--ink)'};text-decoration:${m.estado==='tengo'?'line-through':'none'}">${m.texto}</span>
+      <button class="icon-btn del" onclick="event.stopPropagation();delMaterial('${m.id}','${dId}')" style="border:none;box-shadow:none;background:transparent"><i class="fas fa-times"></i></button>
+    </div>`;
+  }).join('');
+
+  setTimeout(() => initDragAndDrop('dd-materiales', 'departamento_materiales', D.materiales[dId]), 100);
+}
+
+
+async function procesarNuevoMaterial(dId, texto) {
+    if(!D.materiales[dId]) D.materiales[dId] = [];
+    const pos = D.materiales[dId].length;
+    const tempId = 'temp_' + Date.now();
+    D.materiales[dId].push({ id: tempId, departamento_id: dId, texto: texto, estado: 'pendiente', posicion: pos });
+    renderDash();
+    if(currentDept === dId) renderMateriales(dId);
+    
+    try {
+        const { data, error } = await sb.from('departamento_materiales').insert({ departamento_id: dId, texto: texto, estado: 'pendiente', posicion: pos }).select().single();
+        if(error) throw error;
+        if (data && data.id) {
+           const idx = D.materiales[dId].findIndex(m => m.id === tempId);
+           if(idx > -1) D.materiales[dId][idx] = data;
+        }
+    } catch(e) { console.error("Error BD:", e); toast('Error guardando en la nube', 'err'); }
+}
+
+async function addMaterial() { 
+    const input = document.getElementById('matNewItem');
+    if(!input) return;
+    const t = input.value.trim(); 
+    if(!t || !currentDept) return; 
+    input.value = ''; 
+    await procesarNuevoMaterial(currentDept, t);
+    toast('Material añadido', 'ok');
+}
+
+async function addMaterialFromDash() {
+    const dId = document.getElementById('dash-new-dept-sel').value;
+    const input = document.getElementById('dash-new-item-input');
+    const text = input.value.trim();
+    if(!dId) { toast('Selecciona un departamento primero', 'warn'); return; }
+    if(!text) { toast('Escribe el material que necesitas', 'warn'); return; }
+    input.value = '';
+    await procesarNuevoMaterial(dId, text);
+    toast('Material añadido al departamento', 'ok');
+}
+
+async function addMaterialDashInline(dId) {
+    const input = document.getElementById(`new-item-${dId}`);
+    const text = input.value.trim();
+    if(!text) return;
+    input.value = '';
+    await procesarNuevoMaterial(dId, text);
+    toast('Material añadido', 'ok');
+}
+
+function editMaterialText(mId, dId) {
+    const matList = D.materiales[dId];
+    if (!matList) return;
+    const mat = matList.find(m => String(m.id) === String(mId));
+    if (!mat) return;
+    document.getElementById('editMatId').value = mId;
+    document.getElementById('editMatDeptId').value = dId;
+    document.getElementById('editMatInput').value = mat.texto;
+    om('modEditMaterial'); 
+    setTimeout(() => document.getElementById('editMatInput').focus(), 200);
+}
+
+async function saveEditedMaterial() {
+    const mId = document.getElementById('editMatId').value;
+    const dId = document.getElementById('editMatDeptId').value;
+    const nuevoTexto = document.getElementById('editMatInput').value.trim();
+    if (!nuevoTexto) { toast('El texto no puede estar vacío', 'err'); return; }
+    const mat = D.materiales[dId].find(m => String(m.id) === String(mId));
+    if (mat) {
+        mat.texto = nuevoTexto; 
+        renderDash();
+        if (currentDept === dId) renderMateriales(dId);
+        cm('modEditMaterial'); 
+        try {
+            if (!String(mId).startsWith('temp_')) {
+                const dbId = isNaN(mId) ? mId : Number(mId); 
+                const { error } = await sb.from('departamento_materiales').update({ texto: nuevoTexto }).eq('id', dbId);
+                if (error) throw error;
+            }
+            toast('Material actualizado', 'ok');
+        } catch(e) { console.error(e); toast('Error al guardar en la base de datos', 'err'); }
+    }
+}
+
+async function cycleMaterial(id, did, curr) { 
+  const next = curr === 'pendiente' ? 'comprar' : curr === 'comprar' ? 'tengo' : 'pendiente'; 
+  const it = D.materiales[did].find(m => String(m.id) === String(id)); 
+  if(it) { 
+      it.estado = next; 
+      if(currentDept === did) renderMateriales(did); 
+      renderDash(); 
+  }
+  try { 
+    if(!String(id).startsWith('temp_')) {
+        const dbId = isNaN(id) ? id : Number(id);
+        const { error } = await sb.from('departamento_materiales').update({estado: next}).eq('id', dbId); 
+        if (error) throw error;
+    }
+  } catch(e) { console.error("Error DB al cambiar estado:", e); toast('Error al guardar estado en la nube', 'err'); } 
+}
+
+async function delMaterial(id, did) { 
+  if(!confirm('¿Eliminar este material?')) return;
+  D.materiales[did] = (D.materiales[did] || []).filter(m => String(m.id) !== String(id)); 
+  if(currentDept === did) renderMateriales(did); 
+  renderDash(); 
+  try { 
+    if(!String(id).startsWith('temp_')) {
+        const dbId = isNaN(id) ? id : Number(id);
+        const { error } = await sb.from('departamento_materiales').delete().eq('id', dbId); 
+        if (error) throw error;
+    }
+  } catch(e) { console.error("Error DB al borrar:", e); toast('Error al borrar de la base de datos', 'err'); } 
+}
+
+/* ═══════════════════════════════════════
+   🎵 ALABANZA
+═══════════════════════════════════════ */
+function songFilter(val,btn) { 
+  songFilterVal=val; 
+  document.querySelectorAll('#page-alabanza .tab').forEach(t=>t.classList.remove('active')); 
+  if(btn) btn.classList.add('active'); 
+  renderAlabanza(); 
+}
+
+function renderAlabanza() {
+  let s=D.canciones;
+  if(songFilterVal) s=s.filter(x=>x.estado===songFilterVal);
+  
+  const sl=document.getElementById('song-list'), se=document.getElementById('song-empty');
+  
+  if(!s.length) {
+      sl.innerHTML='';
+      se.style.display='block';
+  } else {
+      se.style.display='none';
+      sl.innerHTML = s.map(c => {
+          const stateColors = { confirmado: 'green', pendiente: 'amber', quizas: 'ink3' };
+          const sCol = stateColors[c.estado] || 'ink3';
+          const pT = { confirmado: 'Confirmada', pendiente: 'Pendiente', quizas: 'Quizás' }[c.estado] || c.estado;
+          
+          const cantHTML = (c.cantantes || []).map(id => `<span style="display:inline-flex; align-items:center; gap:4px; background:var(--rose-l); color:var(--rose-v); border:1px solid var(--rose-m); padding:3px 10px; border-radius:99px; font-size:0.75rem; font-weight:700; box-shadow:0 2px 4px rgba(225,29,72,0.05);"><i class="fas fa-microphone" style="font-size:0.65rem;"></i> ${pName(id).split(' ')[0]}</span>`).join('');
+          const instHTML = (c.instrumentistas || []).map(id => `<span style="display:inline-flex; align-items:center; gap:4px; background:var(--sky-l); color:var(--sky-d); border:1px solid var(--sky-m); padding:3px 10px; border-radius:99px; font-size:0.75rem; font-weight:700; box-shadow:0 2px 4px rgba(3,105,161,0.05);"><i class="fas fa-guitar" style="font-size:0.65rem;"></i> ${pName(id).split(' ')[0]}</span>`).join('');
+          const chipsHTML = cantHTML + instHTML || '<span style="font-size:0.75rem; color:var(--ink4); font-style:italic; padding:4px 0;"><i class="fas fa-circle-exclamation"></i> Sin músicos asignados</span>';
+
+          return `
+          <div style="background:var(--surf); border:1px solid var(--border); border-radius:16px; padding:1.25rem; margin-bottom:1.25rem; box-shadow:0 4px 12px rgba(15,23,42,0.03); transition:all 0.2s ease; position:relative; overflow:hidden;" onmouseover="this.style.transform='translateY(-3px)'; this.style.borderColor='var(--amber-m)'; this.style.boxShadow='0 8px 24px rgba(15,23,42,0.06)';" onmouseout="this.style.transform='none'; this.style.borderColor='var(--border)'; this.style.boxShadow='0 4px 12px rgba(15,23,42,0.03)';">
+              
+              <i class="fas fa-music" style="position:absolute; right:-10px; bottom:-15px; font-size:6rem; opacity:0.03; color:var(--amber-v); pointer-events:none; transform:rotate(-15deg);"></i>
+              
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1rem; position:relative; z-index:2; flex-wrap:wrap; gap:1rem;">
+                  <div style="display:flex; gap:1rem; align-items:flex-start;">
+                      <div style="width:48px; height:48px; border-radius:12px; background:linear-gradient(135deg, var(--amber-l), #fef3c7); color:var(--amber-v); display:flex; align-items:center; justify-content:center; font-size:1.4rem; flex-shrink:0; border:1px solid var(--amber-m); box-shadow:0 4px 10px rgba(245,158,11,0.1);">
+                          <i class="fas fa-music"></i>
+                      </div>
+                      <div>
+                          <div style="font-family:'Lora', serif; font-size:1.3rem; font-weight:700; color:var(--ink); line-height:1.2; margin-bottom:0.2rem;">${c.titulo}</div>
+                          <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+                              <span style="font-size:0.8rem; color:var(--ink3); font-weight:600;">${c.artista || 'Autor desconocido'}</span>
+                              ${c.tono ? `<span style="background:var(--amber-l); color:var(--amber-v); padding:2px 8px; border-radius:6px; font-size:0.65rem; font-weight:800; border:1px solid var(--amber-m);">${c.tono}</span>` : ''}
+                              <span style="font-size:0.65rem; background:var(--surf2); color:var(--ink3); padding:2px 6px; border-radius:4px; font-weight:700;"><i class="far fa-clock"></i> ${c.dur || 4}m</span>
+                          </div>
+                      </div>
+                  </div>
+                  
+                  <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+                      <span style="font-size:0.65rem; font-weight:800; text-transform:uppercase; padding:0.3rem 0.8rem; border-radius:8px; background:var(--${sCol}${sCol==='ink3'?'':'-l'}); color:var(--${sCol}${sCol==='ink3'?'':'-v'}); border:1px solid rgba(0,0,0,0.05); letter-spacing:0.05em; margin-right:0.5rem;">${pT}</span>
+                      <button class="icon-btn edit" onclick="openModSongEdit('${c.id}')" title="Editar Canción"><i class="fas fa-pen"></i></button>
+                      <button class="icon-btn del" onclick="delSong('${c.id}')" title="Borrar Canción"><i class="fas fa-trash"></i></button>
+                  </div>
+              </div>
+              
+              <div style="padding-top:1rem; border-top:1px dashed var(--border2); display:flex; gap:0.5rem; flex-wrap:wrap; position:relative; z-index:2;">
+                  ${chipsHTML}
+              </div>
+          </div>`;
+      }).join('');
+  }
+
+  // ESTADÍSTICAS LATERALES DE CANTANTES 
+  const sM={}; 
+  D.canciones.forEach(c=>{ 
+    if(c.estado==='confirmado'){ 
+      (c.cantantes||[]).forEach(id=>{ if(!sM[id])sM[id]={t:0,c:0,i:0}; sM[id].t++; sM[id].c++; }); 
+      (c.instrumentistas||[]).forEach(id=>{ if(!sM[id])sM[id]={t:0,c:0,i:0}; sM[id].t++; sM[id].i++; }); 
+    } 
+  }); 
+  const ids=Object.keys(sM).sort((a,b)=>sM[b].t-sM[a].t);
+  
+  document.getElementById('singer-stats').innerHTML = ids.length ? ids.map(id => { 
+    let bdg=''; 
+    if(sM[id].c>0)bdg+=`<span style="font-size:0.65rem; background:var(--rose-l); color:var(--rose-v); padding:2px 6px; border-radius:4px; margin-right:4px; font-weight:700;"><i class="fas fa-microphone"></i> ${sM[id].c}</span>`; 
+    if(sM[id].i>0)bdg+=`<span style="font-size:0.65rem; background:var(--sky-l); color:var(--sky-d); padding:2px 6px; border-radius:4px; font-weight:700;"><i class="fas fa-guitar"></i> ${sM[id].i}</span>`; 
+    return `
+    <div style="display:flex; align-items:center; justify-content:space-between; padding:0.75rem 0; border-bottom:1px dashed var(--border2);">
+        <div style="display:flex; align-items:center; gap:0.75rem;">
+            <div class="av av-sm" style="background:${pColor(id)}; box-shadow:0 2px 4px rgba(0,0,0,0.1);">${ini(pName(id))}</div>
+            <div>
+                <div style="font-size:0.85rem; font-weight:700; color:var(--ink);">${pName(id).split(' ')[0]}</div>
+                <div style="margin-top:4px;">${bdg}</div>
+            </div>
+        </div>
+        <span style="font-size:1.1rem; font-weight:900; color:var(--ink); background:var(--surf2); width:32px; height:32px; display:flex; align-items:center; justify-content:center; border-radius:8px;">${sM[id].t}</span>
+    </div>`; 
+  }).join('') : '<div class="empty"><i class="fas fa-microphone-slash" style="font-size:1.5rem; margin-bottom:10px;"></i><p>Sin participaciones</p></div>';
+}
+
+function openModSong() { 
+  const aId=getAlabanzaDeptId(); 
+  document.getElementById('sId').value=''; 
+  ['sTit','sArt','sNot','sTono'].forEach(id=>document.getElementById(id).value=''); 
+  document.getElementById('sDur').value='4'; 
+  document.getElementById('sEst').value='confirmado'; 
+  buildPicker('sCantPick',[],aId); 
+  buildPicker('sInstPick',[],aId); 
+  om('modSong'); 
+}
+
+function openModSongEdit(id) { 
+  const aId=getAlabanzaDeptId(); 
+  const c=D.canciones.find(x=>x.id===id); if(!c)return; 
+  document.getElementById('sId').value=c.id; 
+  document.getElementById('sTit').value=c.titulo; 
+  document.getElementById('sArt').value=c.artista||''; 
+  document.getElementById('sTono').value=c.tono||''; 
+  document.getElementById('sDur').value=c.dur||4; 
+  document.getElementById('sEst').value=c.estado||'confirmado'; 
+  document.getElementById('sNot').value=c.notas||''; 
+  buildPicker('sCantPick',c.cantantes||[],aId); 
+  buildPicker('sInstPick',c.instrumentistas||[],aId); 
+  om('modSong'); 
+}
+
+async function saveSong() { 
+  const t = document.getElementById('sTit').value.trim(); 
+  if(!t) { toast('El título es obligatorio', 'err'); return; } 
+
+  const btn = document.querySelector('#modSong .btn-primary');
+  if(btn.disabled) return;
+  btn.disabled = true;
+  const originalHtml = btn.innerHTML;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+
+  const ca = getSelected('sCantPick'), inst = getSelected('sInstPick');
+  const obj = {
+    titulo: t, artista: document.getElementById('sArt').value.trim(),
+    tono: document.getElementById('sTono').value, duracion: parseInt(document.getElementById('sDur').value) || 4,
+    estado: document.getElementById('sEst').value, notas: document.getElementById('sNot').value
+  };
+  const eid = document.getElementById('sId').value; 
+
+  try { 
+    let cid = eid; 
+    if(eid) { await sb.from('canciones').update(obj).eq('id', eid); } 
+    else {
+      const {data, error} = await sb.from('canciones').insert(obj).select().single();
+      if(error) throw error; cid = data.id;
+    } 
+
+    await sb.from('cancion_cantantes').delete().eq('cancion_id', cid); 
+    const inserts = []; 
+    ca.forEach(pid => inserts.push({cancion_id: cid, persona_id: pid, rol: 'cantante'})); 
+    inst.forEach(pid => inserts.push({cancion_id: cid, persona_id: pid, rol: 'instrumentista'})); 
+    if(inserts.length) await sb.from('cancion_cantantes').insert(inserts); 
+
+    const loc = {id: cid, ...obj, dur: obj.duracion, cantantes: ca, instrumentistas: inst}; 
+    if(eid) { const song = D.canciones.find(c => String(c.id) === String(eid)); if(song) Object.assign(song, loc); } 
+    else { D.canciones.push(loc); } 
+
+    cm('modSong'); renderAlabanza(); toast(eid ? 'Canción actualizada' : 'Canción guardada', 'ok'); 
+  } catch(e) { console.error(e); toast('Error al guardar', 'err'); } 
+  finally { btn.disabled = false; btn.innerHTML = originalHtml; }
+}
+
+async function delSong(id) { 
+  if(!confirm('¿Seguro que quieres borrar esta canción?')) return; 
+  try {
+    await sb.from('cancion_cantantes').delete().eq('cancion_id', id);
+    const { error } = await sb.from('canciones').delete().eq('id', id);
+    if(error) throw error;
+    D.canciones = D.canciones.filter(c => c.id !== id);
+    renderAlabanza(); renderDash(); toast('Canción borrada', 'info');
+  } catch(e) { console.error(e); toast('Error al borrar', 'err'); } 
+}
+
+/* ═══════════════════════════════════════
+   📖 PROGRAMA DEL CULTO
+═══════════════════════════════════════ */
+function selectSvc(id) { 
+    currentSvcId = String(id); 
+    const btn = document.getElementById('btnAddItem');
+    if(btn) btn.disabled = false;
+    renderProg(); 
+}
+
+function renderProg() {
+  if (D.servicios.length > 0 && !currentSvcId) currentSvcId = String(D.servicios[0].id);
+
+  const btnAdd = document.getElementById('btnAddItem');
+  if(btnAdd) btnAdd.disabled = !currentSvcId;
+
+  const selContainer = document.getElementById('custom-svc-selector');
+  if (selContainer) {
+    if (!D.servicios.length) {
+      selContainer.innerHTML = '';
+    } else {
+      selContainer.innerHTML = D.servicios.map(s => {
+        const isAct = String(s.id) === String(currentSvcId) ? 'active' : '';
+        const f = s.fecha ? s.fecha.split('-').reverse().join('/') : '';
+        return `
+        <div class="svc-card ${isAct}" onclick="selectSvc('${s.id}')">
+            <div class="svc-card-title">${s.nombre}</div>
+            <div class="svc-card-date"><i class="far fa-clock"></i> ${f} · ${s.hora||''}</div>
+        </div>`;
+      }).join('');
+    }
+  }
+
+  const btnDel = document.getElementById('btnDelSvc');
+  const tl = document.getElementById('prog-timeline');
+  
+  if(!currentSvcId){ 
+    if(btnDel) btnDel.style.display = 'none'; 
+    tl.innerHTML = '<div class="empty">Crea un nuevo culto primero</div>'; 
+    document.getElementById('prog-timebar').innerHTML = '';
+    document.getElementById('prog-side-panel').innerHTML = '';
+    return; 
+  }
+  
+  if(btnDel) {
+      btnDel.style.display = 'inline-flex';
+      const actionsContainer = btnDel.parentElement;
+      const oldEditBtn = document.getElementById('btnEditSvc');
+      if (oldEditBtn) oldEditBtn.remove();
+      const editBtn = document.createElement('button');
+      editBtn.id = 'btnEditSvc';
+      editBtn.className = 'icon-btn';
+      editBtn.style.cssText = 'color: var(--primary-d); border-color: var(--primary-m); background: var(--primary-l); width: 32px; height: 32px; border-radius: 7px; margin-right: 0.5rem;';
+      editBtn.title = 'Editar Culto Actual';
+      editBtn.innerHTML = '<i class="fas fa-pen"></i>';
+      editBtn.onclick = () => openModSvcEdit(currentSvcId);
+      actionsContainer.insertBefore(editBtn, btnDel);
+  }
+
+  const svc = D.servicios.find(x => String(x.id) === String(currentSvcId)); 
+  if(!svc) return; 
+  
+  const p = svc.prog || [];
+  if(!p.length) {
+      tl.innerHTML = '<div class="empty">Añade elementos al programa</div>'; 
+  } else { 
+    let [hh,mm] = (svc.hora||'00:00').split(':').map(Number); 
+    let currentMins = hh * 60 + mm; 
+    
+    tl.innerHTML = '<div class="prog-timeline-container" id="prog-sortable-list">' + p.map(i => { 
+      const c = TC[i.tipo] || TC.anuncio;
+      let displayH = Math.floor(currentMins / 60) % 24; 
+      let displayM = currentMins % 60;
+      const ts = String(displayH).padStart(2, '0') + ':' + String(displayM).padStart(2, '0');
+      currentMins += parseInt(i.dur) || 0; 
+      
+      let asignadosHtml = '';
+      if (i.asignados && i.asignados.length > 0) {
+          if (i.asignados.length <= 3) {
+              asignadosHtml = '<div style="display:flex; flex-wrap:wrap; gap:0.4rem;">' + i.asignados.map(id => `<span style="display:inline-flex; align-items:center; gap:6px; background:var(--surf); padding:3px 8px; border-radius:6px; border:1px solid var(--border); font-size:0.75rem; font-weight:600; color:var(--ink);"><div class="av" style="width:16px;height:16px;font-size:0.45rem;background:${pColor(id)}">${ini(pName(id))}</div> ${pName(id)}</span>`).join('') + '</div>';
+          } else {
+              asignadosHtml = `<div class="av-stack" style="display:flex; flex-wrap:wrap; gap:2px;">` + i.asignados.map((id, index) => `<div class="av av-sm" style="background:${pColor(id)}; border: 2px solid var(--surf2); margin-left: ${index > 0 ? '-8px' : '0'}; z-index:${20-index};" title="${pName(id)}">${ini(pName(id))}</div>`).join('') + `</div>`;
+          }
+      } else {
+          asignadosHtml = '<span style="font-size:0.75rem; color:var(--ink4); font-style:italic;">Sin asignar</span>';
+      }
+
+      return `
+      <div class="prog-item-pro" data-id="${i.id}">
+        <div class="prog-time-pro"><div class="prog-time-main">${ts}</div><div class="prog-time-dur">${i.dur} min</div></div>
+        <div class="prog-dot-pro" style="border-color: ${c.c}"></div>
+        
+        <div class="prog-card-pro" style="background:var(--surf); border:1px solid var(--border); border-left:4px solid ${c.c}; border-radius:12px; box-shadow:var(--sh-sm); display:flex; flex-direction:column; overflow:hidden; padding:0; transition:all 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='var(--sh-lg)';" onmouseout="this.style.transform='none'; this.style.boxShadow='var(--sh-sm)';">
+            
+            <div style="padding:1rem 1.25rem;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.6rem; gap:1rem; flex-wrap:wrap;">
+                    <div style="display:flex; align-items:center; gap:0.5rem;">
+                        <i class="fas fa-grip-vertical drag-handle" style="color:var(--border2); cursor:grab; font-size:1rem; padding-right:5px;" title="Arrastrar para ordenar"></i>
+                        <span style="background:${hexLight(c.c, 0.1)}; color:${c.c}; padding:3px 10px; border-radius:99px; font-size:0.65rem; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; border:1px solid ${hexLight(c.c, 0.2)}; display:inline-flex; align-items:center; gap:4px;">
+                            <i class="fas ${c.i}"></i> ${c.l}
+                        </span>
+                    </div>
+                </div>
+                <div style="font-family:'Lora', serif; font-size:1.3rem; font-weight:700; color:var(--ink); margin-bottom:0.5rem; line-height:1.2;">${i.titulo||'—'}</div>
+                ${i.notas ? `<div style="font-size:0.85rem; color:var(--ink3); margin-bottom:0.5rem; line-height:1.4;">${i.notas}</div>` : ''}
+                ${i.recursos ? `<div style="font-size:0.8rem; background:var(--amber-l); color:var(--amber-v); padding:0.5rem 0.8rem; border-radius:8px; border:1px dashed var(--amber-m); font-weight:600; margin-top:0.5rem; display:inline-block;"><i class="fas fa-box-open"></i> Logística: ${i.recursos}</div>` : ''}
+            </div>
+
+            <div style="padding:0.75rem 1.25rem; background:var(--surf2); border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; gap:1rem; flex-wrap:wrap;">
+                <div style="display:flex; flex-wrap:wrap; flex:1; min-width:150px;">
+                    ${asignadosHtml}
+                </div>
+                <div style="display:flex; gap:0.5rem; flex-shrink:0;">
+                    <button class="icon-btn edit" onclick="openModItemEdit('${i.id}','${currentSvcId}')" style="width:28px;height:28px;border:none;background:var(--surf);box-shadow:var(--sh-sm);"><i class="fas fa-pen" style="font-size:0.7rem;"></i></button>
+                    <button class="icon-btn del" onclick="delItem('${i.id}','${currentSvcId}')" style="width:28px;height:28px;border:none;background:var(--red-l);color:var(--red-v);box-shadow:var(--sh-sm);"><i class="fas fa-trash" style="font-size:0.7rem;"></i></button>
+                </div>
+            </div>
+        </div>
+      </div>`; 
+    }).join('') + '</div>'; 
+  }
+  
+  const td={}; p.forEach(i=>{td[i.tipo]=(td[i.tipo]||0)+(parseInt(i.dur)||0);}); 
+  const tot=Object.values(td).reduce((a,v)=>a+v,0); 
+  document.getElementById('prog-timebar').innerHTML=Object.keys(td).sort((a,b)=>td[b]-td[a]).map(t=>`<div style="display:flex;justify-content:space-between;font-size:.8rem;margin-bottom:.6rem; align-items:center;"><span style="color:var(--ink3); display:flex; align-items:center; gap:8px;"><span style="width:26px; height:26px; border-radius:8px; background:${TC[t].bg}; color:${TC[t].c}; display:flex; align-items:center; justify-content:center;"><i class="fas ${TC[t].i}" style="font-size:.8rem;"></i></span> ${TC[t].l}</span><strong style="color:var(--ink)">${td[t]} min</strong></div>`).join('')+`<div style="border-top:1px dashed var(--border2);margin-top:1rem;padding-top:1rem;display:flex;justify-content:space-between;font-size:1.1rem;font-family:'Lora',serif;font-weight:700"><span>Total</span><span style="color:var(--primary)">${tot} min</span></div>`;
+  const pc={}; p.forEach(i=>{(i.asignados||[]).forEach(id=>{if(!pc[id])pc[id]=0;pc[id]++;});}); 
+  document.getElementById('prog-side-panel').innerHTML=Object.keys(pc).sort((a,b)=>pc[b]-pc[a]).map(id=>`<div style="display:flex;align-items:center;gap:.75rem;padding:.6rem 0;border-bottom:1px solid var(--border)"><div class="av av-sm" style="background:${pColor(id)}">${ini(pName(id))}</div><div style="flex:1;font-size:.85rem;font-weight:600">${pName(id).split(' ')[0]} ${pBadges(id)}</div><div style="font-weight:700;color:var(--primary);background:var(--primary-l);padding:.1rem .5rem;border-radius:99px;font-size:.7rem">${pc[id]}</div></div>`).join('');
+
+  setTimeout(() => initDragAndDropProg('prog-sortable-list', currentSvcId), 100);
+}
+function initDragAndDropProg(containerId, svcId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    Sortable.create(container, {
+        animation: 150,
+        handle: '.drag-handle',
+        ghostClass: 'sortable-ghost',
+        onEnd: async function () {
+            const tarjetas = container.querySelectorAll('.prog-item-pro');
+            const svc = D.servicios.find(x => String(x.id) === String(svcId));
+            if (!svc) return;
+
+            const actualizaciones = [];
+            tarjetas.forEach((tarjeta, index) => {
+                const id = tarjeta.getAttribute('data-id');
+                actualizaciones.push({ id: id, posicion: index });
+                const itemLocal = svc.prog.find(x => String(x.id) === String(id));
+                if(itemLocal) itemLocal.posicion = index;
+            });
+
+            svc.prog.sort((a, b) => (a.posicion || 0) - (b.posicion || 0));
+            renderProg(); 
+
+            try {
+                await Promise.all(
+                    actualizaciones.map(u => {
+                        const dbId = isNaN(u.id) ? u.id : Number(u.id);
+                        return sb.from('programa_items').update({ posicion: u.posicion }).eq('id', dbId);
+                    })
+                );
+                toast('Orden actualizado', 'ok');
+            } catch (e) {
+                console.error(e);
+                toast('Error al guardar el orden', 'err');
+            }
+        }
+    });
+}
+
+function openModSvc() { 
+  let inputId = document.getElementById('svId');
+  if(!inputId) {
+      inputId = document.createElement('input');
+      inputId.type = 'hidden';
+      inputId.id = 'svId';
+      document.getElementById('modSvc').querySelector('.mbox').appendChild(inputId);
+  }
+  inputId.value = ''; 
+  ['svNom'].forEach(id=>document.getElementById(id).value=''); 
+  document.getElementById('svHor').value='10:00'; 
+  document.getElementById('svFec').value=new Date().toISOString().split('T')[0]; 
+  document.querySelector('#modSvc .mhd h3').textContent = 'Nuevo Culto';
+  document.querySelector('#modSvc .btn-primary').textContent = 'Crear';
+  om('modSvc'); 
+}
+function openModSvcEdit(id) { 
+  const svc = D.servicios.find(x => String(x.id) === String(id));
+  if(!svc) return;
+  
+  let inputId = document.getElementById('svId');
+  if(!inputId) {
+      inputId = document.createElement('input');
+      inputId.type = 'hidden';
+      inputId.id = 'svId';
+      document.getElementById('modSvc').querySelector('.mbox').appendChild(inputId);
+  }
+  inputId.value = svc.id; 
+  
+  document.getElementById('svNom').value = svc.nombre; 
+  document.getElementById('svHor').value = svc.hora || '10:00'; 
+  document.getElementById('svFec').value = svc.fecha || new Date().toISOString().split('T')[0]; 
+  document.querySelector('#modSvc .mhd h3').textContent = 'Editar Culto';
+  document.querySelector('#modSvc .btn-primary').textContent = 'Guardar Cambios';
+  om('modSvc'); 
+}
+
+async function saveSvc() { 
+  const n=document.getElementById('svNom').value.trim(); if(!n)return; 
+  const eid = document.getElementById('svId') ? document.getElementById('svId').value : '';
+  const obj = { nombre: n, fecha: document.getElementById('svFec').value, hora: document.getElementById('svHor').value };
+
+  try{
+    if(eid) {
+        const {error} = await sb.from('servicios').update(obj).eq('id', eid);
+        if(error) throw error;
+        Object.assign(D.servicios.find(x => String(x.id) === String(eid)), obj);
+        toast('Culto actualizado','ok');
+    } else {
+        const{data,error}=await sb.from('servicios').insert(obj).select().single();
+        if(error)throw error;
+        D.servicios.push({...data,prog:[]});
+        currentSvcId = String(data.id);
+        toast('Culto creado','ok');
+    }
+    cm('modSvc');
+    renderProg();
+  } catch(e) { console.error(e); toast('Error al guardar', 'err'); } }
+
+async function delSvc() {
+  if(!currentSvcId) return;
+  if(!confirm('¿Eliminar este culto?')) return;
+  try {
+    await sb.from('servicios').delete().eq('id', currentSvcId);
+    D.servicios = D.servicios.filter(s => String(s.id) !== String(currentSvcId));
+    currentSvcId = null;
+    renderProg();
+    toast('Culto eliminado', 'info');
+  } catch(e) { console.error(e); }
+}
+
+function openModItem() { 
+  if(!currentSvcId) {
+     toast('⚠️ Debes crear o seleccionar un Culto primero', 'err');
+     return;
+  }
+  editingItem=null; 
+  document.getElementById('itId').value=''; 
+  document.getElementById('itTit').value=''; 
+  document.getElementById('itNot').value=''; 
+  document.getElementById('itRec').value=''; 
+  document.getElementById('itTipo').value='cancion'; 
+  document.getElementById('itEst').value='confirmado'; 
+  onItTipo(); 
+  om('modItem'); 
+}
+
+function onSongSelect() {
+  const sid = document.getElementById('itRef').value;
+  if(!sid) return;
+  const song = D.canciones.find(c => String(c.id) === String(sid));
+  if(song) {
+    document.getElementById('itTit').value = song.titulo;
+    document.getElementById('itDur').value = song.dur || 5;
+    const asg = [...new Set([...(song.cantantes||[]), ...(song.instrumentistas||[])])];
+    buildPicker('itPick', asg, getAlabanzaDeptId());
+  }
+}
+function openModItemEdit(iid, sid) { 
+  const s=(D.servicios||[]).find(x=>x.id===sid), i=(s.prog||[]).find(x=>x.id===iid); 
+  if(!i)return; 
+  editingItem={iid,sid}; 
+  document.getElementById('itId').value=iid; 
+  document.getElementById('itTipo').value=i.tipo; 
+  document.getElementById('itDur').value=i.dur||5; 
+  document.getElementById('itTit').value=i.titulo||''; 
+  document.getElementById('itNot').value=i.notas||''; 
+  document.getElementById('itRec').value=i.recursos||''; 
+  document.getElementById('itEst').value=i.estado||'confirmado'; 
+  onItTipo(); 
+  buildPicker('itPick', i.asignados||[], i.tipo==='cancion' ? getAlabanzaDeptId() : ''); 
+  om('modItem'); 
+}
+
+async function saveItem() { 
+  const t=document.getElementById('itTipo').value, tit=document.getElementById('itTit').value.trim(), dur=parseInt(document.getElementById('itDur').value)||5, not=document.getElementById('itNot').value.trim(), rec=document.getElementById('itRec').value.trim(), est=document.getElementById('itEst').value, asg=getSelected('itPick');
+  if(!currentSvcId)return; 
+  const svc=D.servicios.find(x=>x.id===currentSvcId);
+  const eid=document.getElementById('itId').value, pos=eid?(svc.prog.find(i=>i.id===eid)?.posicion||0):svc.prog.length, obj={servicio_id:currentSvcId,tipo:t,titulo:tit,duracion:dur,notas:not,recursos:rec,estado:est,posicion:pos}; 
+  try { 
+    let iid=eid; 
+    if(eid){ await sb.from('programa_items').update(obj).eq('id',eid); }
+    else { const{data,error}=await sb.from('programa_items').insert(obj).select().single(); if(error)throw error; iid=data.id; } 
+    await sb.from('programa_asignados').delete().eq('item_id',iid); 
+    if(asg.length)await sb.from('programa_asignados').insert(asg.map(pid=>({item_id:iid,persona_id:pid}))); 
+    const loc={id:iid,...obj,dur,asignados:asg}; 
+    if(eid){ Object.assign(svc.prog.find(i=>i.id===eid),loc); }
+    else { svc.prog.push(loc); } 
+    cm('modItem'); renderProg(); toast('Guardado','ok'); 
+  }catch(e){ console.error(e); } 
+}
+
+function onItTipo() { 
+  const t = document.getElementById('itTipo').value;
+  const titLbl = document.getElementById('itTitLbl');
+  const asgLbl = document.getElementById('itAsgLbl');
+  const asgGrp = document.getElementById('itAsgGrp');
+  const refGrp = document.getElementById('itRefGrp');
+
+  if(titLbl) titLbl.textContent = t==='cancion'?'Canción':t==='predicacion'?'Tema de la Predicación':t==='devocional'?'Tema del Devocional':'Título';
+  if(asgLbl) asgLbl.textContent = t==='cancion'?'Dirigen / Participan':t==='predicacion'?'Predicador/a':t==='devocional'?'A cargo de':'Personas Asignadas';
+  if(asgGrp) asgGrp.style.display = t==='pausa'?'none':'block'; 
+  
+  if(!editingItem) {
+    const duraciones = {cancion:5, devocional:10, predicacion:35, oracion:5, comunion:15, bienvenida:5, ofrendas:5, anuncio:3, pausa:10};
+    document.getElementById('itDur').value = duraciones[t] || 5; 
+  }
+  
+  if(refGrp){
+    if(t==='cancion'){
+      refGrp.style.display = 'block';
+      document.getElementById('itRef').innerHTML = '<option value="">— Escribir título manual —</option>' + (D.canciones || []).map(c=>`<option value="${c.id}">${c.titulo} (${c.artista||'Autor desc.'})</option>`).join('');
+      if(!editingItem) buildPicker('itPick',[], getAlabanzaDeptId());
+    } else {
+      refGrp.style.display = 'none';
+      if(!editingItem) buildPicker('itPick',[]);
+    } 
+  }
+}
+
+async function delItem(iid, sid) { 
+    if(!confirm('¿Borrar elemento?')) return; 
+    try {
+        await sb.from('programa_items').delete().eq('id', iid); 
+        const svc = D.servicios.find(x => String(x.id) === String(sid));
+        if (svc) {
+            svc.prog = svc.prog.filter(i => String(i.id) !== String(iid));
+        }
+        renderProg(); 
+        toast('Elemento borrado', 'info');
+    } catch(e) {
+        console.error(e);
+        toast('Error al borrar', 'err');
+    }
+}
+
+/* ═══════════════════════════════════════
+   🎯 GRUPOS Y JUEGOS
+═══════════════════════════════════════ */
+function renderGruposStats() {
+    const asignados = D.grupos.reduce((acc,g)=>acc+(g.miembros||[]).length, 0), faltan = D.personas.length - asignados;
+    document.getElementById('g-stats-overview').innerHTML = `<div><div style="font-size:2rem;font-weight:800;color:var(--primary)">${D.personas.length}</div><div style="font-size:.75rem;color:var(--ink3);text-transform:uppercase;">Asistentes</div></div><div><div style="font-size:2rem;font-weight:800;color:var(--green-v)">${asignados}</div><div style="font-size:.75rem;color:var(--ink3);text-transform:uppercase;">En Equipos</div></div><div><div style="font-size:2rem;font-weight:800;color:var(--red-v)">${faltan}</div><div style="font-size:.75rem;color:var(--ink3);text-transform:uppercase;">Sin equipo</div></div>`;
+    renderGruposCards();
+}
+
+function renderGruposCards() {
+    document.getElementById('grupos-grid').innerHTML = D.grupos.map(g => {
+        const barColor = g.color || '#ea580c';
+        const bgGradient = `linear-gradient(to bottom, ${hexLight(barColor, 0.04)}, var(--surf) 40%)`;
+        const borderColor = hexLight(barColor, 0.25);
+        const totalOcup = (g.miembros||[]).length + (g.portavoz_id ? 1 : 0);
+
+        const getNameWithTag = (id) => {
+            const person = D.personas.find(p => String(p.id) === String(id));
+            if(!person) return '—';
+            let tag = pBadges(id); 
+           
+            if(person.solo_un_dia) {
+                tag += `<span style="color:var(--amber-v); font-size:0.6rem; font-weight:800; margin-left:5px; background:var(--amber-l); padding:1px 4px; border-radius:4px; border:1px solid var(--amber-m);">SOLO 1 DÍA</span>`;
+            }
+            return person.nombre + tag;
+        };
+
+        const port = g.portavoz_id ? `
+            <div style="display:flex; align-items:center; gap:0.6rem; padding:0.4rem 0; position:relative;">
+                <div style="width:24px; height:24px; border-radius:50%; background:${barColor}; color:#fff; display:flex; align-items:center; justify-content:center; font-size:0.6rem; flex-shrink:0;"><i class="fas fa-bullhorn"></i></div>
+                <div style="font-size:0.85rem; font-weight:700; color:var(--ink); flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${getNameWithTag(g.portavoz_id)}</div>
+            </div>` : '';
+
+        const memHtml = (g.miembros||[]).map(id => `
+            <div style="display:flex; align-items:center; gap:0.6rem; padding:0.4rem 0; position:relative;">
+                <div style="width:24px; height:24px; border-radius:50%; background:var(--surf3); color:var(--ink3); display:flex; align-items:center; justify-content:center; font-size:0.6rem; flex-shrink:0;"><i class="fas fa-user"></i></div>
+                <div style="font-size:0.85rem; font-weight:500; color:var(--ink); flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${getNameWithTag(id)}</div>
+            </div>
+        `).join('');
+
+        const desc = g.descripcion ? `<div style="font-size:0.75rem; color:var(--ink3); margin-bottom:0.8rem; font-style:italic; line-height:1.4;">${g.descripcion}</div>` : '';
+
+        return `
+        <div class="card" style="background:${bgGradient}; border:1px solid ${borderColor}; border-radius:12px; padding:1.25rem; box-shadow:var(--sh-sm); display:flex; flex-direction:column; position:relative; overflow:hidden; transition:all 0.2s;" onmouseover="this.style.transform='translateY(-2px)';" onmouseout="this.style.transform='none';">
+            <div style="position:absolute; top:0; left:0; right:0; height:4px; background:${barColor};"></div>
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:0.75rem; margin-bottom:1rem; margin-top:0.25rem;">
+                <div style="font-size:0.95rem; font-weight:800; color:var(--ink); display:flex; align-items:center; gap:0.6rem; flex:1; min-width:180px;">
+                    <div style="width:34px; height:34px; border-radius:8px; background:${hexLight(barColor, 0.15)}; color:${barColor}; display:flex; align-items:center; justify-content:center; font-size:1rem; flex-shrink:0;"><i class="fas fa-flag"></i></div>
+                    <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex:1;">${g.nombre}</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:0.4rem;">
+                    <div style="font-size:0.7rem; font-weight:800; color:${barColor}; background:${hexLight(barColor, 0.1)}; padding:3px 8px; border-radius:99px; border:1px solid ${hexLight(barColor, 0.2)};">
+                        ${totalOcup} pers.
+                    </div>
+                    <button class="icon-btn edit" onclick="openModGrupoEdit('${g.id}')"><i class="fas fa-pen"></i></button>
+                </div>
+            </div>
+            ${desc}
+            <div style="flex:1; max-height:220px; overflow-y:auto;">
+                ${port}
+                ${memHtml || '<div style="font-size:0.8rem; color:var(--ink4); font-style:italic;">Sin miembros</div>'}
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function openModGrupo() { 
+  document.getElementById('gId').value=''; 
+  document.getElementById('gNom').value=''; 
+  document.getElementById('gColor').value='#ea580c'; 
+  document.getElementById('gDesc').value=''; 
+
+  let ocupados = new Set();
+  D.grupos.forEach(gr => { 
+    if(gr.portavoz_id) ocupados.add(String(gr.portavoz_id)); 
+    (gr.miembros||[]).forEach(pid => ocupados.add(String(pid))); 
+  });
+  
+  let disponibles = D.personas.filter(p => !ocupados.has(String(p.id)) && p.participa_juegos !== false);
+
+  document.getElementById('gPort').innerHTML='<option value="">-- Ninguno --</option>'+disponibles.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join(''); 
+  buildPicker('gMiembrosPick', [], disponibles); 
+  om('modGrupo'); 
+}
+
+function openModGrupoEdit(id) { 
+  const g=D.grupos.find(x=>x.id===id); if(!g)return; 
+  document.getElementById('gId').value=g.id; 
+  document.getElementById('gNom').value=g.nombre; 
+  document.getElementById('gColor').value=g.color; 
+  document.getElementById('gDesc').value=g.descripcion||''; 
+
+  let ocupados = new Set();
+  D.grupos.forEach(gr => { 
+    if(gr.id !== id) { 
+      if(gr.portavoz_id) ocupados.add(String(gr.portavoz_id)); 
+      (gr.miembros||[]).forEach(pid => ocupados.add(String(pid))); 
+    } 
+  });
+  
+  let disponibles = D.personas.filter(p => (!ocupados.has(String(p.id)) && p.participa_juegos !== false) || (g.miembros||[]).includes(p.id) || g.portavoz_id === p.id);
+
+  document.getElementById('gPort').innerHTML='<option value="">-- Ninguno --</option>'+disponibles.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join(''); 
+  document.getElementById('gPort').value=g.portavoz_id||''; 
+  buildPicker('gMiembrosPick', g.miembros||[], disponibles); 
+  om('modGrupo'); 
+}
+
+async function saveGrupo() {
+  const n=document.getElementById('gNom').value.trim(); if(!n) return; 
+  const m=getSelected('gMiembrosPick'), port=document.getElementById('gPort').value||null, desc=document.getElementById('gDesc').value||null, obj={nombre:n,color:document.getElementById('gColor').value,portavoz_id:port,descripcion:desc}, eid=document.getElementById('gId').value;
+  try { 
+    let gid=eid; 
+    if(eid){ await sb.from('grupos').update(obj).eq('id',eid); }
+    else{ const{data,error}=await sb.from('grupos').insert(obj).select().single(); if(error)throw error; gid=data.id; } 
+    await sb.from('grupo_miembros').delete().eq('grupo_id',gid); 
+    if(m.length)await sb.from('grupo_miembros').insert(m.map(pid=>({grupo_id:gid,persona_id:pid}))); 
+    if(eid){ Object.assign(D.grupos.find(g=>g.id===eid),{...obj,miembros:m}); }
+    else{ D.grupos.push({id:gid,...obj,miembros:m}); } 
+    cm('modGrupo'); renderGruposStats(); toast('Guardado','ok'); 
+  }catch(e){ console.error(e); }
+}
+
+async function delGrupo(id) { 
+  if(!confirm('¿Borrar?'))return; 
+  try{ await sb.from('grupos').delete().eq('id',id); D.grupos=D.grupos.filter(g=>g.id!==id); renderGruposStats(); toast('Borrado','info'); }catch(e){ console.error(e); } 
+}
+
+function grupoTab(t,b) { 
+  currentGrupoTab=t; 
+  document.querySelectorAll('#tab-grupos,#tab-juegos,#tab-ranking').forEach(x=>{x.classList.remove('active');}); 
+  b.classList.add('active'); 
+  document.getElementById('gt-grupos').style.display=t==='grupos'?'block':'none'; 
+  document.getElementById('gt-juegos').style.display=t==='juegos'?'block':'none'; 
+  document.getElementById('gt-ranking').style.display=t==='ranking'?'block':'none'; 
+  if(t==='juegos')renderJuegos(); 
+  if(t==='ranking')renderRankingGeneral(); 
+}
+
+function renderJuegos() {
+    const l=document.getElementById('juegos-list'); 
+    if(!D.juegos.length){ l.innerHTML='<div class="empty"><p>Crea un juego primero</p></div>'; renderRankingSide(); return; }
+    
+    l.innerHTML=D.juegos.map(j=>{
+        const isFinalizado = j.estado === 'finalizado';
+        const estColor = isFinalizado ? 'var(--green-v)' : j.estado === 'en_curso' ? 'var(--amber-v)' : 'var(--ink3)';
+        const estBg = isFinalizado ? 'var(--green-l)' : j.estado === 'en_curso' ? 'var(--amber-l)' : 'var(--surf2)';
+        const estText = isFinalizado ? 'Finalizado' : j.estado === 'en_curso' ? 'En curso' : 'Pendiente';
+        const estIcon = isFinalizado ? 'fa-check-circle' : j.estado === 'en_curso' ? 'fa-play-circle' : 'fa-clock';
+        
+        const sc=D.grupos.map(g=>{ 
+            const p=(j.puntuaciones||[]).find(x=>x.grupo_id===g.id), val=p?parseInt(p.puntuacion)||0:0, pct=j.puntuacion_max>0?Math.round(val/j.puntuacion_max*100):0; 
+            return `
+            <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.75rem; padding:0.5rem; border-radius:8px; background:var(--surf2); border:1px solid var(--border); flex-wrap:wrap;">
+                <div style="display:flex; align-items:center; gap:0.5rem; flex:1; min-width:140px;">
+                    <div style="width:14px;height:14px;border-radius:4px;background:${g.color}; flex-shrink:0;"></div>
+                    <div style="font-weight:700; color:var(--ink); font-size:0.85rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex:1;">${g.nombre}</div>
+                </div>
+                <div style="display:flex; align-items:center; gap:0.5rem; width:100%; flex:2; min-width:180px;">
+                    <div style="flex:1; height:8px; background:var(--border); border-radius:99px; overflow:hidden;">
+                        <div style="height:100%; width:${pct}%; background:${g.color}; border-radius:99px; transition:width 0.5s;"></div>
+                    </div>
+                    <input class="fctl" type="number" style="width:65px; padding:0.35rem; text-align:center; font-weight:800; color:var(--primary-d); background:var(--surf); border-color:var(--border2); font-size:0.9rem; margin-left:auto;" value="${val}" onchange="updatePunt('${j.id}','${g.id}',this.value)">
+                </div>
+            </div>`; 
+        }).join('');
+        
+        const mat = j.materiales ? `<div style="font-size:.75rem;color:var(--ink3);margin-top:.5rem; display:inline-flex; align-items:center; gap:4px; background:var(--amber-l); color:var(--amber-v); padding:4px 8px; border-radius:6px; max-width:100%;"><i class="fas fa-box-open"></i> <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${j.materiales}</span></div>` : '';
+        const des = j.descripcion ? `<div style="font-size:.85rem;color:var(--ink2);margin-top:.8rem;font-style:italic; background:var(--surf2); padding:0.8rem; border-radius:8px; border-left:3px solid var(--border2); line-height:1.4;">${j.descripcion}</div>` : '';
+        
+        return `
+        <div class="card" style="margin-bottom:1.5rem; border-top:4px solid ${estColor}; box-shadow:var(--sh-sm); transition:all 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='var(--sh-lg)';" onmouseout="this.style.transform='none'; this.style.boxShadow='var(--sh-sm)';">
+            <div style="padding:1.25rem; border-bottom:1px solid var(--border); display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:1rem; background:var(--surf);">
+                <div style="flex:1; min-width:200px;">
+                    <div style="display:flex; align-items:center; flex-wrap:wrap; gap:0.8rem; margin-bottom:0.4rem;">
+                        <div style="width:36px; height:36px; border-radius:8px; background:${estBg}; color:${estColor}; display:flex; align-items:center; justify-content:center; font-size:1.1rem; flex-shrink:0;"><i class="fas fa-gamepad"></i></div>
+                        <h3 style="font-size:1.2rem; font-weight:800; color:var(--ink); margin:0; word-break:break-word;">${j.nombre}</h3>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap; margin-top:0.5rem;">
+                        <span style="font-size:0.65rem; font-weight:800; text-transform:uppercase; padding:0.2rem 0.6rem; border-radius:6px; background:${estBg}; color:${estColor}; border:1px solid ${hexLight(estColor, 0.3)};"><i class="fas ${estIcon}"></i> ${estText}</span>
+                        <span style="font-size:.75rem;color:var(--ink3); font-weight:600;">${j.tipo} · Máx: <strong style="color:var(--ink);">${j.puntuacion_max} pts</strong></span>
+                    </div>
+                    ${mat}${des}
+                </div>
+                <div style="display:flex; gap:0.4rem;">
+                    <button class="icon-btn edit" style="border:none;background:var(--surf2);box-shadow:var(--sh-sm); width:32px; height:32px;" onclick="openModJuegoEdit('${j.id}')"><i class="fas fa-pen"></i></button>
+                    <button class="icon-btn del" style="border:none;background:var(--red-l);color:var(--red-v);box-shadow:var(--sh-sm); width:32px; height:32px;" onclick="delJuego('${j.id}')"><i class="fas fa-trash"></i></button>
+                </div>
+            </div>
+            <div style="padding:1.25rem; background:var(--surf);">
+                <h4 style="font-size:0.8rem; text-transform:uppercase; color:var(--ink4); font-weight:800; margin-bottom:1rem; letter-spacing:0.05em;">Puntuaciones</h4>
+                <div style="display:flex; flex-direction:column; gap:0.2rem;">
+                    ${sc}
+                </div>
+            </div>
+        </div>`;
+    }).join(''); 
+    renderRankingSide();
+}
+
+function totalPts(gid) { 
+  return D.juegos.reduce((s,j)=>{ const p=(j.puntuaciones||[]).find(x=>x.grupo_id===gid); return s+(p?parseInt(p.puntuacion)||0:0); },0); 
+}
+
+async function updatePunt(jid, gid, val) { 
+  const v = parseInt(val) || 0; // Eliminado el tope de cero
+  try { 
+    await sb.from('juego_puntuaciones').upsert({juego_id:jid,grupo_id:gid,puntuacion:v},{onConflict:'juego_id,grupo_id'}); 
+    const j=D.juegos.find(x=>x.id===jid); 
+    if(!j)return; 
+    j.puntuaciones=j.puntuaciones||[]; 
+    const p=j.puntuaciones.find(x=>x.grupo_id===gid); 
+    if(p)p.puntuacion=v;else j.puntuaciones.push({juego_id:jid,grupo_id:gid,puntuacion:v}); 
+    renderRankingSide(); 
+    if(currentGrupoTab==='ranking')renderRankingGeneral(); 
+  } catch(e) { console.error(e); } 
+}
+
+function renderRankingSide() { 
+  const sr=[...D.grupos].sort((a,b)=>totalPts(b.id)-totalPts(a.id)), mx=sr.length?totalPts(sr[0].id)||1:1; 
+  document.getElementById('juegos-ranking-side').innerHTML=sr.length?sr.map((g,i)=>`<div style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem"><div style="font-size:1.5rem;font-weight:800;color:${i===0?'#d97706':i===1?'#94a3b8':i===2?'#92400e':'#cbd5e1'};width:25px">${i+1}</div><div style="flex:1"><div style="font-weight:700;margin-bottom:.2rem">${g.nombre}</div><div style="height:6px;background:var(--surf3);border-radius:99px"><div style="height:100%;width:${Math.round(totalPts(g.id)/mx*100)}%;background:${g.color};border-radius:99px"></div></div></div><div style="font-size:1.2rem;font-weight:800;color:${g.color}">${totalPts(g.id)}</div></div>`).join(''):'<p>Sin grupos</p>'; 
+}
+
+function renderRankingGeneral() { 
+  const sr=[...D.grupos].sort((a,b)=>totalPts(b.id)-totalPts(a.id)); 
+  document.getElementById('ranking-general').innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:1.5rem">${sr.map((g,i)=>`<div style="background:${hexLight(g.color,.05)};border:2px solid ${g.color};border-radius:var(--r);padding:2rem;text-align:center;box-shadow:0 10px 20px ${hexLight(g.color,.15)}"><div style="font-size:3rem;font-weight:900;color:${i===0?'#d97706':i===1?'#94a3b8':i===2?'#92400e':'#cbd5e1'};margin-bottom:1rem;line-height:1">#${i+1}</div><h2 style="color:${g.color};font-size:1.5rem;margin-bottom:1rem">${g.nombre}</h2><div style="font-size:3.5rem;font-family:'Lora',serif;font-weight:800;color:var(--ink);line-height:1;margin-bottom:.5rem">${totalPts(g.id)}</div><div style="font-size:.8rem;color:var(--ink3);text-transform:uppercase;letter-spacing:.05em">Puntos Totales</div></div>`).join('')}</div>`; 
+}
+
+function openModJuego() { 
+  document.getElementById('jId').value=''; 
+  ['jNom','jMat','jDesc'].forEach(id=>document.getElementById(id).value=''); 
+  document.getElementById('jPunMax').value='10'; 
+  document.getElementById('jEst').value='pendiente'; 
+  document.getElementById('jTipo').value='Gymkana'; 
+  om('modJuego'); 
+}
+
+function openModJuegoEdit(id) { 
+  const j=D.juegos.find(x=>x.id===id); if(!j)return; 
+  document.getElementById('jId').value=j.id; 
+  document.getElementById('jNom').value=j.nombre; 
+  document.getElementById('jTipo').value=j.tipo; 
+  document.getElementById('jPunMax').value=j.puntuacion_max||10; 
+  document.getElementById('jEst').value=j.estado||'pendiente'; 
+  document.getElementById('jMat').value=j.materiales||''; 
+  document.getElementById('jDesc').value=j.descripcion||''; 
+  om('modJuego'); 
+}
+
+async function saveJuego() {
+  const n=document.getElementById('jNom').value.trim(); if(!n) return;
+  const obj={nombre:n,tipo:document.getElementById('jTipo').value,puntuacion_max:parseInt(document.getElementById('jPunMax').value)||10,estado:document.getElementById('jEst').value,materiales:document.getElementById('jMat').value||null,descripcion:document.getElementById('jDesc').value||null};
+  const eid=document.getElementById('jId').value;
+  try { 
+    if(eid){ await sb.from('juegos').update(obj).eq('id',eid); Object.assign(D.juegos.find(j=>j.id===eid),obj); }
+    else{ const{data,error}=await sb.from('juegos').insert(obj).select().single(); if(error)throw error; D.juegos.push({...data,puntuaciones:[]}); } 
+    cm('modJuego'); renderJuegos(); toast('Guardado','ok'); 
+  }catch(e){ console.error(e); }
+}
+
+async function delJuego(id) { 
+  if(!confirm('¿Borrar?'))return; 
+  try{ await sb.from('juegos').delete().eq('id',id); D.juegos=D.juegos.filter(j=>j.id!==id); renderJuegos(); toast('Borrado','info'); }catch(e){ console.error(e); } 
+}
+
+/* ═══════════════════════════════════════
+   🏠 CABAÑAS Y 🚗 COCHES
+═══════════════════════════════════════ */
+function renderCabanas() {
+    const totalCamas = D.cabanas.reduce((a,c)=>a+(c.capacidad||0),0);
+    const ocupadas = D.cabanas.reduce((a,c)=>a+(c.asignados||[]).length,0);
+    const libres = totalCamas - ocupadas;
+    const porcentaje = Math.round((ocupadas/totalCamas)*100) || 0;
+    const sin = D.personas.filter(p => p.necesita_cama !== false && !p.solo_un_dia && !D.cabanas.some(c=>(c.asignados||[]).includes(p.id)));
+
+    const statsHtml = `
+        <div class="logistics-stats-bar">
+            <div class="log-stat-item">
+                <span class="log-stat-label">Capacidad Total</span>
+                <span class="log-stat-val">${totalCamas} <small style="font-size:0.8rem; color:var(--ink4); font-weight:600; margin-left:4px;">Camas</small></span>
+            </div>
+            <div class="log-stat-item">
+                <span class="log-stat-label">Estado de Asignación</span>
+                <span class="log-stat-val">${ocupadas} <small style="font-size:0.8rem; color:var(--ink4); font-weight:600; margin-left:4px;">Asignadas</small></span>
+                <div class="log-progress-bg"><div class="log-progress-fill" style="width:${porcentaje}%; background:var(--primary)"></div></div>
+            </div>
+            <div class="log-stat-item">
+                <span class="log-stat-label">Disponibles</span>
+                <span class="log-stat-val" style="color:var(--green-v)">${libres} <small style="font-size:0.8rem; color:var(--ink4); font-weight:600; margin-left:4px;">Libres</small></span>
+            </div>
+        </div>
+    `;
+
+    const cabStatsContainer = document.getElementById('cab-stats');
+    if(cabStatsContainer) cabStatsContainer.innerHTML = statsHtml;
+    
+    const badge = document.getElementById('cabBadge');
+    if(badge) { badge.style.display=sin.length?'inline-block':'none'; badge.textContent=sin.length; }
+
+    const cg = document.getElementById('cabanas-grid'); 
+    if(!D.cabanas.length){ cg.innerHTML='<div class="empty"><p>Añade cabañas</p></div>'; renderCoches(); return; }
+
+    const palette = ['#0f766e', '#0369a1', '#b45309', '#6d28d9', '#be185d', '#c2410c', '#047857'];
+
+    cg.innerHTML = D.cabanas.map((c, index) => { 
+        const as = c.asignados || [], cap = c.capacidad || 0, l = cap - as.length; 
+        const isFull = l <= 0;
+        const baseColor = palette[index % palette.length];
+        
+        const borderStyle = isFull 
+            ? 'border: 2px solid var(--red-v); box-shadow: 0 6px 16px rgba(239, 68, 68, 0.2);' 
+            : `border: 1px solid var(--border); border-top: 4px solid ${baseColor}; box-shadow: var(--sh-sm);`;
+            
+        const headerBg = isFull ? 'var(--red-l)' : hexLight(baseColor, 0.08); 
+        const titleColor = isFull ? 'var(--red-d)' : 'var(--ink)';
+        const iconBg = isFull ? 'var(--red-v)' : baseColor;
+        const iconColor = '#fff';
+
+        const slotsHtml = as.map(id => `
+            <div style="display:flex; align-items:center; gap:0.6rem; padding:0.5rem 0; border-bottom:1px dashed var(--border2);">
+                <div class="av" style="width:24px; height:24px; font-size:0.6rem; background:${pColor(id)}; flex-shrink:0;">${ini(pName(id))}</div>
+                <div style="font-size:0.85rem; font-weight:600; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex:1;">${pName(id)} ${pBadges(id)}</div>
+            </div>
+        `).join('') + Array(Math.max(0,l)).fill(`
+            <div style="display:flex; align-items:center; gap:0.6rem; padding:0.5rem 0; border-bottom:1px dashed var(--border2); opacity:0.5;">
+                <div style="width:24px; height:24px; display:flex; align-items:center; justify-content:center; flex-shrink:0;"><i class="fas fa-bed" style="color:var(--ink4); font-size:0.8rem;"></i></div>
+                <div style="font-size:0.85rem; font-weight:500; color:var(--ink4); flex:1;">Cama libre</div>
+            </div>
+        `).join('');
+
+        return `
+        <div class="card log-card-fixed" data-id="${c.id}" style="${borderStyle}">
+            ${isFull ? `<div style="position:absolute; top:-10px; right:-10px; background:var(--red-v); color:white; font-size:0.65rem; font-weight:900; padding:4px 10px; border-radius:99px; border:2px solid white; z-index:10; box-shadow: 0 4px 8px rgba(239,68,68,0.4);">¡COMPLETA!</div>` : ''}
+            
+            <div style="padding:1rem; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); gap:0.5rem; background:${headerBg}; border-radius: 10px 10px 0 0;">
+                <div style="display:flex; align-items:flex-start; gap:0.6rem; flex:1; min-width:0;">
+                    <i class="fas fa-grip-vertical drag-handle" style="color:var(--ink4); cursor:grab; font-size:1rem; margin-top:6px; flex-shrink:0;"></i>
+                    <div style="width:32px; height:32px; border-radius:8px; background:${iconBg}; color:${iconColor}; display:flex; align-items:center; justify-content:center; font-size:0.9rem; flex-shrink:0; margin-top:2px; box-shadow:var(--sh-sm);"><i class="fas fa-house"></i></div>
+                    <div style="font-weight:800; font-size:1rem; color:${titleColor}; white-space:normal; word-break:break-word; line-height:1.2; margin-top:2px;">${c.nombre}</div>
+                </div>
+                <div style="display:flex; align-items:center; gap:0.5rem; flex-shrink:0;">
+                    <span style="font-size:0.8rem; font-weight:800; color:${isFull ? '#fff' : baseColor}; background:${isFull ? 'var(--red-v)' : hexLight(baseColor, 0.15)}; padding:2px 8px; border-radius:99px;">${as.length}/${cap}</span>
+                    <div style="display:flex; flex-direction:column; gap:2px; opacity:0.6; transition:opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.6">
+                        <button class="icon-btn edit" style="width:24px;height:24px;min-height:24px;border:none;background:transparent;color:var(--ink4);" onclick="openModCabanaEdit('${c.id}')"><i class="fas fa-pen" style="font-size:0.7rem;"></i></button>
+                        <button class="icon-btn del" style="width:24px;height:24px;min-height:24px;border:none;background:transparent;color:var(--red-m);" onclick="delCabana('${c.id}')"><i class="fas fa-trash" style="font-size:0.7rem;"></i></button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="log-card-body">
+                ${slotsHtml}
+            </div>
+        </div>`;
+    }).join('');
+    
+    renderCoches();
+    setTimeout(() => initDragAndDrop('cabanas-grid', 'cabanas', D.cabanas), 100);
+}
 function renderCoches() {
     const totalPlazas = D.coches.reduce((a,c)=>a+(c.plazas||0),0);
     const pasajeros = D.coches.reduce((a,c)=>a+(c.pasajeros||[]).length + (c.conductor?1:0),0);
@@ -3321,8 +4867,8 @@ function totalPts(gid) {
 }
 
 async function updatePunt(jid, gid, val) { 
-  const v=Math.max(0,parseInt(val)||0); 
-  try{ 
+  const v = parseInt(val) || 0; // <-- Aquí hemos quitado el tope de cero
+  try { 
     await sb.from('juego_puntuaciones').upsert({juego_id:jid,grupo_id:gid,puntuacion:v},{onConflict:'juego_id,grupo_id'}); 
     const j=D.juegos.find(x=>x.id===jid); 
     if(!j)return; 
@@ -3331,7 +4877,7 @@ async function updatePunt(jid, gid, val) {
     if(p)p.puntuacion=v;else j.puntuaciones.push({juego_id:jid,grupo_id:gid,puntuacion:v}); 
     renderRankingSide(); 
     if(currentGrupoTab==='ranking')renderRankingGeneral(); 
-  }catch(e){ console.error(e); } 
+  } catch(e) { console.error(e); } 
 }
 
 function renderRankingSide() { 
@@ -4146,13 +5692,6 @@ function descargarNormasPDF() {
   } else { 
       alert("Por favor, permite las ventanas emergentes (pop-ups)."); 
   }
-}
-// Al cargar la página, comprobar si ya está logueado
-window.onload = () => {
-    if(isLoggedIn()) {
-        document.getElementById('loginScreen').style.display = 'none';
-        showApp();
-    }
 }
 
 </script>
