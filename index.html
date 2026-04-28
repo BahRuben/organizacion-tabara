@@ -486,16 +486,12 @@ nav{flex:1;overflow-y:auto;padding:1rem .875rem;}
   .tabs::-webkit-scrollbar { display: none; }
   .tab { white-space: nowrap; flex-shrink: 0; }
 
-  /* 6. LÍNEA DE TIEMPO DEL PROGRAMA */
-  .prog-item-pro { flex-direction: column; gap: 0.5rem; margin-bottom: 1.5rem; }
-  .prog-time-pro { width: 100%; text-align: left; padding-top: 0; display: flex; align-items: center; gap: 10px; }
-  .prog-time-main { margin-bottom: 0; }
+  /* 6. LÍNEA DE TIEMPO DEL PROGRAMA (SÚPER COMPACTO) */
+  .prog-item-pro { flex-direction: column; gap: 0; margin-bottom: 1rem; }
+  .prog-time-pro { display: none !important; } /* Ocultamos la hora gigante lateral en móvil */
   .prog-dot-pro, .prog-timeline-container::before { display: none; }
-  .prog-card-pro { margin-left: 0; }
-
-  /* Días del horario */
-  .day-name { font-size: 1.3rem; }
-  .day-big-number { font-size: 2.5rem; top: -5px; }
+  .prog-card-pro { margin-left: 0; width: 100%; border-radius: 10px !important; }
+  .prog-mob-time { display: inline-flex !important; } /* Mostramos la hora en chiquitito dentro */
 }
 
 @media (max-width: 480px) {
@@ -1045,7 +1041,7 @@ nav{flex:1;overflow-y:auto;padding:1rem .875rem;}
     <input type="hidden" id="itId">
     <div class="frow">
       <div class="fgroup"><label class="flbl">Tipo</label>
-        <select class="fctl" id="itTipo" onchange="onItTipo()"><option value="cancion">🎵 Cántico</option><option value="devocional">📖 Devocional</option><option value="predicacion">📢 Predicación</option><option value="oracion">🙏 Oración</option><option value="bienvenida">👋 Bienvenida</option><option value="ofrendas">💝 Ofrendas</option><option value="comunion">🍷 Comunión</option><option value="anuncio">📣 Anuncios</option><option value="pausa">☕ Pausa</option></select>
+        <select class="fctl" id="itTipo" onchange="onItTipo()"><option value="cancion">🎵 Cântări</option><option value="devocional">📖 Îndemn Rugăciune </option><option value="predicacion">📢 Predică / Studiu </option><option value="oracion">🙏 Oración</option><option value="bienvenida">👋 Bun Venit</option><option value="ofrendas">💝 Colectă</option><option value="comunion">🍷 Cina Domnului</option><option value="anuncio">📣 Anunțuri</option><option value="pausa">☕ Pauză</option></select>
       </div>
       <div class="fgroup"><label class="flbl">Duración (min)</label><input class="fctl" type="number" id="itDur" value="5"></div>
     </div>
@@ -2707,44 +2703,55 @@ function renderProg() {
       
       let asignadosHtml = '';
       if (i.asignados && i.asignados.length > 0) {
-          if (i.asignados.length <= 3) {
-              asignadosHtml = '<div style="display:flex; flex-wrap:wrap; gap:0.4rem;">' + i.asignados.map(id => `<span style="display:inline-flex; align-items:center; gap:6px; background:var(--surf); padding:3px 8px; border-radius:6px; border:1px solid var(--border); font-size:0.75rem; font-weight:600; color:var(--ink);"><div class="av" style="width:16px;height:16px;font-size:0.45rem;background:${pColor(id)}">${ini(pName(id))}</div> ${pName(id).split(' ')[0]}</span>`).join('') + '</div>';
+          if (i.asignados.length <= 4) {
+              asignadosHtml = '<div style="display:flex; flex-wrap:wrap; gap:0.3rem;">' + i.asignados.map(id => `<span style="display:inline-flex; align-items:center; gap:4px; background:#fff; padding:2px 6px; border-radius:4px; border:1px solid ${hexLight(c.c, 0.2)}; font-size:0.7rem; font-weight:600; color:var(--ink); box-shadow:0 1px 2px rgba(0,0,0,0.02);"><div class="av" style="width:14px;height:14px;font-size:0.45rem;background:${pColor(id)}">${ini(pName(id))}</div> ${pName(id).split(' ')[0]}</span>`).join('') + '</div>';
           } else {
-              asignadosHtml = `<div class="av-stack" style="display:flex; flex-wrap:wrap; gap:2px;">` + i.asignados.map((id, index) => `<div class="av av-sm" style="background:${pColor(id)}; border: 2px solid var(--surf2); margin-left: ${index > 0 ? '-8px' : '0'}; z-index:${20-index};" title="${pName(id)}">${ini(pName(id))}</div>`).join('') + `</div>`;
+              asignadosHtml = `<div class="av-stack" style="display:flex; flex-wrap:wrap; gap:2px;">` + i.asignados.map((id, index) => `<div class="av av-sm" style="width:20px;height:20px;font-size:0.55rem;background:${pColor(id)}; border: 2px solid #fff; margin-left: ${index > 0 ? '-6px' : '0'}; z-index:${20-index};" title="${pName(id)}">${ini(pName(id))}</div>`).join('') + `</div>`;
           }
       } else {
-          asignadosHtml = '<span style="font-size:0.75rem; color:var(--ink4); font-style:italic;">Sin asignar</span>';
+          asignadosHtml = '<span style="font-size:0.7rem; color:var(--ink3); font-style:italic;">Fără alocare</span>';
       }
 
+      // LA TARJETA COLOREADA ESTÁ AQUÍ
       return `
-      <div class="prog-item-pro" data-id="${i.id}">
-        <div class="prog-time-pro"><div class="prog-time-main">${ts}</div><div class="prog-time-dur">${i.dur} min</div></div>
-        <div class="prog-dot-pro" style="border-color: ${c.c}"></div>
+      <div class="prog-item-pro" data-id="${i.id}" style="margin-bottom:1.2rem;">
+        <div class="prog-time-pro" style="padding-top:0.25rem;">
+            <div class="prog-time-main" style="font-size:1.1rem;">${ts}</div>
+            <div class="prog-time-dur" style="font-size:0.65rem;">${i.dur} min</div>
+        </div>
+        <div class="prog-dot-pro" style="border-color: ${c.c}; top:0.8rem; width:14px; height:14px;"></div>
         
-        <div class="prog-card-pro" style="background:var(--surf); border:1px solid var(--border); border-left:4px solid ${c.c}; border-radius:12px; box-shadow:var(--sh-sm); display:flex; flex-direction:column; overflow:hidden; padding:0; transition:all 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='var(--sh-lg)';" onmouseout="this.style.transform='none'; this.style.boxShadow='var(--sh-sm)';">
+        <div class="prog-card-pro" style="background: linear-gradient(120deg, ${c.bg} 0%, var(--surf) 80%); border:1px solid ${hexLight(c.c, 0.3)}; border-left:6px solid ${c.c}; border-radius:10px; box-shadow:var(--sh-sm); overflow:hidden; transition:all 0.2s; padding:0; cursor:default;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 20px ${hexLight(c.c, 0.2)}';" onmouseout="this.style.transform='none'; this.style.boxShadow='var(--sh-sm)';">
             
-            <div style="padding:1rem 1.25rem;">
-                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.6rem; gap:1rem; flex-wrap:wrap;">
-                    <div style="display:flex; align-items:center; gap:0.5rem;">
-                        <i class="fas fa-grip-vertical drag-handle" style="color:var(--border2); cursor:grab; font-size:1rem; padding-right:5px;" title="Arrastrar para ordenar"></i>
-                        <span style="background:${hexLight(c.c, 0.1)}; color:${c.c}; padding:3px 10px; border-radius:99px; font-size:0.65rem; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; border:1px solid ${hexLight(c.c, 0.2)}; display:inline-flex; align-items:center; gap:4px;">
+            <div style="padding: 0.75rem 1rem;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.4rem; gap:0.5rem;">
+                    <div style="display:flex; align-items:center; gap:0.4rem; flex-wrap:wrap;">
+                        <i class="fas fa-grip-vertical drag-handle" style="color:var(--ink4); cursor:grab; font-size:0.85rem; padding-right:3px;"></i>
+                        
+                        <span style="background:#fff; color:${c.c}; padding:2px 8px; border-radius:6px; font-size:0.6rem; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; border:1px solid ${hexLight(c.c, 0.3)}; display:inline-flex; align-items:center; gap:4px; box-shadow:0 1px 2px rgba(0,0,0,0.03);">
                             <i class="fas ${c.i}"></i> ${c.l}
                         </span>
+                        
+                        <span class="prog-mob-time" style="font-weight:800; color:var(--ink); font-size:0.7rem; display:none; background:#fff; padding:2px 6px; border-radius:6px; border:1px solid ${hexLight(c.c, 0.3)}; align-items:center; gap:4px;"><i class="far fa-clock" style="color:${c.c}"></i> ${ts}</span>
+                        
+                        <span style="font-weight:700; color:var(--ink2); font-size:0.65rem; display:inline-flex; background:#fff; padding:2px 6px; border-radius:6px; align-items:center; gap:3px; border:1px solid ${hexLight(c.c, 0.3)};"><i class="fas fa-hourglass-half" style="color:${c.c}; opacity:0.8;"></i> ${i.dur} min</span>
+                    </div>
+                    
+                    <div style="display:flex; gap:0.2rem; margin-top:-2px; margin-right:-4px; flex-shrink:0;">
+                        <button class="icon-btn edit" onclick="openModItemEdit('${i.id}','${currentSvcId}')" style="width:24px;height:24px;border:none;background:transparent;box-shadow:none; color:var(--ink4);" title="Editar"><i class="fas fa-pen" style="font-size:0.7rem;"></i></button>
+                        <button class="icon-btn del" onclick="delItem('${i.id}','${currentSvcId}')" style="width:24px;height:24px;border:none;background:transparent;box-shadow:none; color:var(--red-v); opacity:0.7;" title="Șterge"><i class="fas fa-trash" style="font-size:0.7rem;"></i></button>
                     </div>
                 </div>
-                <div style="font-family:'Lora', serif; font-size:1.3rem; font-weight:700; color:var(--ink); margin-bottom:0.5rem; line-height:1.2;">${i.titulo||'—'}</div>
-                ${i.notas ? `<div style="font-size:0.85rem; color:var(--ink3); margin-bottom:0.5rem; line-height:1.4;">${i.notas}</div>` : ''}
-                ${i.recursos ? `<div style="font-size:0.8rem; background:var(--amber-l); color:var(--amber-v); padding:0.5rem 0.8rem; border-radius:8px; border:1px dashed var(--amber-m); font-weight:600; margin-top:0.5rem; display:inline-block;"><i class="fas fa-box-open"></i> Logística: ${i.recursos}</div>` : ''}
+
+                <div style="padding-left:1.3rem;">
+                    <div style="font-family:'Lora', serif; font-size:1.15rem; font-weight:700; color:var(--ink); line-height:1.2; margin-bottom:0.2rem; word-break: break-word;">${i.titulo||'—'}</div>
+                    ${i.notas ? `<div style="font-size:0.8rem; color:var(--ink3); margin-bottom:0.3rem; line-height:1.3;">${i.notas}</div>` : ''}
+                    ${i.recursos ? `<div style="font-size:0.7rem; background:#fff; color:var(--amber-v); padding:0.3rem 0.6rem; border-radius:6px; font-weight:700; display:inline-flex; align-items:center; gap:5px; margin-top:0.2rem; border:1px dashed var(--amber-m);"><i class="fas fa-box-open"></i> Logistică: ${i.recursos}</div>` : ''}
+                </div>
             </div>
 
-            <div style="padding:0.75rem 1.25rem; background:var(--surf2); border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; gap:1rem; flex-wrap:wrap;">
-                <div style="display:flex; flex-wrap:wrap; flex:1; min-width:150px;">
-                    ${asignadosHtml}
-                </div>
-                <div style="display:flex; gap:0.5rem; flex-shrink:0;">
-                    <button class="icon-btn edit" onclick="openModItemEdit('${i.id}','${currentSvcId}')" style="width:28px;height:28px;border:none;background:var(--surf);box-shadow:var(--sh-sm);"><i class="fas fa-pen" style="font-size:0.7rem;"></i></button>
-                    <button class="icon-btn del" onclick="delItem('${i.id}','${currentSvcId}')" style="width:28px;height:28px;border:none;background:var(--red-l);color:var(--red-v);box-shadow:var(--sh-sm);"><i class="fas fa-trash" style="font-size:0.7rem;"></i></button>
-                </div>
+            <div style="padding:0.4rem 1rem; background:rgba(255,255,255,0.4); border-top:1px dashed ${hexLight(c.c, 0.2)}; display:flex; align-items:center;">
+                ${asignadosHtml}
             </div>
         </div>
       </div>`; 
