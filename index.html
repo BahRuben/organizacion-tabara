@@ -1302,12 +1302,12 @@ async function loginPublico() {
             .ph-actions { display: none !important; }
         `;
 
-        // 4. Creamos el botón "Secreto" para los monitores pequeños
+        // 4. Creamos el botón "Secreto" para los monitores
         let btnMonitor = document.getElementById('btn-pequeno-monitor');
         if(!btnMonitor) {
             btnMonitor = document.createElement('button');
             btnMonitor.id = 'btn-pequeno-monitor';
-            btnMonitor.innerHTML = '<i class="fas fa-unlock"></i> Desbloquear Puntuaciones';
+            btnMonitor.innerHTML = '<i class="fas fa-unlock"></i> Habilitar Edición';
             btnMonitor.className = 'btn btn-danger';
             btnMonitor.style.cssText = 'position:fixed; bottom:20px; right:20px; z-index:9999; box-shadow:var(--sh-lg); border-radius:99px;';
             document.body.appendChild(btnMonitor);
@@ -1316,12 +1316,15 @@ async function loginPublico() {
         
         // 5. Acción al pulsar el botón
         btnMonitor.onclick = () => {
-            const pw = prompt('Introduce la contraseña (admin) para editar puntos:');
+            // AQUÍ QUITAMOS LA PALABRA "ADMIN" DEL TEXTO
+            const pw = prompt('Introduce la contraseña para habilitar la edición:');
             if(pw === 'admin') {
+                // Al borrar el css-bloqueo-visor, automáticamente reaparecen
+                // las pestañas de Equipos, los botones de Crear Grupo y los iconos de Editar/Borrar.
                 document.getElementById('css-bloqueo-visor').remove();
                 btnMonitor.style.display = 'none';
                 grupoTab('juegos', document.getElementById('tab-juegos'));
-                toast('Modo edición activado. Ya puedes sumar o restar puntos.', 'ok');
+                toast('Modo edición activado. Ya puedes gestionar grupos y puntos.', 'ok');
             } else if(pw) {
                 toast('Contraseña incorrecta', 'err');
             }
