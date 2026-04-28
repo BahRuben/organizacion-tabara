@@ -1781,6 +1781,7 @@ function renderDash() {
                 const dateObj = new Date(f + "T00:00:00");
                 const dayName = window.innerWidth < 600 ? dateObj.toLocaleDateString('es-ES', { weekday: 'short' }) : dateObj.toLocaleDateString('es-ES', { weekday: 'long' });
                 const dayShort = dateObj.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+                
                 gridHtml += `
                 <div class="timeline-day-column" style="position:relative;">
                     <div class="day-big-number" style="position:absolute; right:0; top:-10px; font-size:3.5rem; font-weight:900; color:var(--ink); opacity:0.03; pointer-events:none;">${dateObj.getDate()}</div>
@@ -1791,27 +1792,41 @@ function renderDash() {
                     <div class="timeline-events" style="border-left: 1.5px dashed var(--border2); padding-left: 1.2rem; margin-left: 0.3rem;">` + 
                     g[f].map(h => {
                         const cfg = HORARIO_CFG[h.tipo] || HORARIO_CFG['Otro'];
-                        const lightCol = hexLight(cfg.c, 0.12);
+                        
                         return `
-                        <div class="event-card-pro" style="--ev-color: ${cfg.c}; background: var(--surf); border: 1px solid var(--border); border-left: 4px solid ${cfg.c}; border-radius: 12px; padding: 1rem; margin-bottom: 1rem; box-shadow: var(--sh-sm); position: relative; transition: all 0.2s ease;" 
-                             onmouseover="this.style.transform='translateX(4px)'; this.style.boxShadow='var(--sh)';" 
-                             onmouseout="this.style.transform='none'; this.style.boxShadow='var(--sh-sm)';">
-                            <button class="icon-btn" onclick="openModHorarioEdit('${h.id}')" 
-                                    style="position:absolute; top:0.75rem; right:0.75rem; width:28px; height:28px; border-radius:8px; border:1px solid var(--border); background:var(--surf2); color:var(--ink3); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.2s;"
-                                    onmouseover="this.style.background='var(--primary-l)'; this.style.color='var(--primary)'; this.style.borderColor='var(--primary-m)';"
-                                    onmouseout="this.style.background='var(--surf2)'; this.style.color='var(--ink3)'; this.style.borderColor='var(--border)';" title="Editar evento">
-                                <i class="fas fa-pen" style="font-size:0.7rem"></i>
-                            </button>
-                            <div style="display:flex; align-items:center; gap:6px; margin-bottom:0.4rem;">
-                                 <span style="background:${lightCol}; color:${cfg.c}; padding:2px 8px; border-radius:6px; font-size:0.65rem; font-weight:800; display:inline-flex; align-items:center; gap:4px;">
-                                    <i class="far fa-clock"></i> ${h.hora_inicio.substring(0,5)}
-                                 </span>
-                                 <i class="fas ${cfg.i}" style="color:${cfg.c}; font-size:0.75rem; opacity:0.5; margin-left:auto; margin-right:1.8rem;"></i>
-                            </div>
-                            <div style="font-weight:700; color:var(--ink); font-size:0.9rem; line-height:1.3; padding-right:1.5rem;">${h.titulo}</div>
-                            <div style="display:flex; align-items:center; gap:4px; font-size:0.7rem; color:var(--ink3); font-weight:600; margin-top:0.4rem;">
-                                <i class="fas fa-location-dot" style="color:var(--primary); opacity:0.7;"></i> 
-                                <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${h.ubicacion || 'Por definir'}</span>
+                        <div style="position:relative; margin-bottom:1.2rem;">
+                            <div class="tl-node" style="position:absolute; left:-1.2rem; transform:translateX(-50%); top:15px; width:12px; height:12px; border-radius:50%; background:${cfg.c}; border:3px solid var(--surf); box-shadow:0 0 0 1px ${hexLight(cfg.c, 0.2)}, var(--sh-sm); z-index:3;"></div>
+                            
+                            <div class="event-card-pro" style="background: linear-gradient(120deg, ${hexLight(cfg.c, 0.08)} 0%, var(--surf) 70%); border:1px solid ${hexLight(cfg.c, 0.2)}; border-left:5px solid ${cfg.c}; border-radius:10px; padding:0.75rem 1rem; box-shadow:var(--sh-sm); transition:all 0.2s cubic-bezier(0.165, 0.84, 0.44, 1); position:relative;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px ${hexLight(cfg.c, 0.15)}';" onmouseout="this.style.transform='none'; this.style.boxShadow='var(--sh-sm)';">
+                                
+                                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.4rem; gap:0.5rem;">
+                                    <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+                                        <span style="background:#fff; color:${cfg.c}; padding:2px 8px; border-radius:6px; font-size:0.65rem; font-weight:800; border:1px solid ${hexLight(cfg.c, 0.3)}; display:inline-flex; align-items:center; gap:4px; box-shadow:0 1px 2px rgba(0,0,0,0.03);">
+                                            <i class="far fa-clock"></i> ${h.hora_inicio.substring(0,5)}${h.hora_fin ? ' - ' + h.hora_fin.substring(0,5) : ''}
+                                        </span>
+                                        <span style="color:${cfg.c}; font-size:0.9rem;" title="${h.tipo}"><i class="fas ${cfg.i}"></i></span>
+                                    </div>
+                                    
+                                    <div style="display:flex; gap:0.2rem; margin-top:-2px; margin-right:-4px;">
+                                        <button class="icon-btn edit" onclick="openModHorarioEdit('${h.id}')" style="width:24px;height:24px;border:none;background:transparent;box-shadow:none; color:var(--ink4);" title="Editar"><i class="fas fa-pen" style="font-size:0.7rem"></i></button>
+                                    </div>
+                                </div>
+                                
+                                <div style="padding-left: 0.2rem;">
+                                    <div style="font-family:'Lora',serif; font-size:1.05rem; font-weight:700; color:var(--ink); line-height:1.2; word-break:break-word; margin-bottom:0.2rem;">${h.titulo}</div>
+                                    ${h.descripcion ? `<div style="font-size:0.75rem; color:var(--ink3); margin-bottom:0.3rem; line-height:1.3;">${h.descripcion}</div>` : ''}
+                                </div>
+                                
+                                ${(h.ubicacion || h.responsable_id) ? `
+                                <div style="display:flex; align-items:center; justify-content:space-between; margin-top:0.4rem; padding-top:0.4rem; border-top:1px dashed ${hexLight(cfg.c, 0.2)}; flex-wrap:wrap; gap:0.5rem;">
+                                    ${h.ubicacion ? `<div style="display:flex; align-items:center; gap:4px; font-size:0.7rem; color:var(--ink2); font-weight:600;"><i class="fas fa-location-dot" style="color:${cfg.c}; opacity:0.8;"></i> <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:140px;">${h.ubicacion}</span></div>` : '<div></div>'}
+                                    
+                                    ${h.responsable_id ? `
+                                    <div style="display:flex; align-items:center; gap:6px; background:rgba(255,255,255,0.5); padding:2px 6px; border-radius:6px; border:1px solid ${hexLight(cfg.c, 0.1)};">
+                                        <div class="av" style="width:16px;height:16px;font-size:0.45rem;background:${pColor(h.responsable_id)};box-shadow:var(--sh-sm); border:1px solid #fff;">${ini(pName(h.responsable_id))}</div>
+                                        <span style="font-size:0.65rem; color:var(--ink3); font-weight:700;">${pName(h.responsable_id).split(' ')[0]}</span>
+                                    </div>` : ''}
+                                </div>` : ''}
                             </div>
                         </div>`;
                     }).join('') + `</div></div>`;
@@ -1976,7 +1991,7 @@ function renderHorario() {
   const g = {}; evs.forEach(h => { if(!g[h.fecha]) g[h.fecha]=[]; g[h.fecha].push(h); });
   
   // Contenedor principal de la cuadrícula
-  let html = '<div class="timeline-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(340px, 1fr)); gap:2.5rem; align-items:start;">';
+  let html = '<div class="timeline-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:2rem; align-items:start;">';
   
   Object.keys(g).sort().forEach((f) => {
       const dateObj = new Date(f + "T00:00:00");
@@ -1985,45 +2000,52 @@ function renderHorario() {
       
       html += `
       <div class="timeline-day-column" style="position:relative;">
-          <div class="day-big-number" style="position:absolute; right:10px; top:-20px; font-size:4.5rem; font-weight:900; color:var(--ink); opacity:0.04; line-height:1; pointer-events:none; z-index:1;">${dateObj.getDate()}</div>
+          <div class="day-big-number" style="position:absolute; right:10px; top:-20px; font-size:4rem; font-weight:900; color:var(--ink); opacity:0.04; line-height:1; pointer-events:none; z-index:1;">${dateObj.getDate()}</div>
           
-          <div class="timeline-day-header" style="position:relative; margin-bottom:2rem; padding-left:1.2rem; border-left:3px solid var(--primary); z-index:2;">
-              <span class="day-full-date" style="font-size:0.7rem; text-transform:uppercase; color:var(--primary); font-weight:700; letter-spacing:1px;">${dayShort}</span>
-              <span class="day-name" style="font-family:'Lora',serif; font-size:1.6rem; font-weight:700; color:var(--ink); display:block;">${dayName.toUpperCase()}</span>
+          <div class="timeline-day-header" style="position:relative; margin-bottom:1.5rem; padding-left:1.2rem; border-left:3px solid var(--primary); z-index:2;">
+              <span class="day-full-date" style="font-size:0.7rem; text-transform:uppercase; color:var(--primary); font-weight:800; letter-spacing:1px;">${dayShort}</span>
+              <span class="day-name" style="font-family:'Lora',serif; font-size:1.4rem; font-weight:700; color:var(--ink); display:block;">${dayName.toUpperCase()}</span>
           </div>
           
-          <div class="timeline-events" style="position:relative; border-left:1.5px solid var(--border); padding-left:1.5rem; margin-left:0.4rem; z-index:2;">` + 
+          <div class="timeline-events" style="position:relative; border-left:1.5px solid var(--border); padding-left:1.2rem; margin-left:0.4rem; z-index:2;">` + 
           g[f].map(h => {
               const cfg = HORARIO_CFG[h.tipo] || HORARIO_CFG['Otro'];
               
-              // Sección del responsable rediseñada
-              const respHtml = h.responsable_id ? `
-                <div style="display:flex; align-items:center; gap:8px; margin-top:0.8rem; padding-top:0.8rem; border-top:1px solid var(--border); background:var(--surf2); margin-left:-1rem; margin-right:-1rem; padding-left:1rem; padding-right:1rem; margin-bottom:-1rem; padding-bottom:1rem; border-radius:0 0 16px 16px;">
-                    <div class="av" style="width:24px;height:24px;font-size:0.6rem;background:${pColor(h.responsable_id)};box-shadow:var(--sh-sm);">${ini(pName(h.responsable_id))}</div>
-                    <span style="font-size:0.75rem; color:var(--ink3); font-weight:600;">Resp: <strong>${pName(h.responsable_id).split(' ')[0]}</strong></span>
-                </div>` : '';
-              
               return `
-              <div style="position:relative; margin-bottom:1.8rem;">
-                  <div class="tl-node" style="position:absolute; left:-1.5rem; transform:translateX(-50%); top:20px; width:12px; height:12px; border-radius:50%; background:${cfg.c}; border:3px solid #fff; box-shadow:0 0 0 2px ${hexLight(cfg.c, 0.2)}, var(--sh-sm); z-index:3;"></div>
+              <div style="position:relative; margin-bottom:1.2rem;">
+                  <div class="tl-node" style="position:absolute; left:-1.2rem; transform:translateX(-50%); top:15px; width:12px; height:12px; border-radius:50%; background:${cfg.c}; border:3px solid #fff; box-shadow:0 0 0 1px ${hexLight(cfg.c, 0.2)}, var(--sh-sm); z-index:3;"></div>
                   
-                  <div class="event-card-pro" style="background:var(--surf); border-radius:16px; padding:1.2rem 1.4rem; border:1px solid var(--border); border-left:4px solid ${cfg.c}; box-shadow:var(--sh-sm); transition:transform 0.2s cubic-bezier(0.165, 0.84, 0.44, 1), box-shadow 0.2s cubic-bezier(0.165, 0.84, 0.44, 1); position:relative;" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='var(--sh-lg)';" onmouseout="this.style.transform='none'; this.style.boxShadow='var(--sh-sm)';">
+                  <div class="event-card-pro" style="background: linear-gradient(120deg, ${hexLight(cfg.c, 0.08)} 0%, var(--surf) 70%); border:1px solid ${hexLight(cfg.c, 0.2)}; border-left:5px solid ${cfg.c}; border-radius:10px; padding:0.75rem 1rem; box-shadow:var(--sh-sm); transition:all 0.2s cubic-bezier(0.165, 0.84, 0.44, 1); position:relative;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px ${hexLight(cfg.c, 0.15)}';" onmouseout="this.style.transform='none'; this.style.boxShadow='var(--sh-sm)';">
                       
-                      <div class="event-icon-box" style="position:absolute; top:1.2rem; right:1.2rem; font-size:1.1rem; color:${cfg.c}; opacity:0.15;"><i class="fas ${cfg.i}"></i></div>
-                      
-                      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.7rem;">
-                          <div class="event-time-badge" style="display:inline-flex; align-items:center; gap:5px; background:${hexLight(cfg.c, 0.1)}; color:${cfg.c}; padding:3px 10px; border-radius:8px; font-size:0.7rem; font-weight:800;"><i class="far fa-clock"></i> ${h.hora_inicio.substring(0,5)}${h.hora_fin ? ' - ' + h.hora_fin.substring(0,5) : ''}</div>
-                          <div style="display:flex; gap:0.3rem; margin-top:-6px; margin-right:-6px;">
-                              <button class="icon-btn edit" onclick="openModHorarioEdit('${h.id}')" style="width:26px;height:26px;border:none;background:transparent;box-shadow:none; color:var(--ink4);"><i class="fas fa-pen" style="font-size:0.7rem"></i></button>
-                              <button class="icon-btn del" onclick="delHorario('${h.id}')" style="width:26px;height:26px;border:none;background:transparent;box-shadow:none; color:var(--red-v);"><i class="fas fa-trash" style="font-size:0.7rem"></i></button>
+                      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.4rem; gap:0.5rem;">
+                          <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+                              <span style="background:#fff; color:${cfg.c}; padding:2px 8px; border-radius:6px; font-size:0.65rem; font-weight:800; border:1px solid ${hexLight(cfg.c, 0.3)}; display:inline-flex; align-items:center; gap:4px; box-shadow:0 1px 2px rgba(0,0,0,0.03);">
+                                  <i class="far fa-clock"></i> ${h.hora_inicio.substring(0,5)}${h.hora_fin ? ' - ' + h.hora_fin.substring(0,5) : ''}
+                              </span>
+                              <span style="color:${cfg.c}; font-size:0.9rem;" title="${h.tipo}"><i class="fas ${cfg.i}"></i></span>
+                          </div>
+                          
+                          <div style="display:flex; gap:0.2rem; margin-top:-2px; margin-right:-4px;">
+                              <button class="icon-btn edit" onclick="openModHorarioEdit('${h.id}')" style="width:24px;height:24px;border:none;background:transparent;box-shadow:none; color:var(--ink4);" title="Editar"><i class="fas fa-pen" style="font-size:0.7rem"></i></button>
+                              <button class="icon-btn del" onclick="delHorario('${h.id}')" style="width:24px;height:24px;border:none;background:transparent;box-shadow:none; color:var(--red-v); opacity:0.7;" title="Borrar"><i class="fas fa-trash" style="font-size:0.7rem"></i></button>
                           </div>
                       </div>
                       
-                      <div class="event-title-pro" style="font-family:'Lora',serif; font-size:1.15rem; font-weight:700; color:var(--ink); line-height:1.2; margin-bottom:0.3rem; padding-right:2rem;">${h.titulo} <span style="font-family:'Plus Jakarta Sans',sans-serif;font-size:0.65rem; background:var(--surf3); color:var(--ink3); padding:2px 6px; border-radius:6px; font-weight:600; margin-left:6px; vertical-align:middle;">${h.tipo}</span></div>
-                      ${h.ubicacion ? `<div class="event-location-pro" style="display:flex; align-items:center; gap:6px; font-size:0.75rem; color:var(--primary); font-weight:600;"><i class="fas fa-location-dot" style="opacity:0.7;"></i> <span>${h.ubicacion}</span></div>` : ''}
-                      ${h.descripcion ? `<div style="font-size:0.8rem; color:var(--ink3); margin-top:0.6rem; line-height:1.5; padding:0.7rem; background:var(--surf2); border-radius:8px;">${h.descripcion}</div>` : ''}
+                      <div style="padding-left: 0.2rem;">
+                          <div style="font-family:'Lora',serif; font-size:1.05rem; font-weight:700; color:var(--ink); line-height:1.2; word-break:break-word; margin-bottom:0.2rem;">${h.titulo}</div>
+                          ${h.descripcion ? `<div style="font-size:0.75rem; color:var(--ink3); margin-bottom:0.3rem; line-height:1.3;">${h.descripcion}</div>` : ''}
+                      </div>
                       
-                      ${respHtml}
+                      ${(h.ubicacion || h.responsable_id) ? `
+                      <div style="display:flex; align-items:center; justify-content:space-between; margin-top:0.4rem; padding-top:0.4rem; border-top:1px dashed ${hexLight(cfg.c, 0.2)}; flex-wrap:wrap; gap:0.5rem;">
+                          ${h.ubicacion ? `<div style="display:flex; align-items:center; gap:4px; font-size:0.7rem; color:var(--ink2); font-weight:600;"><i class="fas fa-location-dot" style="color:${cfg.c}; opacity:0.8;"></i> <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:140px;">${h.ubicacion}</span></div>` : '<div></div>'}
+                          
+                          ${h.responsable_id ? `
+                          <div style="display:flex; align-items:center; gap:6px; background:rgba(255,255,255,0.5); padding:2px 6px; border-radius:6px; border:1px solid ${hexLight(cfg.c, 0.1)};">
+                              <div class="av" style="width:16px;height:16px;font-size:0.45rem;background:${pColor(h.responsable_id)};box-shadow:var(--sh-sm); border:1px solid #fff;">${ini(pName(h.responsable_id))}</div>
+                              <span style="font-size:0.65rem; color:var(--ink3); font-weight:700;">${pName(h.responsable_id).split(' ')[0]}</span>
+                          </div>` : ''}
+                      </div>` : ''}
                   </div>
               </div>`;
           }).join('') + `</div></div>`;
