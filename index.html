@@ -4097,7 +4097,7 @@ function descargarNormasPDF() {
   }
 }
 /* ═══════════════════════════════════════
-   📅 EXPORTAR HORARIO A PDF (1 HOJA)
+   📅 EXPORTAR HORARIO A PDF (DISEÑO PÓSTER CABAÑAS)
 ═══════════════════════════════════════ */
 function descargarHorarioPDF() {
     if (!D.horario || !D.horario.length) {
@@ -4116,7 +4116,8 @@ function descargarHorarioPDF() {
     // 2. Ordenar las fechas y generar el HTML de cada columna (día)
     Object.keys(eventosPorFecha).sort().forEach(fecha => {
         const dateObj = new Date(fecha + "T00:00:00");
-        const dayName = dateObj.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'short' });
+        const dayName = dateObj.toLocaleDateString('es-ES', { weekday: 'long' }).toUpperCase();
+        const dayNum = dateObj.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }).toUpperCase();
 
         let eventosHtml = eventosPorFecha[fecha].map(h => {
             const cfg = HORARIO_CFG[h.tipo] || HORARIO_CFG['Otro'];
@@ -4124,89 +4125,182 @@ function descargarHorarioPDF() {
             const locResp = [h.ubicacion, responsable].filter(Boolean).join(' • ');
 
             return `
-            <div style="display: flex; padding: 6px 8px; border-bottom: 1px solid #f1f5f9; break-inside: avoid; align-items: flex-start; gap: 8px;">
-                <div style="font-weight: 800; color: #0f766e; width: 35px; flex-shrink: 0; font-size: 11px; margin-top: 1px;">
+            <div class="evento" style="border-left-color: ${cfg.c};">
+                <div class="hora">
                     ${h.hora_inicio.substring(0,5)}
                 </div>
-                <div style="flex: 1; min-width: 0;">
-                    <div style="font-weight: 800; font-size: 11px; color: #0f172a; margin-bottom: 2px; line-height: 1.2;">
+                <div class="detalle">
+                    <div class="titulo">
+                        <i class="fas ${cfg.i}" style="color: ${cfg.c}; font-size: 10px; margin-right: 4px;"></i> 
                         ${h.titulo}
-                        <span style="font-size: 8px; color: ${cfg.c}; border: 1px solid ${cfg.c}; padding: 1px 4px; border-radius: 4px; margin-left: 4px; vertical-align: middle; white-space: nowrap; font-weight: bold;">${h.tipo}</span>
                     </div>
-                    ${locResp ? `<div style="font-size: 9px; color: #64748b; margin-top: 2px; font-weight: 600;">📍 ${locResp}</div>` : ''}
+                    ${locResp ? `<div class="sub-detalle">📍 ${locResp}</div>` : ''}
                 </div>
             </div>`;
         }).join('');
 
-        // Tarjeta para el día entero
         diasHtml += `
-        <div style="flex: 1; min-width: 220px; border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden; background: #fff; break-inside: avoid; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-            <div style="background: #0f766e; color: #fff; padding: 6px 10px; font-weight: 800; font-size: 12px; text-align: center; text-transform: uppercase; letter-spacing: 0.5px;">
-                ${dayName}
+        <div class="dia-col">
+            <div class="dia-header">
+                <span class="dia-nombre">${dayName}</span>
+                <span class="dia-fecha">${dayNum}</span>
             </div>
-            <div style="padding: 2px;">
+            <div class="dia-body">
                 ${eventosHtml}
             </div>
         </div>`;
     });
 
-    // 3. Ensamblar el documento final (Landscape / Horizontal)
+    // 3. Ensamblar el documento final (Landscape / Apaisado)
     let html = `<!DOCTYPE html>
     <html lang="es">
     <head>
         <meta charset="UTF-8">
-        <title>Horario_General_Campamento</title>
-        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+        <title>Horario_Cabanas_TML</title>
+        <!-- Fuentes e Iconos Premium -->
+        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Lora:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
         <style>
-            /* Configuramos la hoja en Horizontal (Apaisado) para que quepan todos los días uno al lado del otro */
+            /* Configuración de la hoja A4 Horizontal */
             @page { size: A4 landscape; margin: 10mm; }
             
             body { 
                 font-family: 'Plus Jakarta Sans', sans-serif; 
-                color: #0f172a; 
+                color: #1e293b; 
                 margin: 0; 
                 padding: 0; 
-                -webkit-print-color-adjust: exact; /* Fuerza a imprimir los colores de fondo */
-                background: #fff; 
+                -webkit-print-color-adjust: exact; /* Fundamental para que se impriman los colores de fondo */
+                background: #ffffff; 
             }
-            .header { 
-                display: flex; 
-                justify-content: space-between; 
-                align-items: flex-end;
-                margin-bottom: 15px; 
-                border-bottom: 3px solid #0f766e; 
-                padding-bottom: 8px; 
-            }
-            h1 { color: #0f766e; font-size: 20px; margin: 0; text-transform: uppercase; font-weight: 900; letter-spacing: 0.5px; }
-            .subtitle { color: #64748b; font-size: 12px; font-style: italic; font-weight: 600; margin: 0; }
             
-            /* Contenedor Flex para alinear los días de lado a lado */
+            /* Marco general tipo Póster */
+            .poster-container {
+                border: 2px solid #0f766e;
+                border-radius: 16px;
+                padding: 15px 20px 20px 20px;
+                height: calc(100vh - 40px); /* Ajuste perfecto a los márgenes de impresión */
+                box-sizing: border-box;
+                display: flex;
+                flex-direction: column;
+            }
+            
+            /* Cabecera Elegante */
+            .header { 
+                text-align: center;
+                margin-bottom: 20px; 
+            }
+            .header h1 { 
+                font-family: 'Lora', serif;
+                color: #0f766e; 
+                font-size: 30px; 
+                margin: 0 0 2px 0; 
+                font-weight: 700; 
+            }
+            .header h2 { 
+                color: #b45309; 
+                font-size: 14px; 
+                text-transform: uppercase; 
+                letter-spacing: 3px;
+                margin: 0; 
+                font-weight: 800;
+            }
+            
+            /* Estructura Responsive de Columnas */
             .grid { 
                 display: flex; 
-                justify-content: center; 
-                align-items: flex-start; 
-                gap: 10px; 
-                width: 100%; 
+                justify-content: space-between; 
+                align-items: stretch; 
+                gap: 15px; 
+                flex: 1;
+                min-height: 0; /* Ayuda a que el contenido no desborde */
+            }
+            
+            /* Diseño de cada Día */
+            .dia-col {
+                flex: 1;
+                background: #f8fafc;
+                border: 1px solid #cbd5e1;
+                border-radius: 12px;
+                overflow: hidden;
+                display: flex;
+                flex-direction: column;
+            }
+            
+            .dia-header {
+                background: #0f766e;
+                color: #ffffff;
+                padding: 10px;
+                text-align: center;
+                display: flex;
+                flex-direction: column;
+                border-bottom: 4px solid #115e59;
+            }
+            .dia-nombre {
+                font-size: 15px;
+                font-weight: 800;
+                letter-spacing: 1px;
+            }
+            .dia-fecha {
+                font-size: 11px;
+                color: #ccfbf1;
+                font-weight: 700;
+            }
+            
+            /* Lista de eventos del día */
+            .dia-body {
+                padding: 10px;
+                flex: 1;
+            }
+            
+            /* Diseño de cada Tarjeta de Evento */
+            .evento {
+                display: flex;
+                align-items: flex-start;
+                background: #ffffff;
+                border-radius: 8px;
+                padding: 8px 10px;
+                margin-bottom: 8px;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+                border-left: 4px solid #cbd5e1; /* El color se inyecta dinámicamente arriba */
+            }
+            .hora {
+                font-weight: 800;
+                color: #0f766e;
+                font-size: 14px;
+                width: 45px;
+                flex-shrink: 0;
+                margin-top: 1px;
+            }
+            .detalle {
+                flex: 1;
+                min-width: 0;
+            }
+            .titulo {
+                font-weight: 800;
+                font-size: 11px;
+                color: #0f172a;
+                line-height: 1.3;
+                margin-bottom: 2px;
+                word-wrap: break-word;
+            }
+            .sub-detalle {
+                font-size: 9px;
+                color: #64748b;
+                font-weight: 700;
+                word-wrap: break-word;
             }
         </style>
     </head>
     <body>
-        <div class="header">
-            <div>
-                <h1>Horario General del Campamento</h1>
-                <p class="subtitle">Reîntâlnire cu Tatăl</p>
+        <div class="poster-container">
+            <div class="header">
+                <h1>Reîntâlnire cu Tatăl</h1>
+                <h2>Horario Oficial del Campamento</h2>
             </div>
-            <div style="font-size: 10px; color: #94a3b8; font-weight: bold; text-align: right;">
-                Actualizado: ${new Date().toLocaleDateString()}
+            
+            <div class="grid">
+                ${diasHtml}
             </div>
-        </div>
-        
-        <div class="grid">
-            ${diasHtml}
-        </div>
-        
-        <div style="text-align: center; font-size: 10px; color: #cbd5e1; margin-top: 15px; padding-top: 10px; border-top: 1px dashed #e2e8f0;">
-            Generado automáticamente por el Panel de Gestión TML
         </div>
     </body>
     </html>`;
@@ -4218,12 +4312,12 @@ function descargarHorarioPDF() {
         printWin.document.write(html);
         printWin.document.close();
         
-        // Esperamos un instante a que cargue la fuente de Google antes de imprimir
+        // Esperamos un poco más para asegurar que las tipografías y FontAwesome se descarguen antes de imprimir
         setTimeout(() => { 
             printWin.print(); 
-        }, 700);
+        }, 800);
     } else {
-        alert("Por favor, permite las ventanas emergentes (pop-ups) en tu navegador.");
+        alert("Por favor, permite las ventanas emergentes (pop-ups) en tu navegador para generar el póster.");
     }
 }
 </script>
