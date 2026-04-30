@@ -679,6 +679,7 @@ nav{flex:1;overflow-y:auto;padding:1rem .875rem;}
         <div class="ph">
             <div class="ph-title"><h1>Horario General</h1><p>Cronograma completo del campamento</p></div>
             <div class="ph-actions">
+                <button class="btn btn-green" onclick="descargarHorarioPDF()"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
                 <button class="btn btn-primary" onclick="openModHorario()"><i class="fas fa-plus"></i> Añadir Evento</button>
             </div>
         </div>
@@ -4094,6 +4095,136 @@ function descargarNormasPDF() {
   } else { 
       alert("Por favor, permite las ventanas emergentes (pop-ups)."); 
   }
+}
+/* ═══════════════════════════════════════
+   📅 EXPORTAR HORARIO A PDF (1 HOJA)
+═══════════════════════════════════════ */
+function descargarHorarioPDF() {
+    if (!D.horario || !D.horario.length) {
+        alert("No hay eventos programados en el horario para exportar."); 
+        return; 
+    }
+
+    // 1. Agrupar los eventos por fecha
+    const eventosPorFecha = {};
+    D.horario.forEach(h => { 
+        if(!eventosPorFecha[h.fecha]) eventosPorFecha[h.fecha] = []; 
+        eventosPorFecha[h.fecha].push(h); 
+    });
+
+    let diasHtml = '';
+    // 2. Ordenar las fechas y generar el HTML de cada columna (día)
+    Object.keys(eventosPorFecha).sort().forEach(fecha => {
+        const dateObj = new Date(fecha + "T00:00:00");
+        const dayName = dateObj.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'short' });
+
+        let eventosHtml = eventosPorFecha[fecha].map(h => {
+            const cfg = HORARIO_CFG[h.tipo] || HORARIO_CFG['Otro'];
+            const responsable = h.responsable_id ? pName(h.responsable_id).split(' ')[0] : '';
+            const locResp = [h.ubicacion, responsable].filter(Boolean).join(' • ');
+
+            return `
+            <div style="display: flex; padding: 6px 8px; border-bottom: 1px solid #f1f5f9; break-inside: avoid; align-items: flex-start; gap: 8px;">
+                <div style="font-weight: 800; color: #0f766e; width: 35px; flex-shrink: 0; font-size: 11px; margin-top: 1px;">
+                    ${h.hora_inicio.substring(0,5)}
+                </div>
+                <div style="flex: 1; min-width: 0;">
+                    <div style="font-weight: 800; font-size: 11px; color: #0f172a; margin-bottom: 2px; line-height: 1.2;">
+                        ${h.titulo}
+                        <span style="font-size: 8px; color: ${cfg.c}; border: 1px solid ${cfg.c}; padding: 1px 4px; border-radius: 4px; margin-left: 4px; vertical-align: middle; white-space: nowrap; font-weight: bold;">${h.tipo}</span>
+                    </div>
+                    ${locResp ? `<div style="font-size: 9px; color: #64748b; margin-top: 2px; font-weight: 600;">📍 ${locResp}</div>` : ''}
+                </div>
+            </div>`;
+        }).join('');
+
+        // Tarjeta para el día entero
+        diasHtml += `
+        <div style="flex: 1; min-width: 220px; border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden; background: #fff; break-inside: avoid; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+            <div style="background: #0f766e; color: #fff; padding: 6px 10px; font-weight: 800; font-size: 12px; text-align: center; text-transform: uppercase; letter-spacing: 0.5px;">
+                ${dayName}
+            </div>
+            <div style="padding: 2px;">
+                ${eventosHtml}
+            </div>
+        </div>`;
+    });
+
+    // 3. Ensamblar el documento final (Landscape / Horizontal)
+    let html = `<!DOCTYPE html>
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <title>Horario_General_Campamento</title>
+        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+        <style>
+            /* Configuramos la hoja en Horizontal (Apaisado) para que quepan todos los días uno al lado del otro */
+            @page { size: A4 landscape; margin: 10mm; }
+            
+            body { 
+                font-family: 'Plus Jakarta Sans', sans-serif; 
+                color: #0f172a; 
+                margin: 0; 
+                padding: 0; 
+                -webkit-print-color-adjust: exact; /* Fuerza a imprimir los colores de fondo */
+                background: #fff; 
+            }
+            .header { 
+                display: flex; 
+                justify-content: space-between; 
+                align-items: flex-end;
+                margin-bottom: 15px; 
+                border-bottom: 3px solid #0f766e; 
+                padding-bottom: 8px; 
+            }
+            h1 { color: #0f766e; font-size: 20px; margin: 0; text-transform: uppercase; font-weight: 900; letter-spacing: 0.5px; }
+            .subtitle { color: #64748b; font-size: 12px; font-style: italic; font-weight: 600; margin: 0; }
+            
+            /* Contenedor Flex para alinear los días de lado a lado */
+            .grid { 
+                display: flex; 
+                justify-content: center; 
+                align-items: flex-start; 
+                gap: 10px; 
+                width: 100%; 
+            }
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <div>
+                <h1>Horario General del Campamento</h1>
+                <p class="subtitle">Reîntâlnire cu Tatăl</p>
+            </div>
+            <div style="font-size: 10px; color: #94a3b8; font-weight: bold; text-align: right;">
+                Actualizado: ${new Date().toLocaleDateString()}
+            </div>
+        </div>
+        
+        <div class="grid">
+            ${diasHtml}
+        </div>
+        
+        <div style="text-align: center; font-size: 10px; color: #cbd5e1; margin-top: 15px; padding-top: 10px; border-top: 1px dashed #e2e8f0;">
+            Generado automáticamente por el Panel de Gestión TML
+        </div>
+    </body>
+    </html>`;
+
+    // 4. Abrir ventana de impresión
+    const printWin = window.open('', '_blank');
+    if (printWin) {
+        printWin.document.open();
+        printWin.document.write(html);
+        printWin.document.close();
+        
+        // Esperamos un instante a que cargue la fuente de Google antes de imprimir
+        setTimeout(() => { 
+            printWin.print(); 
+        }, 700);
+    } else {
+        alert("Por favor, permite las ventanas emergentes (pop-ups) en tu navegador.");
+    }
 }
 </script>
 </body>
